@@ -34,7 +34,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 py-4 md:px-8">
+    <header className="absolute inset-x-0 top-0 z-20 flex h-16 shrink-0 items-center justify-between px-5 md:px-8">
       <Link href="/" className="group">
         <span className="font-[family-name:var(--font-display)] text-2xl tracking-tight text-[var(--sand)] md:text-3xl">
           After the Sun
