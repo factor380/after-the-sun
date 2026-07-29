@@ -26,10 +26,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full`}>
-      <body className="atmosphere min-h-full antialiased">
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable} h-dvh overflow-hidden`}
+    >
+      <body className="atmosphere flex h-dvh flex-col overflow-hidden antialiased">
         <SiteHeader />
-        <main className="relative flex min-h-full flex-1 flex-col pt-16">
+        <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pt-16">
           {children}
         </main>
       </body>
