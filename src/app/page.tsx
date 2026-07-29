@@ -1,65 +1,78 @@
-import Image from "next/image";
+import SpotMapClient from "@/components/map/SpotMapClient";
+import { SpotList } from "@/components/spots/SpotList";
+import { listSpots } from "@/services/spots";
+import type { SpotSummary } from "@/types/spot";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+async function loadSpots(): Promise<{
+  spots: SpotSummary[];
+  setupNeeded: boolean;
+}> {
+  try {
+    const spots = await listSpots();
+    return {
+      spots: spots.map((s) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        lat: s.lat,
+        lng: s.lng,
+        region: s.region,
+        photoUrl: s.photoUrl,
+        createdById: s.createdById,
+        createdAt: s.createdAt.toISOString(),
+      })),
+      setupNeeded: false,
+    };
+  } catch {
+    return { spots: [], setupNeeded: true };
+  }
+}
+
+export default async function HomePage() {
+  const { spots, setupNeeded } = await loadSpots();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="relative flex min-h-[calc(100vh-4rem)] flex-col lg:flex-row">
+      <section className="relative h-[58vh] min-h-[320px] w-full lg:h-auto lg:min-h-[calc(100vh-4rem)] lg:flex-1">
+        <SpotMapClient spots={spots} />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-[var(--dusk-deep)]/90 to-transparent p-5 md:p-8 lg:hidden">
+          <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--sand)]">
+            After the Sun
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-1 max-w-md text-sm text-[var(--sand-muted)]">
+            Sunset spots shared across Israel — find yours on the map.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <aside className="flex w-full flex-col border-t border-white/10 bg-[var(--dusk-deep)]/80 px-5 py-6 backdrop-blur-sm lg:w-[380px] lg:border-l lg:border-t-0 lg:px-6">
+        <div className="mb-4 hidden lg:block">
+          <h1 className="font-[family-name:var(--font-display)] text-4xl leading-tight text-[var(--sand)]">
+            After the Sun
+          </h1>
+          <p className="mt-2 text-[var(--sand-muted)]">
+            Sunset spots shared across Israel — find yours on the map.
+          </p>
         </div>
-      </main>
+
+        {setupNeeded ? (
+          <div className="mb-4 rounded-sm border border-[var(--ember)]/40 bg-black/20 p-3 text-sm text-[var(--sand-muted)]">
+            Connect Supabase in <code className="text-[var(--sand)]">.env</code>{" "}
+            (see <code className="text-[var(--sand)]">.env.example</code>), then
+            run <code className="text-[var(--sand)]">npx prisma db push</code>{" "}
+            and <code className="text-[var(--sand)]">npm run db:seed</code>.
+          </div>
+        ) : null}
+
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sand-muted)]">
+          Spots ({spots.length})
+        </h2>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <SpotList spots={spots} />
+        </div>
+      </aside>
     </div>
   );
 }

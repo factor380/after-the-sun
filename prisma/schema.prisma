@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profile {
+  id          String   @id @db.Uuid
+  displayName String?
+  createdAt   DateTime @default(now())
+  spots       Spot[]
+}
+
+model Spot {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  lat         Float
+  lng         Float
+  region      String?
+  photoUrl    String?
+  createdById String   @db.Uuid
+  createdBy   Profile  @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([lat, lng])
+  @@index([region])
+}
