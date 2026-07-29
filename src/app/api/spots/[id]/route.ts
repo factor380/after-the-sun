@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { toPublicSpot } from "@/lib/public-spot";
+import { isSameOriginRequest } from "@/lib/request-origin";
 import { updateSpotSchema } from "@/lib/validations/spot";
 import { deleteSpot, getSpotById, updateSpot } from "@/services/spots";
 
@@ -12,7 +14,7 @@ export async function GET(_request: Request, context: RouteContext) {
     if (!spot) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    return NextResponse.json(spot);
+    return NextResponse.json(toPublicSpot(spot));
   } catch (error) {
     console.error("GET /api/spots/[id]", error);
     return NextResponse.json({ error: "Failed to load spot" }, { status: 500 });
@@ -21,6 +23,10 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
+    if (!isSameOriginRequest(request)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { id } = await context.params;
     const supabase = await createClient();
     const {
@@ -44,18 +50,26 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!spot) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    return NextResponse.json(spot);
+    return NextResponse.json(toPublicSpot(spot));
   } catch (error) {
+    console.error("PATCH /api/spots/[id]", error);
     const message = error instanceof Error ? error.message : "Update failed";
     if (message === "FORBIDDEN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    return NextResponse.json({ error: message }, { status: 400 });
+    if (message === "Location must be within Israel bounds") {
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Update failed" }, { status: 400 });
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
+    if (!isSameOriginRequest(request)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { id } = await context.params;
     const supabase = await createClient();
     const {
@@ -72,10 +86,11 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
     return NextResponse.json({ ok: true });
   } catch (error) {
+    console.error("DELETE /api/spots/[id]", error);
     const message = error instanceof Error ? error.message : "Delete failed";
     if (message === "FORBIDDEN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ error: "Delete failed" }, { status: 400 });
   }
 }

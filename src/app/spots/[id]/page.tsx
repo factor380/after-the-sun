@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { T } from "@/components/T";
 import { getSpotById } from "@/services/spots";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -24,7 +25,10 @@ export default async function SpotDetailPage({ params }: PageProps) {
         href="/"
         className="text-sm text-[var(--sand-muted)] hover:text-[var(--sand)]"
       >
-        ← Back to map
+        <span aria-hidden className="me-1 inline-block rtl:-scale-x-100">
+          ←
+        </span>
+        <T k="backToMap" />
       </Link>
 
       <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl text-[var(--sand)] md:text-5xl">
@@ -51,11 +55,15 @@ export default async function SpotDetailPage({ params }: PageProps) {
 
       <dl className="mt-8 grid grid-cols-2 gap-4 border-t border-white/10 pt-6 text-sm">
         <div>
-          <dt className="text-[var(--sand-muted)]">Latitude</dt>
+          <dt className="text-[var(--sand-muted)]">
+            <T k="latitude" />
+          </dt>
           <dd className="text-[var(--sand)]">{spot.lat.toFixed(5)}</dd>
         </div>
         <div>
-          <dt className="text-[var(--sand-muted)]">Longitude</dt>
+          <dt className="text-[var(--sand-muted)]">
+            <T k="longitude" />
+          </dt>
           <dd className="text-[var(--sand)]">{spot.lng.toFixed(5)}</dd>
         </div>
       </dl>
@@ -66,7 +74,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
         rel="noreferrer"
         className="mt-6 inline-block text-sm text-[var(--ember)] underline"
       >
-        Open in OpenStreetMap
+        <T k="openOsm" />
       </a>
     </article>
   );

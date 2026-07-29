@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import LocationPickerClient from "@/components/map/LocationPickerClient";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export default function SpotForm() {
   const router = useRouter();
+  const { t } = useLocale();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [region, setRegion] = useState("");
@@ -20,7 +22,7 @@ export default function SpotForm() {
     setError(null);
 
     if (lat === null || lng === null) {
-      setError("Click the map to set the spot location.");
+      setError(t("clickMapError"));
       return;
     }
 
@@ -41,13 +43,13 @@ export default function SpotForm() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to save spot");
+        throw new Error(data.error ?? t("saveFailed"));
       }
 
       router.push(`/spots/${data.id}`);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save spot");
+      setError(err instanceof Error ? err.message : t("saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -57,20 +59,20 @@ export default function SpotForm() {
     <form onSubmit={onSubmit} className="space-y-5">
       <div>
         <label className="mb-1 block text-sm text-[var(--sand-muted)]">
-          Name
+          {t("name")}
         </label>
         <input
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
-          placeholder="Jaffa Port lookout"
+          placeholder={t("namePlaceholder")}
         />
       </div>
 
       <div>
         <label className="mb-1 block text-sm text-[var(--sand-muted)]">
-          Description
+          {t("description")}
         </label>
         <textarea
           required
@@ -78,25 +80,25 @@ export default function SpotForm() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
-          placeholder="Why is this a great sunset spot?"
+          placeholder={t("descriptionPlaceholder")}
         />
       </div>
 
       <div>
         <label className="mb-1 block text-sm text-[var(--sand-muted)]">
-          Region (optional)
+          {t("regionOptional")}
         </label>
         <input
           value={region}
           onChange={(e) => setRegion(e.target.value)}
           className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
-          placeholder="Tel Aviv"
+          placeholder={t("regionPlaceholder")}
         />
       </div>
 
       <div>
         <label className="mb-1 block text-sm text-[var(--sand-muted)]">
-          Photo URL (optional)
+          {t("photoUrlOptional")}
         </label>
         <input
           type="url"
@@ -104,12 +106,14 @@ export default function SpotForm() {
           onChange={(e) => setPhotoUrl(e.target.value)}
           className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
           placeholder="https://..."
+          pattern="https://.*"
+          title="HTTPS URL only"
         />
       </div>
 
       <div>
         <p className="mb-2 text-sm text-[var(--sand-muted)]">
-          Tap the map to drop a pin
+          {t("tapMap")}
           {lat !== null && lng !== null
             ? ` · ${lat.toFixed(5)}, ${lng.toFixed(5)}`
             : ""}
@@ -131,7 +135,7 @@ export default function SpotForm() {
         disabled={saving}
         className="bg-[var(--ember)] px-5 py-2.5 font-medium text-[var(--ink)] transition hover:brightness-110 disabled:opacity-60"
       >
-        {saving ? "Saving…" : "Share spot"}
+        {saving ? t("saving") : t("shareSpot")}
       </button>
     </form>
   );

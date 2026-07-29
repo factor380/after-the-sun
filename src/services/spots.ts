@@ -16,8 +16,10 @@ export async function ensureProfile(userId: string, displayName?: string | null)
   });
 }
 
+const MAX_SEARCH_QUERY_LENGTH = 100;
+
 export async function listSpots(query?: string) {
-  const q = query?.trim();
+  const q = query?.trim().slice(0, MAX_SEARCH_QUERY_LENGTH) || undefined;
 
   return prisma.spot.findMany({
     where: q

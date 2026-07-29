@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import SpotForm from "@/components/spots/SpotForm";
+import { T } from "@/components/T";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -16,10 +17,9 @@ export default async function NewSpotPage() {
   if (!isSupabaseConfigured()) {
     return (
       <div className="mx-auto max-w-xl px-5 py-12 text-[var(--sand-muted)]">
-        Configure Supabase in <code className="text-[var(--sand)]">.env</code>{" "}
-        before adding spots.{" "}
+        <T k="configureSupabase" />{" "}
         <Link href="/" className="text-[var(--ember)] underline">
-          Back home
+          <T k="backHome" />
         </Link>
       </div>
     );
@@ -37,10 +37,10 @@ export default async function NewSpotPage() {
   return (
     <div className="mx-auto w-full max-w-xl px-5 py-10">
       <h1 className="font-[family-name:var(--font-display)] text-4xl text-[var(--sand)]">
-        Share a sunset spot
+        <T k="shareSpotTitle" />
       </h1>
       <p className="mt-2 mb-8 text-[var(--sand-muted)]">
-        Name it, describe the vibe, and pin it on the map.
+        <T k="shareSpotSubtitle" />
       </p>
       <SpotForm />
     </div>

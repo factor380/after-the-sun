@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { SpotSummary } from "@/types/spot";
 
 export function SpotCard({ spot }: { spot: SpotSummary }) {
@@ -26,6 +27,7 @@ export function SpotCard({ spot }: { spot: SpotSummary }) {
 
 export function SpotList({ spots }: { spots: SpotSummary[] }) {
   const parentRef = useRef<HTMLDivElement>(null);
+  const { t } = useLocale();
 
   const virtualizer = useVirtualizer({
     count: spots.length,
@@ -36,9 +38,7 @@ export function SpotList({ spots }: { spots: SpotSummary[] }) {
 
   if (spots.length === 0) {
     return (
-      <p className="py-6 text-sm text-[var(--sand-muted)]">
-        No spots yet. Be the first to share a sunset.
-      </p>
+      <p className="py-6 text-sm text-[var(--sand-muted)]">{t("spotsEmpty")}</p>
     );
   }
 
@@ -58,7 +58,7 @@ export function SpotList({ spots }: { spots: SpotSummary[] }) {
               key={spot.id}
               data-index={item.index}
               ref={virtualizer.measureElement}
-              className="absolute top-0 left-0 w-full"
+              className="absolute top-0 start-0 w-full"
               style={{ transform: `translateY(${item.start}px)` }}
             >
               <SpotCard spot={spot} />

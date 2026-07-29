@@ -1,13 +1,26 @@
 import { z } from "zod";
 import { isWithinIsraelBounds } from "@/lib/geo/israel";
 
+const httpsUrl = z
+  .string()
+  .trim()
+  .max(2048)
+  .url()
+  .refine((value) => {
+    try {
+      return new URL(value).protocol === "https:";
+    } catch {
+      return false;
+    }
+  }, "Photo URL must use https");
+
 export const createSpotSchema = z.object({
   name: z.string().trim().min(2).max(80),
   description: z.string().trim().min(10).max(1000),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   region: z.string().trim().max(80).optional().nullable(),
-  photoUrl: z.string().url().optional().nullable(),
+  photoUrl: httpsUrl.optional().nullable(),
 });
 
 export const updateSpotSchema = createSpotSchema.partial();

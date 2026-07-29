@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") ?? "/";
+  const nextPath = safeRedirectPath(searchParams.get("next"));
+  const { t } = useLocale();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +21,7 @@ export default function LoginForm() {
     setError(null);
 
     if (!configured) {
-      setError("Supabase is not configured yet. Add keys to .env.");
+      setError(t("supabaseNotConfigured"));
       return;
     }
 
@@ -37,7 +40,7 @@ export default function LoginForm() {
       if (authError) throw authError;
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send magic link");
+      setError(err instanceof Error ? err.message : t("magicLinkFailed"));
     } finally {
       setLoading(false);
     }
@@ -46,21 +49,19 @@ export default function LoginForm() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col px-5 py-16">
       <h1 className="font-[family-name:var(--font-display)] text-4xl text-[var(--sand)]">
-        Sign in
+        {t("signInTitle")}
       </h1>
-      <p className="mt-2 text-[var(--sand-muted)]">
-        We&apos;ll email you a magic link — no password needed.
-      </p>
+      <p className="mt-2 text-[var(--sand-muted)]">{t("signInSubtitle")}</p>
 
       {sent ? (
         <p className="mt-8 border border-white/15 bg-black/20 p-4 text-[var(--sand)]">
-          Check your inbox for a link to finish signing in.
+          {t("checkInbox")}
         </p>
       ) : (
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <div>
             <label className="mb-1 block text-sm text-[var(--sand-muted)]">
-              Email
+              {t("email")}
             </label>
             <input
               type="email"
@@ -77,7 +78,7 @@ export default function LoginForm() {
             disabled={loading}
             className="bg-[var(--ember)] px-5 py-2.5 font-medium text-[var(--ink)] transition hover:brightness-110 disabled:opacity-60"
           >
-            {loading ? "Sending…" : "Send magic link"}
+            {loading ? t("sending") : t("sendMagicLink")}
           </button>
         </form>
       )}

@@ -26,6 +26,11 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
+html.locale-he {
+  --font-body: var(--font-hebrew);
+  --font-display: var(--font-hebrew);
+}
+
 .leaflet-container {
   height: 100%;
   width: 100%;

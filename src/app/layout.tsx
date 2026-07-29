@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Fraunces, Outfit } from "next/font/google";
+import { Fraunces, Heebo, Outfit } from "next/font/google";
 import SiteHeader from "@/components/SiteHeader";
+import WelcomeModal from "@/components/WelcomeModal";
+import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import "./globals.css";
 
 const display = Fraunces({
@@ -15,9 +17,18 @@ const body = Outfit({
   weight: ["400", "500", "600"],
 });
 
+const hebrew = Heebo({
+  variable: "--font-hebrew",
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "After the Sun — Sunset spots in Israel",
   description: "Discover and share the best sunset spots across Israel.",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/icon" }],
+  },
 };
 
 export default function RootLayout({
@@ -28,13 +39,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${body.variable} h-dvh overflow-hidden`}
+      className={`${display.variable} ${body.variable} ${hebrew.variable} h-dvh overflow-hidden`}
+      suppressHydrationWarning
     >
       <body className="atmosphere flex h-dvh flex-col overflow-hidden antialiased">
-        <SiteHeader />
-        <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pt-16">
-          {children}
-        </main>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts -- blocking boot avoids RTL flash */}
+        <script src="/scripts/locale-boot.js" />
+        <LocaleProvider>
+          <SiteHeader />
+          <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pt-16">
+            {children}
+          </main>
+          <WelcomeModal />
+        </LocaleProvider>
       </body>
     </html>
   );
