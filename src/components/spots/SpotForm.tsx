@@ -118,14 +118,16 @@ export default function SpotForm() {
             ? ` · ${lat.toFixed(5)}, ${lng.toFixed(5)}`
             : ""}
         </p>
-        <LocationPickerClient
-          lat={lat}
-          lng={lng}
-          onPick={(nextLat, nextLng) => {
-            setLat(nextLat);
-            setLng(nextLng);
-          }}
-        />
+        <div className="h-64 w-full overflow-hidden rounded-sm">
+          <LocationPickerClient
+            lat={lat}
+            lng={lng}
+            onPick={(nextLat, nextLng) => {
+              setLat(nextLat);
+              setLng(nextLng);
+            }}
+          />
+        </div>
       </div>
 
       {error ? <p className="text-sm text-red-300">{error}</p> : null}

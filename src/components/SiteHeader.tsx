@@ -38,16 +38,16 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="absolute inset-x-0 top-0 z-20 flex h-16 shrink-0 items-center justify-between px-5 md:px-8">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-16 shrink-0 items-center justify-between px-5 md:px-8">
       <Link
         href="/"
-        className="group transition-opacity hover:opacity-90"
+        className="pointer-events-auto group transition-opacity hover:opacity-90"
         aria-label={t("brand")}
       >
         <BrandLogo title={t("brand")} />
       </Link>
 
-      <nav className="flex items-center gap-3 text-sm md:gap-4">
+      <nav className="pointer-events-auto flex items-center gap-3 text-sm md:gap-4">
         <LanguageSwitcher />
         <Link
           href="/spots/new"

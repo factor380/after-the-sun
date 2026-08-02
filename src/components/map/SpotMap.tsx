@@ -29,6 +29,7 @@ export default function SpotMap({ spots }: SpotMapProps) {
       maxBounds={ISRAEL_MAX_BOUNDS}
       maxBoundsViscosity={0.85}
       className="h-full w-full"
+      style={{ height: "100%", width: "100%" }}
       scrollWheelZoom
     >
       <TileLayer
@@ -87,6 +88,7 @@ export function LocationPicker({ lat, lng, onPick }: LocationPickerProps) {
       maxBounds={ISRAEL_MAX_BOUNDS}
       maxBoundsViscosity={0.85}
       className="h-64 w-full rounded-sm"
+      style={{ height: "16rem", width: "100%" }}
       scrollWheelZoom
     >
       <TileLayer

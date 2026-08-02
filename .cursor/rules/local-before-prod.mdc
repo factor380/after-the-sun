@@ -1,0 +1,15 @@
+---
+description: Verify bug fixes locally before deploying to production
+alwaysApply: true
+---
+
+# Local verification before production
+
+When fixing a bug (or any user-facing regression):
+
+1. **Reproduce** the issue locally when possible (`npm run dev`).
+2. **Fix** the code.
+3. **Verify locally** in the browser that the fix works (same flow the user reported).
+4. **Only then** deploy to production / push a live URL update.
+
+Never jump straight from a code change to a production deploy for bug fixes. If local verification is blocked (missing env, auth, etc.), say so explicitly and get confirmation before deploying.
