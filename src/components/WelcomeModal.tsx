@@ -1,29 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { BrandMark } from "@/components/BrandLogo";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
-const STORAGE_KEY = "hasSeenWelcomeModal";
-
-function hasSeenWelcome(): boolean {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === "true";
-  } catch {
-    return false;
-  }
-}
-
-function markWelcomeSeen() {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, "true");
-  } catch {
-    // Ignore quota / private-mode failures; modal still closes for this session.
-  }
-}
-
 export default function WelcomeModal() {
   const { t, dir } = useLocale();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const titleId = useId();
   const descriptionId = useId();
@@ -31,16 +15,22 @@ export default function WelcomeModal() {
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
   const dismiss = useCallback(() => {
-    markWelcomeSeen();
     setOpen(false);
     previouslyFocused.current?.focus?.();
   }, []);
 
+  const viewMap = useCallback(() => {
+    dismiss();
+  }, [dismiss]);
+
+  const addSpot = useCallback(() => {
+    dismiss();
+    router.push("/spots/new");
+  }, [dismiss, router]);
+
   useEffect(() => {
-    if (!hasSeenWelcome()) {
-      previouslyFocused.current = document.activeElement as HTMLElement | null;
-      setOpen(true);
-    }
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
+    setOpen(true);
   }, []);
 
   useEffect(() => {
@@ -117,13 +107,22 @@ export default function WelcomeModal() {
           {t("welcomeBody")}
         </p>
 
-        <button
-          type="button"
-          onClick={dismiss}
-          className="mt-8 w-full bg-[var(--ember)] px-5 py-2.5 font-medium text-[var(--ink)] transition hover:brightness-110 sm:w-auto"
-        >
-          {t("welcomeCta")}
-        </button>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={viewMap}
+            className="w-full bg-[var(--ember)] px-5 py-2.5 font-medium text-[var(--ink)] transition hover:brightness-110 sm:w-auto"
+          >
+            {t("welcomeViewMap")}
+          </button>
+          <button
+            type="button"
+            onClick={addSpot}
+            className="w-full border border-white/25 bg-transparent px-5 py-2.5 font-medium text-[var(--sand)] transition hover:border-white/40 hover:bg-white/5 sm:w-auto"
+          >
+            {t("welcomeAddSpot")}
+          </button>
+        </div>
       </div>
     </div>
   );

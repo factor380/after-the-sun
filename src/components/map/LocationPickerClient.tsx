@@ -1,19 +1,25 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const LocationPicker = dynamic(
   () =>
     import("@/components/map/SpotMap").then((mod) => mod.LocationPicker),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-64 w-full items-center justify-center bg-[var(--dusk-mid)] text-[var(--sand)]">
-        Loading map…
-      </div>
-    ),
+    loading: () => <MapLoading />,
   },
 );
+
+function MapLoading() {
+  const { t } = useLocale();
+  return (
+    <div className="flex h-64 w-full items-center justify-center bg-[var(--dusk-mid)] text-[var(--sand)]">
+      {t("loadingMap")}
+    </div>
+  );
+}
 
 type Props = {
   lat: number | null;

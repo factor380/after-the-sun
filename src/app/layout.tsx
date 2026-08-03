@@ -24,8 +24,8 @@ const hebrew = Heebo({
 });
 
 export const metadata: Metadata = {
-  title: "After the Sun — Sunset spots in Israel",
-  description: "Discover and share the best sunset spots across Israel.",
+  title: "After the Sun — נקודות שקיעה בישראל",
+  description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/icon" }],
   },
@@ -38,8 +38,9 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${display.variable} ${body.variable} ${hebrew.variable} h-dvh overflow-hidden`}
+      lang="he"
+      dir="rtl"
+      className={`${display.variable} ${body.variable} ${hebrew.variable} locale-he h-dvh overflow-hidden`}
       suppressHydrationWarning
     >
       <body className="atmosphere flex h-dvh flex-col overflow-hidden antialiased">

@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaf
 import L from "leaflet";
 import Link from "next/link";
 import { ISRAEL_CENTER, ISRAEL_DEFAULT_ZOOM, ISRAEL_MAX_BOUNDS } from "@/lib/geo/israel";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { SpotSummary } from "@/types/spot";
 import "leaflet/dist/leaflet.css";
 
@@ -22,6 +23,8 @@ type SpotMapProps = {
 };
 
 export default function SpotMap({ spots }: SpotMapProps) {
+  const { t } = useLocale();
+
   return (
     <MapContainer
       center={[ISRAEL_CENTER.lat, ISRAEL_CENTER.lng]}
@@ -39,7 +42,7 @@ export default function SpotMap({ spots }: SpotMapProps) {
       {spots.map((spot) => (
         <Marker key={spot.id} position={[spot.lat, spot.lng]} icon={markerIcon}>
           <Popup>
-            <div className="space-y-1">
+            <div className="space-y-1" dir="rtl">
               <p className="font-semibold text-sm">{spot.name}</p>
               {spot.region ? (
                 <p className="text-xs text-neutral-600">{spot.region}</p>
@@ -48,7 +51,7 @@ export default function SpotMap({ spots }: SpotMapProps) {
                 href={`/spots/${spot.id}`}
                 className="text-xs font-medium text-amber-800 underline"
               >
-                View spot
+                {t("viewSpot")}
               </Link>
             </div>
           </Popup>

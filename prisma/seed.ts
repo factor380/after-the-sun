@@ -7,108 +7,132 @@ const SEED_USER_ID = "00000000-0000-4000-8000-000000000001";
 
 const spots = [
   {
-    name: "Jaffa Port",
+    name: "נמל יפו",
     description:
-      "Classic Mediterranean sunset over the old harbor — fishing boats, stone quays, and a wide western sky.",
+      "שקיעה ים־תיכונית קלאסית מעל הנמל העתיק — סירות דיג, רציפי אבן ושמיים רחבים למערב.",
     lat: 32.0525,
     lng: 34.7511,
-    region: "Tel Aviv–Yafo",
+    region: "תל אביב–יפו",
   },
   {
-    name: "Gordon Beach",
+    name: "חוף גורדון",
     description:
-      "City shoreline with an open horizon. Arrive early for golden hour over the water.",
+      "קו החוף של העיר עם אופק פתוח. כדאי להגיע מוקדם לשעת הזהב מעל המים.",
     lat: 32.0823,
     lng: 34.7685,
-    region: "Tel Aviv",
+    region: "תל אביב",
   },
   {
-    name: "Caesarea Aqueduct Beach",
+    name: "חוף אמת המים בקיסריה",
     description:
-      "Roman arches meet the sea. Soft light on sandstone and long reflections at dusk.",
+      "קשתות רומיות פוגשות את הים. אור רך על אבן החול והשתקפויות ארוכות בשעת בין־ערביים.",
     lat: 32.5085,
     lng: 34.8925,
-    region: "Caesarea",
+    region: "קיסריה",
   },
   {
-    name: "Bat Galim Promenade",
+    name: "טיילת בת גלים",
     description:
-      "Haifa’s western edge — Carmel silhouette behind you, sun dropping into the bay.",
+      "הקצה המערבי של חיפה — צללית הכרמל מאחוריכם, והשמש יורדת אל המפרץ.",
     lat: 32.8322,
     lng: 34.9724,
-    region: "Haifa",
+    region: "חיפה",
   },
   {
-    name: "Achziv Beach",
+    name: "חוף אכזיב",
     description:
-      "Northern coast lagoons and rocky shelves. Quiet evenings when the wind settles.",
+      "לגונות וסלעים בחוף הצפוני. ערבים שקטים כשהרוח נרגעת.",
     lat: 33.0545,
     lng: 35.1025,
-    region: "Western Galilee",
+    region: "גליל מערבי",
   },
   {
-    name: "Netanya Cliff Park",
+    name: "פארק הצוק נתניה",
     description:
-      "High kurkar cliffs overlooking the Mediterranean — dramatic silhouettes at sunset.",
+      "צוקי כורכר גבוהים מול הים התיכון — צלליות דרמטיות בשקיעה.",
     lat: 32.3285,
     lng: 34.8515,
-    region: "Netanya",
+    region: "נתניה",
   },
   {
-    name: "Dead Sea — Ein Bokek view",
+    name: "חוף הצפון אילת",
     description:
-      "Pink-gold haze over the water as the sun sinks behind the Judean hills.",
-    lat: 31.2,
-    lng: 35.362,
-    region: "Dead Sea",
-  },
-  {
-    name: "Eilat North Beach",
-    description:
-      "Red Sea glow with Jordan and Egypt on the horizon — short winter sunsets, long summer ones.",
+      "זוהר ים סוף עם ירדן ומצרים באופק — שקיעות קצרות בחורף וארוכות בקיץ.",
     lat: 29.5581,
     lng: 34.9515,
-    region: "Eilat",
+    region: "אילת",
   },
   {
-    name: "Jerusalem Tayelet",
+    name: "מרינה אשקלון",
     description:
-      "Armon HaNatziv promenade — city and hills turning amber as the day closes.",
-    lat: 31.7515,
-    lng: 35.2375,
-    region: "Jerusalem",
-  },
-  {
-    name: "Ashkelon Marina",
-    description:
-      "Southern coast marina with a clear western view — calm water and soft evening color.",
+      "מרינה בחוף הדרומי עם מבט מערבי פתוח — מים רגועים וצבעי ערב רכים.",
     lat: 31.6825,
     lng: 34.5555,
-    region: "Ashkelon",
+    region: "אשקלון",
   },
 ];
+
+/** English names from older seeds — update matching rows to Hebrew */
+const englishNameByLatLng = new Map(
+  [
+    ["Jaffa Port", spots[0]],
+    ["Gordon Beach", spots[1]],
+    ["Caesarea Aqueduct Beach", spots[2]],
+    ["Bat Galim Promenade", spots[3]],
+    ["Achziv Beach", spots[4]],
+    ["Netanya Cliff Park", spots[5]],
+    ["Eilat North Beach", spots[6]],
+    ["Ashkelon Marina", spots[7]],
+  ].map(([en, he]) => [en as string, he as (typeof spots)[number]]),
+);
 
 async function main() {
   await prisma.profile.upsert({
     where: { id: SEED_USER_ID },
-    create: { id: SEED_USER_ID, displayName: "Demo Seeder" },
-    update: { displayName: "Demo Seeder" },
+    create: { id: SEED_USER_ID, displayName: "דמו" },
+    update: { displayName: "דמו" },
   });
 
-  const existing = await prisma.spot.count();
-  if (existing > 0) {
-    console.log(`Skip seed: ${existing} spots already exist.`);
+  const existing = await prisma.spot.findMany({
+    select: { id: true, name: true, lat: true, lng: true },
+  });
+
+  if (existing.length === 0) {
+    await prisma.spot.createMany({
+      data: spots.map((spot) => ({
+        ...spot,
+        createdById: SEED_USER_ID,
+      })),
+    });
+    console.log(`Seeded ${spots.length} Israel sunset spots (Hebrew).`);
     return;
   }
 
-  await prisma.spot.createMany({
-    data: spots.map((spot) => ({
-      ...spot,
-      createdById: SEED_USER_ID,
-    })),
-  });
+  let updated = 0;
+  for (const row of existing) {
+    const byName = englishNameByLatLng.get(row.name);
+    const byCoords = byName
+      ? byName
+      : spots.find(
+          (s) =>
+            Math.abs(s.lat - row.lat) < 0.0001 &&
+            Math.abs(s.lng - row.lng) < 0.0001,
+        );
+    if (!byCoords) continue;
+    await prisma.spot.update({
+      where: { id: row.id },
+      data: {
+        name: byCoords.name,
+        description: byCoords.description,
+        region: byCoords.region,
+      },
+    });
+    updated += 1;
+  }
 
-  console.log(`Seeded ${spots.length} Israel sunset spots.`);
+  console.log(
+    `Spots already present (${existing.length}). Updated ${updated} to Hebrew.`,
+  );
 }
 
 main()

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useEffect, useState } from "react";
@@ -48,7 +47,6 @@ export default function SiteHeader() {
       </Link>
 
       <nav className="pointer-events-auto flex items-center gap-3 text-sm md:gap-4">
-        <LanguageSwitcher />
         <Link
           href="/spots/new"
           className="bg-[var(--ember)] px-3 py-1.5 font-medium text-[var(--ink)] transition hover:brightness-110"

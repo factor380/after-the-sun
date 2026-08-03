@@ -2,63 +2,45 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
-  useState,
   type ReactNode,
 } from "react";
 import {
-  dictionaries,
+  dictionary,
   type Locale,
   type MessageKey,
 } from "@/lib/i18n/dictionaries";
 
-const STORAGE_KEY = "ats-locale";
-
 type LocaleContextValue = {
   locale: Locale;
-  setLocale: (locale: Locale) => void;
   t: (key: MessageKey) => string;
-  dir: "ltr" | "rtl";
+  dir: "rtl";
 };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-function readStoredLocale(): Locale {
-  if (typeof window === "undefined") return "en";
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  return stored === "he" || stored === "en" ? stored : "en";
-}
-
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
-
-  useEffect(() => {
-    setLocaleState(readStoredLocale());
-  }, []);
-
-  const setLocale = useCallback((next: Locale) => {
-    setLocaleState(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
-  }, []);
-
   useEffect(() => {
     const root = document.documentElement;
-    root.lang = locale;
-    root.dir = locale === "he" ? "rtl" : "ltr";
-    root.classList.toggle("locale-he", locale === "he");
-  }, [locale]);
+    root.lang = "he";
+    root.dir = "rtl";
+    root.classList.add("locale-he");
+    try {
+      window.localStorage.removeItem("ats-locale");
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const value = useMemo<LocaleContextValue>(
     () => ({
-      locale,
-      setLocale,
-      t: (key) => dictionaries[locale][key],
-      dir: locale === "he" ? "rtl" : "ltr",
+      locale: "he",
+      t: (key) => dictionary[key],
+      dir: "rtl",
     }),
-    [locale, setLocale],
+    [],
   );
 
   return (
