@@ -54,7 +54,7 @@ export default function LoginForm() {
       <p className="mt-2 text-[var(--sand-muted)]">{t("signInSubtitle")}</p>
 
       {sent ? (
-        <p className="mt-8 border border-white/15 bg-black/20 p-4 text-[var(--sand)]">
+        <p className="mt-8 border border-[var(--line)] bg-[var(--surface)] p-4 text-[var(--sand)]">
           {t("checkInbox")}
         </p>
       ) : (
@@ -68,15 +68,15 @@ export default function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
+              className="w-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
               placeholder="you@example.com"
             />
           </div>
-          {error ? <p className="text-sm text-red-300">{error}</p> : null}
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <button
             type="submit"
             disabled={loading}
-            className="bg-[var(--ember)] px-5 py-2.5 font-medium text-[var(--ink)] transition hover:brightness-110 disabled:opacity-60"
+            className="bg-[var(--ember)] px-5 py-2.5 font-medium text-white transition hover:brightness-110 disabled:opacity-60"
           >
             {loading ? t("sending") : t("sendMagicLink")}
           </button>

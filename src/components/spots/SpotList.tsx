@@ -36,7 +36,7 @@ export function SpotCard({
   return (
     <Link
       href={`/spots/${spot.id}`}
-      className="block border-b border-white/10 py-3 transition hover:bg-white/5"
+      className="block border-b border-[var(--line)] py-3 transition hover:bg-[var(--dusk-mid)]/40"
     >
       <div className="flex items-baseline justify-between gap-3">
         <p className="font-[family-name:var(--font-display)] text-lg text-[var(--sand)]">
@@ -116,7 +116,7 @@ function LocationSortBar({
     <button
       type="button"
       onClick={onRequest}
-      className="mb-2 w-full border border-white/20 px-3 py-2 text-start text-xs font-medium text-[var(--sand)] transition hover:border-white/35 hover:bg-white/5"
+      className="mb-2 w-full border border-[var(--line)] px-3 py-2.5 text-start text-xs font-medium text-[var(--sand)] transition hover:border-[var(--ember)]/40 hover:bg-[var(--dusk-mid)]/35"
     >
       {t("sortByDistance")}
     </button>

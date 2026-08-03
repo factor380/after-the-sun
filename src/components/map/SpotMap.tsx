@@ -1,6 +1,6 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import Link from "next/link";
 import { ISRAEL_CENTER, ISRAEL_DEFAULT_ZOOM, ISRAEL_MAX_BOUNDS } from "@/lib/geo/israel";
@@ -34,22 +34,24 @@ export default function SpotMap({ spots }: SpotMapProps) {
       className="h-full w-full"
       style={{ height: "100%", width: "100%" }}
       scrollWheelZoom
+      zoomControl={false}
     >
+      <ZoomControl position="topleft" />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
       {spots.map((spot) => (
         <Marker key={spot.id} position={[spot.lat, spot.lng]} icon={markerIcon}>
           <Popup>
             <div className="space-y-1" dir="rtl">
-              <p className="font-semibold text-sm">{spot.name}</p>
+              <p className="font-semibold text-sm text-[var(--sand)]">{spot.name}</p>
               {spot.region ? (
-                <p className="text-xs text-neutral-600">{spot.region}</p>
+                <p className="text-xs text-[var(--sand-muted)]">{spot.region}</p>
               ) : null}
               <Link
                 href={`/spots/${spot.id}`}
-                className="text-xs font-medium text-amber-800 underline"
+                className="text-xs font-medium text-[var(--ember)] underline"
               >
                 {t("viewSpot")}
               </Link>
@@ -95,8 +97,8 @@ export function LocationPicker({ lat, lng, onPick }: LocationPickerProps) {
       scrollWheelZoom
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
       <ClickHandler onPick={onPick} />
       {lat !== null && lng !== null ? (

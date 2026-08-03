@@ -65,7 +65,7 @@ export default function SpotForm() {
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
+          className="w-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
           placeholder={t("namePlaceholder")}
         />
       </div>
@@ -79,7 +79,7 @@ export default function SpotForm() {
           rows={4}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
+          className="w-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
           placeholder={t("descriptionPlaceholder")}
         />
       </div>
@@ -91,7 +91,7 @@ export default function SpotForm() {
         <input
           value={region}
           onChange={(e) => setRegion(e.target.value)}
-          className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
+          className="w-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
           placeholder={t("regionPlaceholder")}
         />
       </div>
@@ -104,7 +104,7 @@ export default function SpotForm() {
           type="url"
           value={photoUrl}
           onChange={(e) => setPhotoUrl(e.target.value)}
-          className="w-full border border-white/15 bg-black/20 px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
+          className="w-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-[var(--sand)] outline-none focus:border-[var(--ember)]"
           placeholder="https://..."
           pattern="https://.*"
           title="HTTPS URL only"
@@ -130,12 +130,12 @@ export default function SpotForm() {
         </div>
       </div>
 
-      {error ? <p className="text-sm text-red-300">{error}</p> : null}
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <button
         type="submit"
         disabled={saving}
-        className="bg-[var(--ember)] px-5 py-2.5 font-medium text-[var(--ink)] transition hover:brightness-110 disabled:opacity-60"
+        className="bg-[var(--ember)] px-5 py-2.5 font-medium text-white transition hover:brightness-110 disabled:opacity-60"
       >
         {saving ? t("saving") : t("shareSpot")}
       </button>

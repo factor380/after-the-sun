@@ -20,62 +20,75 @@ export default async function SpotDetailPage({ params }: PageProps) {
   if (!spot) notFound();
 
   return (
-    <article className="mx-auto w-full max-w-2xl px-5 py-10">
-      <Link
-        href="/"
-        className="text-sm text-[var(--sand-muted)] hover:text-[var(--sand)]"
-      >
-        <span aria-hidden className="me-1 inline-block rtl:-scale-x-100">
-          ←
-        </span>
-        <T k="backToMap" />
-      </Link>
-
-      <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl text-[var(--sand)] md:text-5xl">
-        {spot.name}
-      </h1>
-      {spot.region ? (
-        <p className="mt-2 text-[var(--ember)]">{spot.region}</p>
-      ) : null}
-
+    <article className="pb-16">
       {spot.photoUrl ? (
-        <div className="relative mt-6 aspect-[16/10] w-full overflow-hidden">
+        <div className="relative -mt-16 aspect-[16/11] w-full overflow-hidden sm:aspect-[21/9]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={spot.photoUrl}
             alt={spot.name}
             className="h-full w-full object-cover"
           />
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-[var(--dusk-deep)] via-[var(--dusk-deep)]/40 to-transparent"
+            aria-hidden
+          />
         </div>
-      ) : null}
-
-      <p className="mt-6 text-lg leading-relaxed text-[var(--sand-muted)]">
-        {spot.description}
-      </p>
-
-      <dl className="mt-8 grid grid-cols-2 gap-4 border-t border-white/10 pt-6 text-sm">
-        <div>
-          <dt className="text-[var(--sand-muted)]">
-            <T k="latitude" />
-          </dt>
-          <dd className="text-[var(--sand)]">{spot.lat.toFixed(5)}</dd>
+      ) : (
+        <div
+          className="sky-afterglow relative -mt-16 h-48 w-full sm:h-64"
+          aria-hidden
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--dusk-deep)] to-transparent" />
         </div>
-        <div>
-          <dt className="text-[var(--sand-muted)]">
-            <T k="longitude" />
-          </dt>
-          <dd className="text-[var(--sand)]">{spot.lng.toFixed(5)}</dd>
-        </div>
-      </dl>
+      )}
 
-      <a
-        href={`https://www.openstreetmap.org/?mlat=${spot.lat}&mlon=${spot.lng}#map=15/${spot.lat}/${spot.lng}`}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-6 inline-block text-sm text-[var(--ember)] underline"
-      >
-        <T k="openOsm" />
-      </a>
+      <div className="relative mx-auto w-full max-w-2xl px-5">
+        <Link
+          href="/"
+          className="inline-flex items-center text-sm text-[var(--sand-muted)] transition hover:text-[var(--sand)]"
+        >
+          <span aria-hidden className="me-1 inline-block rtl:-scale-x-100">
+            ←
+          </span>
+          <T k="backToMap" />
+        </Link>
+
+        <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl leading-tight text-[var(--sand)] md:text-5xl">
+          {spot.name}
+        </h1>
+        {spot.region ? (
+          <p className="mt-2 text-[var(--ember)]">{spot.region}</p>
+        ) : null}
+
+        <p className="mt-6 text-lg leading-relaxed text-[var(--sand-muted)]">
+          {spot.description}
+        </p>
+
+        <dl className="mt-8 grid grid-cols-2 gap-4 border-t border-[var(--line)] pt-6 text-sm">
+          <div>
+            <dt className="text-[var(--sand-muted)]">
+              <T k="latitude" />
+            </dt>
+            <dd className="text-[var(--sand)]">{spot.lat.toFixed(5)}</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--sand-muted)]">
+              <T k="longitude" />
+            </dt>
+            <dd className="text-[var(--sand)]">{spot.lng.toFixed(5)}</dd>
+          </div>
+        </dl>
+
+        <a
+          href={`https://www.openstreetmap.org/?mlat=${spot.lat}&mlon=${spot.lng}#map=15/${spot.lat}/${spot.lng}`}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-8 inline-block bg-[var(--ember)] px-5 py-3 text-sm font-medium text-white transition hover:brightness-110"
+        >
+          <T k="openOsm" />
+        </a>
+      </div>
     </article>
   );
 }

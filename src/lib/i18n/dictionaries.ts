@@ -47,6 +47,8 @@ type Dict = {
   welcomeViewMap: string;
   welcomeAddSpot: string;
   welcomeClose: string;
+  drawerExpand: string;
+  drawerCollapse: string;
   sortByDistance: string;
   locatingPosition: string;
   sortedByDistance: string;
@@ -58,7 +60,7 @@ type Dict = {
 
 export const dictionary: Dict = {
   brand: "After the Sun",
-  tagline: "נקודות שקיעה ברחבי ישראל — מצאו את שלכם על המפה.",
+  tagline: "מצאו את השקיעה שלכם על המפה.",
   spots: "נקודות",
   spotsEmpty: "עדיין אין נקודות. היו הראשונים לשתף שקיעה.",
   addSpot: "הוספת נקודה",
@@ -100,9 +102,11 @@ export const dictionary: Dict = {
   welcomeTitle: "ברוכים הבאים ל-After the Sun",
   welcomeBody:
     "הקהילה של אוהבי השקיעות. בואו לגלות לוקיישנים נסתרים, לדרג תצפיות מרהיבות ולהוסיף את המקומות הסודיים שלכם למפה.",
-  welcomeViewMap: "צפייה במפה",
-  welcomeAddSpot: "הוספת נקודה במיקום",
+  welcomeViewMap: "למפה",
+  welcomeAddSpot: "הוספת נקודה",
   welcomeClose: "סגירת ברוכים הבאים",
+  drawerExpand: "הרחבת רשימת נקודות",
+  drawerCollapse: "צמצום רשימת נקודות",
   sortByDistance: "מיון לפי קרבה אליי",
   locatingPosition: "מאתר מיקום…",
   sortedByDistance: "ממוין לפי מרחק ממך",

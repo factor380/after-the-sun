@@ -11,14 +11,19 @@ export default function SiteHeader() {
   const router = useRouter();
   const { t } = useLocale();
   const [email, setEmail] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const configured = isSupabaseConfigured();
 
   useEffect(() => {
-    if (!configured) return;
+    if (!configured) {
+      setAuthReady(true);
+      return;
+    }
 
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       setEmail(data.user?.email ?? null);
+      setAuthReady(true);
     });
 
     const {
@@ -37,35 +42,38 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-16 shrink-0 items-center justify-between px-5 md:px-8">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex h-16 shrink-0 items-center justify-between bg-gradient-to-b from-[var(--dusk-deep)]/90 to-transparent px-5 md:px-8">
       <Link
         href="/"
         className="pointer-events-auto group transition-opacity hover:opacity-90"
         aria-label={t("brand")}
       >
-        <BrandLogo title={t("brand")} />
+        <BrandLogo
+          title={t("brand")}
+          titleClassName="font-[family-name:var(--font-display)] text-xl tracking-tight text-[var(--sand)] md:text-2xl"
+        />
       </Link>
 
       <nav className="pointer-events-auto flex items-center gap-3 text-sm md:gap-4">
         <Link
           href="/spots/new"
-          className="bg-[var(--ember)] px-3 py-1.5 font-medium text-[var(--ink)] transition hover:brightness-110"
+          className="bg-[var(--ember)] px-3.5 py-2 font-medium text-white transition hover:brightness-110"
         >
           {t("addSpot")}
         </Link>
-        {configured ? (
+        {authReady && configured ? (
           email ? (
             <button
               type="button"
               onClick={signOut}
-              className="text-[var(--sand-muted)] hover:text-[var(--sand)]"
+              className="text-[var(--sand-muted)] transition hover:text-[var(--sand)]"
             >
               {t("signOut")}
             </button>
           ) : (
             <Link
               href="/login"
-              className="text-[var(--sand-muted)] hover:text-[var(--sand)]"
+              className="text-[var(--sand-muted)] transition hover:text-[var(--sand)]"
             >
               {t("signIn")}
             </Link>

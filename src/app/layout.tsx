@@ -1,24 +1,18 @@
 import type { Metadata } from "next";
-import { Fraunces, Heebo, Outfit } from "next/font/google";
+import { Frank_Ruhl_Libre, Heebo } from "next/font/google";
 import SiteHeader from "@/components/SiteHeader";
 import WelcomeModal from "@/components/WelcomeModal";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import "./globals.css";
 
-const display = Fraunces({
+const display = Frank_Ruhl_Libre({
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  subsets: ["latin", "hebrew"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const body = Outfit({
+const body = Heebo({
   variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const hebrew = Heebo({
-  variable: "--font-hebrew",
   subsets: ["hebrew", "latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -40,7 +34,7 @@ export default function RootLayout({
     <html
       lang="he"
       dir="rtl"
-      className={`${display.variable} ${body.variable} ${hebrew.variable} locale-he h-dvh overflow-hidden`}
+      className={`${display.variable} ${body.variable} locale-he h-dvh overflow-hidden`}
       suppressHydrationWarning
     >
       <body className="atmosphere flex h-dvh flex-col overflow-hidden antialiased">

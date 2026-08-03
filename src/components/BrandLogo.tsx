@@ -25,7 +25,7 @@ export function BrandMark({ className = "size-8" }: { className?: string }) {
     >
       <defs>
         <radialGradient id={sunId} cx="50%" cy="45%" r="55%">
-          <stop offset="0%" stopColor="#f6c46a" />
+          <stop offset="0%" stopColor="#ffd36a" />
           <stop offset="55%" stopColor="var(--ember)" />
           <stop offset="100%" stopColor="var(--horizon)" />
         </radialGradient>
@@ -37,11 +37,11 @@ export function BrandMark({ className = "size-8" }: { className?: string }) {
 
       <ellipse cx="20" cy="18" rx="14" ry="10" fill={`url(#${glowId})`} />
       <circle cx="20" cy="22" r="9" fill={`url(#${sunId})`} />
-      <path d="M2 36 L20 14 L38 36 Z" fill="var(--ink)" fillOpacity="0.92" />
+      <path d="M2 36 L20 14 L38 36 Z" fill="var(--ink)" fillOpacity="0.88" />
       <path
         d="M6 33.5 L20 16.5 L34 33.5"
-        stroke="var(--sand)"
-        strokeOpacity="0.18"
+        stroke="#fff3e8"
+        strokeOpacity="0.35"
         strokeWidth="1"
         strokeLinejoin="round"
       />
