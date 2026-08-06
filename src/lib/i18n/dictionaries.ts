@@ -48,6 +48,11 @@ type Dict = {
   latitude: string;
   longitude: string;
   openOsm: string;
+  navigateToSpot: string;
+  navigateChooseApp: string;
+  navigateWaze: string;
+  navigateGoogleMaps: string;
+  navigateCancel: string;
   welcomeTitle: string;
   welcomeBody: string;
   welcomeViewMap: string;
@@ -111,6 +116,11 @@ export const dictionary: Dict = {
   latitude: "קו רוחב",
   longitude: "קו אורך",
   openOsm: "פתיחה ב־OpenStreetMap",
+  navigateToSpot: "ניווט לנקודה",
+  navigateChooseApp: "בחרו אפליקציית ניווט",
+  navigateWaze: "Waze",
+  navigateGoogleMaps: "Google Maps",
+  navigateCancel: "ביטול",
   welcomeTitle: "ברוכים הבאים ל-After the Sun",
   welcomeBody:
     "הקהילה של אוהבי השקיעות. בואו לגלות לוקיישנים נסתרים, לדרג תצפיות מרהיבות ולהוסיף את המקומות הסודיים שלכם למפה.",

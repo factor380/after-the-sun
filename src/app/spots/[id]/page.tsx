@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import NavigateToSpot from "@/components/spots/NavigateToSpot";
 import { T } from "@/components/T";
 import { getSpotById } from "@/services/spots";
 
@@ -80,11 +81,13 @@ export default async function SpotDetailPage({ params }: PageProps) {
           </div>
         </dl>
 
+        <NavigateToSpot lat={spot.lat} lng={spot.lng} />
+
         <a
           href={`https://www.openstreetmap.org/?mlat=${spot.lat}&mlon=${spot.lng}#map=15/${spot.lat}/${spot.lng}`}
           target="_blank"
           rel="noreferrer"
-          className="mt-8 inline-block bg-[var(--ember)] px-5 py-3 text-sm font-medium text-white transition hover:brightness-110"
+          className="mt-8 hidden bg-[var(--ember)] px-5 py-3 text-sm font-medium text-white transition hover:brightness-110 md:inline-block"
         >
           <T k="openOsm" />
         </a>
