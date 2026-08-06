@@ -18,6 +18,12 @@ type Dict = {
   name: string;
   description: string;
   regionOptional: string;
+  photoOptional: string;
+  photoHint: string;
+  photoRemove: string;
+  photoTooLarge: string;
+  photoInvalidType: string;
+  photoUploadFailed: string;
   photoUrlOptional: string;
   namePlaceholder: string;
   descriptionPlaceholder: string;
@@ -75,7 +81,13 @@ export const dictionary: Dict = {
   name: "שם",
   description: "תיאור",
   regionOptional: "אזור (אופציונלי)",
-  photoUrlOptional: "כתובת תמונה (אופציונלי)",
+  photoOptional: "תמונת שקיעה (אופציונלי)",
+  photoHint: "JPEG, PNG או WebP · עד 5MB",
+  photoRemove: "הסרה",
+  photoTooLarge: "התמונה גדולה מדי — מקסימום 5MB.",
+  photoInvalidType: "סוג קובץ לא נתמך. בחרו JPEG, PNG או WebP.",
+  photoUploadFailed: "העלאת התמונה נכשלה",
+  photoUrlOptional: "או הדביקו כתובת תמונה (HTTPS)",
   namePlaceholder: "תצפית נמל יפו",
   descriptionPlaceholder: "למה זו נקודת שקיעה מעולה?",
   regionPlaceholder: "תל אביב",

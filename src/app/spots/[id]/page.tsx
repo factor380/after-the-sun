@@ -22,15 +22,15 @@ export default async function SpotDetailPage({ params }: PageProps) {
   return (
     <article className="pb-16">
       {spot.photoUrl ? (
-        <div className="relative -mt-16 aspect-[16/11] w-full overflow-hidden sm:aspect-[21/9]">
+        <div className="relative -mt-16 aspect-[4/3] w-full overflow-hidden sm:aspect-[16/9]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={spot.photoUrl}
             alt={spot.name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-center"
           />
           <div
-            className="absolute inset-0 bg-gradient-to-t from-[var(--dusk-deep)] via-[var(--dusk-deep)]/40 to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--dusk-deep)] to-transparent"
             aria-hidden
           />
         </div>

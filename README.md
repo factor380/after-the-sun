@@ -5,7 +5,7 @@ Sunset spots sharing app for Israel — Beta (MVP).
 ## Stack (free-tier)
 
 - **Next.js** (App Router) + TypeScript + Tailwind
-- **Supabase** Free — Postgres, Auth (magic link), optional Storage later
+- **Supabase** Free — Postgres, Auth (magic link), Storage (spot photos)
 - **Prisma** — ORM + migrations
 - **Leaflet** + OpenStreetMap — maps (no Mapbox cost)
 - **Vercel** Hobby — deploy when ready
@@ -18,8 +18,25 @@ Sunset spots sharing app for Israel — Beta (MVP).
    - `DATABASE_URL` (Transaction pooler, port **6543**, with `?pgbouncer=true`)
    - `DIRECT_URL` (Session / direct, port **5432**)
 3. In Supabase Auth → URL configuration, add redirect:
-   - `http://localhost:3000/auth/callback`
-4. Install and push schema:
+   - `http://localhost:3004/auth/callback`
+4. Create a **public** Storage bucket named `spot-photos` (Dashboard → Storage → New bucket). Then in SQL Editor:
+
+```sql
+-- Authenticated users upload only into their own folder
+create policy "spot photos insert own folder"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'spot-photos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Anyone can read public spot photos
+create policy "spot photos public read"
+on storage.objects for select to public
+using (bucket_id = 'spot-photos');
+```
+
+5. Install and push schema:
 
 ```bash
 npm install
@@ -28,7 +45,7 @@ npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3004](http://localhost:3004).
 
 ## Scripts
 
@@ -44,6 +61,6 @@ Open [http://localhost:3000](http://localhost:3000).
 - Map of spots centered on Israel
 - Spot detail pages
 - Magic-link sign-in
-- Authenticated users can add a spot (map pin + form)
+- Authenticated users can add a spot (map pin + form + optional sunset photo upload)
 
 AI recommendations are intentionally **not** in Beta; a future `src/ai/` layer can call the same `services/spots` API.
