@@ -1,6 +1,16 @@
 export const SPOT_PHOTOS_BUCKET = "spot-photos";
 
-export const MAX_SPOT_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
+/** Hard cap for files accepted by the upload API (after client compression). */
+export const MAX_SPOT_PHOTO_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
+
+/** Max size of a photo the user may pick before client-side compression. */
+export const MAX_SPOT_PHOTO_INPUT_BYTES = 12 * 1024 * 1024; // 12 MB
+
+/** Longest edge after resize. */
+export const MAX_SPOT_PHOTO_EDGE = 1600;
+
+/** Soft target size after compression. */
+export const TARGET_SPOT_PHOTO_BYTES = 900 * 1024; // ~900 KB
 
 export const ALLOWED_SPOT_PHOTO_TYPES = [
   "image/jpeg",

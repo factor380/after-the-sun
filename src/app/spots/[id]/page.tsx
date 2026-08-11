@@ -1,12 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import NavigateToSpot from "@/components/spots/NavigateToSpot";
+import ReportSpot from "@/components/spots/ReportSpot";
 import { T } from "@/components/T";
+import { createClient } from "@/lib/supabase/server";
 import { getSpotById } from "@/services/spots";
 
 type PageProps = { params: Promise<{ id: string }> };
 
 export const dynamic = "force-dynamic";
+
+function isSupabaseConfigured() {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  );
+}
 
 export default async function SpotDetailPage({ params }: PageProps) {
   const { id } = await params;
@@ -19,6 +28,17 @@ export default async function SpotDetailPage({ params }: PageProps) {
   }
 
   if (!spot) notFound();
+
+  let isAuthenticated = false;
+  let isOwner = false;
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    isAuthenticated = Boolean(user);
+    isOwner = Boolean(user && user.id === spot.createdById);
+  }
 
   return (
     <article className="pb-16">
@@ -81,6 +101,23 @@ export default async function SpotDetailPage({ params }: PageProps) {
           </div>
         </dl>
 
+        {isOwner ? (
+          <div className="mt-6 flex flex-wrap gap-3 text-sm">
+            <Link
+              href={`/spots/${spot.id}/edit`}
+              className="border border-[var(--line)] px-4 py-2 text-[var(--sand-muted)] transition hover:border-[var(--ember)] hover:text-[var(--sand)]"
+            >
+              <T k="editSpot" />
+            </Link>
+            <Link
+              href="/spots/mine"
+              className="border border-[var(--line)] px-4 py-2 text-[var(--sand-muted)] transition hover:border-[var(--ember)] hover:text-[var(--sand)]"
+            >
+              <T k="mySpotsTitle" />
+            </Link>
+          </div>
+        ) : null}
+
         <NavigateToSpot lat={spot.lat} lng={spot.lng} />
 
         <a
@@ -91,6 +128,8 @@ export default async function SpotDetailPage({ params }: PageProps) {
         >
           <T k="openOsm" />
         </a>
+
+        <ReportSpot spotId={spot.id} isAuthenticated={isAuthenticated} />
       </div>
     </article>
   );

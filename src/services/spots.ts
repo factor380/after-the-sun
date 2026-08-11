@@ -35,6 +35,13 @@ export async function listSpots(query?: string) {
   });
 }
 
+export async function listSpotsByUser(userId: string) {
+  return prisma.spot.findMany({
+    where: { createdById: userId },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function getSpotById(id: string) {
   return prisma.spot.findUnique({ where: { id } });
 }

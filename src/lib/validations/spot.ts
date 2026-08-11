@@ -21,9 +21,13 @@ export const createSpotSchema = z.object({
   lng: z.number().min(-180).max(180),
   region: z.string().trim().max(80).optional().nullable(),
   photoUrl: httpsUrl.optional().nullable(),
+  /** Client must confirm landscape-only UGC rules before create. */
+  acceptedGuidelines: z.literal(true),
 });
 
-export const updateSpotSchema = createSpotSchema.partial();
+export const updateSpotSchema = createSpotSchema
+  .omit({ acceptedGuidelines: true })
+  .partial();
 
 export type CreateSpotInput = z.infer<typeof createSpotSchema>;
 export type UpdateSpotInput = z.infer<typeof updateSpotSchema>;

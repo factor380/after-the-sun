@@ -13,6 +13,7 @@ model Profile {
   displayName String?
   createdAt   DateTime @default(now())
   spots       Spot[]
+  reports     SpotReport[]
 }
 
 model Spot {
@@ -27,7 +28,23 @@ model Spot {
   createdBy   Profile  @relation(fields: [createdById], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  reports     SpotReport[]
 
   @@index([lat, lng])
   @@index([region])
+}
+
+/** User reports for moderation — review via Prisma Studio for now. */
+model SpotReport {
+  id         String   @id @default(cuid())
+  spotId     String
+  spot       Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  reporterId String   @db.Uuid
+  reporter   Profile  @relation(fields: [reporterId], references: [id])
+  reason     String
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([spotId, createdAt])
+  @@index([createdAt])
 }

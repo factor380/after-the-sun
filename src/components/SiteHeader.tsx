@@ -55,6 +55,14 @@ export default function SiteHeader() {
       </Link>
 
       <nav className="pointer-events-auto flex items-center gap-3 text-sm md:gap-4">
+        {authReady && configured && email ? (
+          <Link
+            href="/spots/mine"
+            className="text-[var(--sand-muted)] transition hover:text-[var(--sand)]"
+          >
+            {t("mySpotsNav")}
+          </Link>
+        ) : null}
         <Link
           href="/spots/new"
           className="bg-[var(--ember)] px-3.5 py-2 font-medium text-white transition hover:brightness-110"

@@ -22,9 +22,15 @@ type Dict = {
   photoHint: string;
   photoRemove: string;
   photoTooLarge: string;
+  photoCompressFailed: string;
+  photoCompressing: string;
   photoInvalidType: string;
   photoUploadFailed: string;
   photoUrlOptional: string;
+  photoLandscapeGuide: string;
+  uploadTermsNotice: string;
+  uploadTermsCheckbox: string;
+  uploadTermsRequired: string;
   namePlaceholder: string;
   descriptionPlaceholder: string;
   regionPlaceholder: string;
@@ -67,6 +73,37 @@ type Dict = {
   locationUnavailable: string;
   locationError: string;
   retryLocation: string;
+  reportSpot: string;
+  reportSignInLink: string;
+  reportTitle: string;
+  reportSubtitle: string;
+  reportReason: string;
+  reportReasonInappropriatePhoto: string;
+  reportReasonWrongLocation: string;
+  reportReasonSpam: string;
+  reportReasonOther: string;
+  reportDetailsOptional: string;
+  reportDetailsPlaceholder: string;
+  reportSubmit: string;
+  reportSubmitting: string;
+  reportCancel: string;
+  reportClose: string;
+  reportThanks: string;
+  reportFailed: string;
+  reportNeedSignIn: string;
+  reportTooMany: string;
+  mySpotsTitle: string;
+  mySpotsSubtitle: string;
+  mySpotsEmpty: string;
+  mySpotsNav: string;
+  editSpot: string;
+  editSpotTitle: string;
+  editSpotSubtitle: string;
+  saveChanges: string;
+  deleteSpot: string;
+  deletingSpot: string;
+  deleteSpotConfirm: string;
+  deleteSpotFailed: string;
 };
 
 export const dictionary: Dict = {
@@ -87,12 +124,21 @@ export const dictionary: Dict = {
   description: "תיאור",
   regionOptional: "אזור (אופציונלי)",
   photoOptional: "תמונת שקיעה (אופציונלי)",
-  photoHint: "JPEG, PNG או WebP · עד 5MB",
+  photoHint: "JPEG, PNG או WebP · עד ~12MB לפני דחיסה אוטומטית",
   photoRemove: "הסרה",
-  photoTooLarge: "התמונה גדולה מדי — מקסימום 5MB.",
+  photoTooLarge: "התמונה גדולה מדי — מקסימום 12MB לפני דחיסה.",
+  photoCompressFailed: "דחיסת התמונה נכשלה. נסו תמונה אחרת או קטנה יותר.",
+  photoCompressing: "דוחס תמונה…",
   photoInvalidType: "סוג קובץ לא נתמך. בחרו JPEG, PNG או WebP.",
   photoUploadFailed: "העלאת התמונה נכשלה",
   photoUrlOptional: "או הדביקו כתובת תמונה (HTTPS)",
+  photoLandscapeGuide:
+    "מעלים רק תמונת נוף או מקום שקיעה — בלי פרצופים מזוהים ובלי אנשים במרכז התמונה.",
+  uploadTermsNotice:
+    "אתם אחראים לתוכן שאתם משתפים. מותר רק נקודות ותמונות נוף/מקום שקיעה שיש לכם רשות לפרסם. אפשר להסיר תוכן שלא עומד בכללים.",
+  uploadTermsCheckbox:
+    "אני מאשר/ת שזו תמונת נוף או מקום (בלי פרצופים מזוהים), שיש לי רשות לשתף, ושאפשר להסיר את התוכן אם יידרש.",
+  uploadTermsRequired: "יש לאשר את כללי השיתוף לפני השמירה.",
   namePlaceholder: "תצפית נמל יפו",
   descriptionPlaceholder: "למה זו נקודת שקיעה מעולה?",
   regionPlaceholder: "תל אביב",
@@ -136,6 +182,37 @@ export const dictionary: Dict = {
   locationUnavailable: "לא ניתן לקבוע מיקום במכשיר זה.",
   locationError: "איתור המיקום נכשל. נסו שוב.",
   retryLocation: "נסה שוב",
+  reportSpot: "דיווח על נקודה זו",
+  reportSignInLink: "התחברו כדי לדווח על נקודה זו",
+  reportTitle: "דיווח על נקודה",
+  reportSubtitle: "הדיווח יגיע לצוות לבדיקה. תודה ששומרים על הקהילה.",
+  reportReason: "סיבה",
+  reportReasonInappropriatePhoto: "תמונה לא מתאימה (אנשים / לא נוף)",
+  reportReasonWrongLocation: "מיקום שגוי או מסוכן",
+  reportReasonSpam: "ספאם או תוכן מטעה",
+  reportReasonOther: "אחר",
+  reportDetailsOptional: "פרטים נוספים (אופציונלי)",
+  reportDetailsPlaceholder: "מה לא בסדר בנקודה?",
+  reportSubmit: "שליחת דיווח",
+  reportSubmitting: "שולח…",
+  reportCancel: "ביטול",
+  reportClose: "סגירה",
+  reportThanks: "הדיווח התקבל. נבדוק בהקדם.",
+  reportFailed: "שליחת הדיווח נכשלה",
+  reportNeedSignIn: "יש להתחבר כדי לדווח.",
+  reportTooMany: "נשלחו יותר מדי דיווחים. נסו שוב מאוחר יותר.",
+  mySpotsTitle: "הנקודות שלי",
+  mySpotsSubtitle: "צפייה, עריכה או מחיקה של נקודות ששיתפתם.",
+  mySpotsEmpty: "עדיין לא שיתפתם נקודות. אפשר להתחיל עכשיו.",
+  mySpotsNav: "שלי",
+  editSpot: "עריכה",
+  editSpotTitle: "עריכת נקודה",
+  editSpotSubtitle: "עדכנו את הפרטים או המיקום במפה.",
+  saveChanges: "שמירת שינויים",
+  deleteSpot: "מחיקה",
+  deletingSpot: "מוחק…",
+  deleteSpotConfirm: "למחוק את \"{name}\"? פעולה זו לא ניתנת לביטול.",
+  deleteSpotFailed: "מחיקת הנקודה נכשלה",
 };
 
 /** @deprecated Prefer `dictionary` — kept for call sites that still use Record access */
