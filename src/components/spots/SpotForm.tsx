@@ -33,8 +33,14 @@ export default function SpotForm({ initial }: SpotFormProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [region, setRegion] = useState(initial?.region ?? "");
-  const [lat, setLat] = useState<number | null>(initial?.lat ?? null);
-  const [lng, setLng] = useState<number | null>(initial?.lng ?? null);
+  const [draftLat, setDraftLat] = useState<number | null>(initial?.lat ?? null);
+  const [draftLng, setDraftLng] = useState<number | null>(initial?.lng ?? null);
+  const [confirmedLat, setConfirmedLat] = useState<number | null>(
+    initial?.lat ?? null,
+  );
+  const [confirmedLng, setConfirmedLng] = useState<number | null>(
+    initial?.lng ?? null,
+  );
   const [photoUrl, setPhotoUrl] = useState(initial?.photoUrl ?? "");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
@@ -56,6 +62,12 @@ export default function SpotForm({ initial }: SpotFormProps) {
   const photoPreview =
     photoObjectUrl ??
     (photoUrl.trim().startsWith("https://") ? photoUrl.trim() : null);
+
+  const hasDraftLocation = draftLat !== null && draftLng !== null;
+  const isLocationConfirmed =
+    hasDraftLocation &&
+    draftLat === confirmedLat &&
+    draftLng === confirmedLng;
 
   function clearPhoto() {
     setPhotoFile(null);
@@ -123,8 +135,13 @@ export default function SpotForm({ initial }: SpotFormProps) {
     e.preventDefault();
     setError(null);
 
-    if (lat === null || lng === null) {
+    if (!hasDraftLocation) {
       setError(t("clickMapError"));
+      return;
+    }
+
+    if (confirmedLat === null || confirmedLng === null || !isLocationConfirmed) {
+      setError(t("confirmLocationFirst"));
       return;
     }
 
@@ -144,8 +161,8 @@ export default function SpotForm({ initial }: SpotFormProps) {
         name,
         description,
         region: region || null,
-        lat,
-        lng,
+        lat: confirmedLat,
+        lng: confirmedLng,
         photoUrl: resolvedPhotoUrl,
         ...(isEdit ? {} : { acceptedGuidelines: true as const }),
       };
@@ -283,20 +300,54 @@ export default function SpotForm({ initial }: SpotFormProps) {
       <div>
         <p className="mb-2 text-sm text-[var(--sand-muted)]">
           {t("tapMap")}
-          {lat !== null && lng !== null
-            ? ` · ${lat.toFixed(5)}, ${lng.toFixed(5)}`
+          {hasDraftLocation
+            ? ` · ${draftLat!.toFixed(5)}, ${draftLng!.toFixed(5)}`
             : ""}
         </p>
         <div className="h-64 w-full overflow-hidden rounded-sm">
           <LocationPickerClient
-            lat={lat}
-            lng={lng}
+            lat={draftLat}
+            lng={draftLng}
             onPick={(nextLat, nextLng) => {
-              setLat(nextLat);
-              setLng(nextLng);
+              setDraftLat(nextLat);
+              setDraftLng(nextLng);
             }}
           />
         </div>
+
+        {hasDraftLocation ? (
+          <div className="mt-3 flex items-center gap-3">
+            {isLocationConfirmed ? (
+              <>
+                <span className="text-sm font-medium text-[var(--ember)]">
+                  ✓ {t("locationConfirmed")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmedLat(null);
+                    setConfirmedLng(null);
+                  }}
+                  className="text-sm text-[var(--sand-muted)] underline"
+                >
+                  {t("changeLocation")}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmedLat(draftLat);
+                  setConfirmedLng(draftLng);
+                  setError(null);
+                }}
+                className="border border-[var(--ember)] px-4 py-2 text-sm font-medium text-[var(--ember)] transition hover:bg-[var(--ember)] hover:text-white"
+              >
+                {t("confirmLocation")}
+              </button>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {!isEdit ? (

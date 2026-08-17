@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useSpotSelection } from "@/components/home/SpotSelectionProvider";
 import {
   formatDistanceMeters,
   sortSpotsByDistance,
@@ -26,6 +27,37 @@ const GEO_OPTIONS: PositionOptions = {
   maximumAge: 60_000,
 };
 
+function SpotCardBody({
+  spot,
+  distanceMeters,
+}: {
+  spot: SpotSummary;
+  distanceMeters?: number;
+}) {
+  return (
+    <div className="min-w-0 flex-1">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="truncate font-[family-name:var(--font-display)] text-lg text-[var(--sand)]">
+          {spot.name}
+        </p>
+        {distanceMeters != null ? (
+          <span className="shrink-0 text-xs tabular-nums text-[var(--ember)]">
+            {formatDistanceMeters(distanceMeters)}
+          </span>
+        ) : null}
+      </div>
+      {spot.region ? (
+        <p className="truncate text-sm text-[var(--sand-muted)]">
+          {spot.region}
+        </p>
+      ) : null}
+      <p className="mt-1 line-clamp-2 text-sm text-[var(--sand-muted)]">
+        {spot.description}
+      </p>
+    </div>
+  );
+}
+
 export function SpotCard({
   spot,
   distanceMeters,
@@ -38,27 +70,49 @@ export function SpotCard({
       href={`/spots/${spot.id}`}
       className="flex gap-3 border-b border-[var(--line)] py-3 transition hover:bg-[var(--dusk-mid)]/40"
     >
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-3">
-          <p className="truncate font-[family-name:var(--font-display)] text-lg text-[var(--sand)]">
-            {spot.name}
-          </p>
-          {distanceMeters != null ? (
-            <span className="shrink-0 text-xs tabular-nums text-[var(--ember)]">
-              {formatDistanceMeters(distanceMeters)}
-            </span>
-          ) : null}
-        </div>
-        {spot.region ? (
-          <p className="truncate text-sm text-[var(--sand-muted)]">
-            {spot.region}
-          </p>
-        ) : null}
-        <p className="mt-1 line-clamp-2 text-sm text-[var(--sand-muted)]">
-          {spot.description}
-        </p>
-      </div>
+      <SpotCardBody spot={spot} distanceMeters={distanceMeters} />
     </Link>
+  );
+}
+
+/** Card used next to the map: picking it focuses the spot instead of navigating. */
+function SelectableSpotCard({
+  spot,
+  distanceMeters,
+  selected,
+  onSelect,
+}: {
+  spot: SpotSummary;
+  distanceMeters?: number;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const { t } = useLocale();
+
+  return (
+    <div
+      className={`border-b border-[var(--line)] transition ${
+        selected
+          ? "border-s-2 border-s-[var(--ember)] bg-[var(--dusk-mid)]/50 ps-2"
+          : ""
+      }`}
+    >
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={selected}
+        aria-label={`${spot.name} — ${t("showOnMap")}`}
+        className="flex w-full gap-3 py-3 text-start transition hover:bg-[var(--dusk-mid)]/40"
+      >
+        <SpotCardBody spot={spot} distanceMeters={distanceMeters} />
+      </button>
+      <Link
+        href={`/spots/${spot.id}`}
+        className="mb-2 inline-block text-xs font-medium text-[var(--ember)] underline-offset-2 hover:underline"
+      >
+        {t("viewSpot")}
+      </Link>
+    </div>
   );
 }
 
@@ -130,6 +184,7 @@ function LocationSortBar({
 export function SpotList({ spots }: { spots: SpotSummary[] }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const { t } = useLocale();
+  const selection = useSpotSelection();
   const [status, setStatus] = useState<GeoStatus>("idle");
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(
     null,
@@ -252,10 +307,16 @@ export function SpotList({ spots }: { spots: SpotSummary[] }) {
                 className="absolute top-0 start-0 w-full"
                 style={{ transform: `translateY(${item.start}px)` }}
               >
-                <SpotCard
-                  spot={spot}
-                  distanceMeters={spot.distanceMeters}
-                />
+                {selection ? (
+                  <SelectableSpotCard
+                    spot={spot}
+                    distanceMeters={spot.distanceMeters}
+                    selected={selection.selectedId === spot.id}
+                    onSelect={() => selection.select(spot.id)}
+                  />
+                ) : (
+                  <SpotCard spot={spot} distanceMeters={spot.distanceMeters} />
+                )}
               </div>
             );
           })}

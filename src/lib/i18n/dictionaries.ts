@@ -57,6 +57,17 @@ type Dict = {
   regionPlaceholder: string;
   tapMap: string;
   clickMapError: string;
+  searchPlaceLabel: string;
+  searchPlacePlaceholder: string;
+  searching: string;
+  searchNoResults: string;
+  searchError: string;
+  dragMarkerHint: string;
+  confirmLocation: string;
+  locationConfirmed: string;
+  changeLocation: string;
+  confirmLocationFirst: string;
+  poweredByGeoapify: string;
   saveFailed: string;
   saving: string;
   shareSpot: string;
@@ -71,6 +82,7 @@ type Dict = {
   loading: string;
   loadingMap: string;
   viewSpot: string;
+  showOnMap: string;
   backToMap: string;
   latitude: string;
   longitude: string;
@@ -181,8 +193,19 @@ export const dictionary: Dict = {
   namePlaceholder: "תצפית נמל יפו",
   descriptionPlaceholder: "למה זו נקודת שקיעה מעולה?",
   regionPlaceholder: "תל אביב",
-  tapMap: "לחצו על המפה כדי לשים סיכה",
-  clickMapError: "לחצו על המפה כדי לקבוע את מיקום הנקודה.",
+  tapMap: "חפשו כתובת או מקום, ואז כווננו את הסיכה על המפה",
+  clickMapError: "בחרו מיקום על המפה כדי לקבוע את מיקום הנקודה.",
+  searchPlaceLabel: "חיפוש מיקום",
+  searchPlacePlaceholder: "חיפוש כתובת או מקום…",
+  searching: "מחפש…",
+  searchNoResults: "לא נמצאו תוצאות — אפשר לסמן ידנית על המפה.",
+  searchError: "החיפוש אינו זמין כרגע — אפשר לסמן ידנית על המפה.",
+  dragMarkerHint: "גררו את הסיכה או לחצו על המפה לכוונון מדויק.",
+  confirmLocation: "אישור המיקום",
+  locationConfirmed: "המיקום אושר",
+  changeLocation: "שינוי מיקום",
+  confirmLocationFirst: "אשרו את המיקום לפני השמירה.",
+  poweredByGeoapify: "חיפוש מבוסס Geoapify",
   saveFailed: "שמירת הנקודה נכשלה",
   saving: "שומר…",
   shareSpot: "שיתוף נקודה",
@@ -197,6 +220,7 @@ export const dictionary: Dict = {
   loading: "טוען…",
   loadingMap: "טוען מפה…",
   viewSpot: "צפייה בנקודה",
+  showOnMap: "הצגה על המפה",
   backToMap: "חזרה למפה",
   latitude: "קו רוחב",
   longitude: "קו אורך",

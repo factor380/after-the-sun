@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useSpotSelection } from "@/components/home/SpotSelectionProvider";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 type SpotsDrawerProps = {
@@ -19,6 +20,13 @@ export function SpotsDrawer({
   const { t } = useLocale();
   const [expanded, setExpanded] = useState(true);
   const heading = `${t("spots")} (${spotCount})`;
+  const subscribeToFocus = useSpotSelection()?.subscribeToFocus;
+
+  // On phones the drawer would cover the spot the map just centered on.
+  // Desktop keeps its own height, so collapsing there is a no-op.
+  useEffect(() => {
+    return subscribeToFocus?.(() => setExpanded(false));
+  }, [subscribeToFocus]);
 
   return (
     <div

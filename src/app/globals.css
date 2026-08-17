@@ -102,6 +102,42 @@ body {
   color: var(--ember);
 }
 
+/* Selected map spot: glowing pin above a pulsing halo.
+   Leaflet puts the icon class on the shadow image too, hence the scoping. */
+.leaflet-marker-icon.spot-marker-selected {
+  filter: drop-shadow(0 0 6px var(--ember)) drop-shadow(0 0 14px var(--ember));
+}
+
+.spot-marker-halo {
+  stroke: var(--ember);
+  fill: var(--ember);
+  fill-opacity: 0.18;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ats-marker-halo 1.8s ease-out infinite;
+}
+
+@keyframes ats-marker-halo {
+  0% {
+    transform: scale(0.7);
+    stroke-opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.15);
+    stroke-opacity: 0.15;
+  }
+  100% {
+    transform: scale(0.7);
+    stroke-opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spot-marker-halo {
+    animation: none;
+  }
+}
+
 .atmosphere {
   background:
     radial-gradient(110% 70% at 50% 0%, rgba(255, 180, 90, 0.55) 0%, transparent 55%),
