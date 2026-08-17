@@ -1,5 +1,54 @@
 export const SPOT_PHOTOS_BUCKET = "spot-photos";
 
+/** Upper bound of community photos kept per spot. */
+export const MAX_PHOTOS_PER_SPOT = 24;
+
+/** Upper bound of community photos a single user may add to one spot. */
+export const MAX_PHOTOS_PER_USER_PER_SPOT = 5;
+
+const PUBLIC_OBJECT_PREFIX = `/storage/v1/object/public/${SPOT_PHOTOS_BUCKET}/`;
+
+function storageOrigin(): string | null {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+  try {
+    return new URL(base).origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Community photos may only reference objects we uploaded ourselves. Accepting
+ * arbitrary remote URLs would let anyone attach third-party content to a spot
+ * they do not own.
+ */
+export function isSpotPhotoStorageUrl(value: string): boolean {
+  const origin = storageOrigin();
+  if (!origin) return false;
+
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+
+  return (
+    url.protocol === "https:" &&
+    url.origin === origin &&
+    url.pathname.startsWith(PUBLIC_OBJECT_PREFIX) &&
+    url.pathname.length > PUBLIC_OBJECT_PREFIX.length
+  );
+}
+
+/** Object path inside the bucket, for cleanup after a photo is removed. */
+export function spotPhotoObjectPath(value: string): string | null {
+  if (!isSpotPhotoStorageUrl(value)) return null;
+  const { pathname } = new URL(value);
+  return decodeURIComponent(pathname.slice(PUBLIC_OBJECT_PREFIX.length));
+}
+
 /** Hard cap for files accepted by the upload API (after client compression). */
 export const MAX_SPOT_PHOTO_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
 

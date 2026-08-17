@@ -40,8 +40,8 @@ export function BrandMark({ className = "size-8" }: { className?: string }) {
       <path d="M2 36 L20 14 L38 36 Z" fill="var(--ink)" fillOpacity="0.88" />
       <path
         d="M6 33.5 L20 16.5 L34 33.5"
-        stroke="#fff3e8"
-        strokeOpacity="0.35"
+        stroke="var(--dusk-deep)"
+        strokeOpacity="0.45"
         strokeWidth="1"
         strokeLinejoin="round"
       />

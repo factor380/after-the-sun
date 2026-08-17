@@ -18,6 +18,16 @@ export async function ensureProfile(userId: string, displayName?: string | null)
 
 const MAX_SEARCH_QUERY_LENGTH = 100;
 
+/** Enough to resolve a cover image when the spot has no photo of its own. */
+const COVER_PHOTO_SELECTION = {
+  photos: {
+    orderBy: { createdAt: "asc" },
+    take: 1,
+    select: { id: true, url: true, uploadedById: true, createdAt: true },
+  },
+  _count: { select: { photos: true } },
+} as const;
+
 export async function listSpots(query?: string) {
   const q = query?.trim().slice(0, MAX_SEARCH_QUERY_LENGTH) || undefined;
 
@@ -32,6 +42,7 @@ export async function listSpots(query?: string) {
         }
       : undefined,
     orderBy: { createdAt: "desc" },
+    include: COVER_PHOTO_SELECTION,
   });
 }
 
@@ -39,11 +50,25 @@ export async function listSpotsByUser(userId: string) {
   return prisma.spot.findMany({
     where: { createdById: userId },
     orderBy: { createdAt: "desc" },
+    include: COVER_PHOTO_SELECTION,
   });
 }
 
 export async function getSpotById(id: string) {
-  return prisma.spot.findUnique({ where: { id } });
+  return prisma.spot.findUnique({ where: { id }, include: COVER_PHOTO_SELECTION });
+}
+
+/** Spot plus its full community gallery, for the detail page. */
+export async function getSpotWithPhotos(id: string) {
+  return prisma.spot.findUnique({
+    where: { id },
+    include: {
+      photos: {
+        orderBy: { createdAt: "asc" },
+        select: { id: true, url: true, uploadedById: true, createdAt: true },
+      },
+    },
+  });
 }
 
 export async function createSpot(userId: string, input: CreateSpotInput) {

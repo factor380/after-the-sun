@@ -4,11 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import {
+  PhotoCountBadge,
+  SpotThumbnail,
+} from "@/components/spots/SpotThumbnail";
 
 export type MySpotItem = {
   id: string;
   name: string;
   region: string | null;
+  photoUrl: string | null;
+  photoCount: number;
   createdAt: string;
 };
 
@@ -69,16 +75,35 @@ export default function MySpotsList({ spots }: MySpotsListProps) {
             key={spot.id}
             className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="min-w-0">
-              <Link
-                href={`/spots/${spot.id}`}
-                className="font-medium text-[var(--sand)] transition hover:text-[var(--ember)]"
-              >
-                {spot.name}
-              </Link>
-              {spot.region ? (
-                <p className="mt-1 text-sm text-[var(--ember)]">{spot.region}</p>
+            <div className="flex min-w-0 items-center gap-3">
+              {spot.photoUrl ? (
+                <Link
+                  href={`/spots/${spot.id}`}
+                  aria-hidden
+                  tabIndex={-1}
+                  className="relative h-14 w-16 shrink-0 overflow-hidden rounded-sm border border-[var(--line)]"
+                >
+                  <SpotThumbnail
+                    url={spot.photoUrl}
+                    alt=""
+                    className="h-full w-full"
+                  />
+                  <PhotoCountBadge count={spot.photoCount} />
+                </Link>
               ) : null}
+              <div className="min-w-0">
+                <Link
+                  href={`/spots/${spot.id}`}
+                  className="font-medium text-[var(--sand)] transition hover:text-[var(--ember)]"
+                >
+                  {spot.name}
+                </Link>
+                {spot.region ? (
+                  <p className="mt-1 text-sm text-[var(--ember)]">
+                    {spot.region}
+                  </p>
+                ) : null}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 text-sm">
               <Link

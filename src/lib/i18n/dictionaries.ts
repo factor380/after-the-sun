@@ -28,6 +28,27 @@ type Dict = {
   photoUploadFailed: string;
   photoUrlOptional: string;
   photoLandscapeGuide: string;
+  photoCount: string;
+  photoOpenFull: string;
+  photoClose: string;
+  photoPrevious: string;
+  photoNext: string;
+  photoDelete: string;
+  photoDeleting: string;
+  photoDeleteConfirm: string;
+  photoDeleteFailed: string;
+  photoAddTitle: string;
+  photoAddSubtitle: string;
+  photoAddSubmit: string;
+  photoAddUploading: string;
+  photoAddThanks: string;
+  photoAddFailed: string;
+  photoAddSignIn: string;
+  photoAddPickFirst: string;
+  photoAddDuplicate: string;
+  photoAddSpotLimit: string;
+  photoAddUserLimit: string;
+  photoAddTooMany: string;
   uploadTermsNotice: string;
   uploadTermsCheckbox: string;
   uploadTermsRequired: string;
@@ -53,12 +74,8 @@ type Dict = {
   backToMap: string;
   latitude: string;
   longitude: string;
-  openOsm: string;
   navigateToSpot: string;
-  navigateChooseApp: string;
-  navigateWaze: string;
-  navigateGoogleMaps: string;
-  navigateCancel: string;
+  themeToggle: string;
   welcomeTitle: string;
   welcomeBody: string;
   welcomeViewMap: string;
@@ -134,6 +151,28 @@ export const dictionary: Dict = {
   photoUrlOptional: "או הדביקו כתובת תמונה (HTTPS)",
   photoLandscapeGuide:
     "מעלים רק תמונת נוף או מקום שקיעה — בלי פרצופים מזוהים ובלי אנשים במרכז התמונה.",
+  photoCount: "{count} תמונות",
+  photoOpenFull: "פתיחת התמונה בגודל מלא",
+  photoClose: "סגירה",
+  photoPrevious: "התמונה הקודמת",
+  photoNext: "התמונה הבאה",
+  photoDelete: "מחיקת התמונה",
+  photoDeleting: "מוחק…",
+  photoDeleteConfirm: "למחוק את התמונה? פעולה זו לא ניתנת לביטול.",
+  photoDeleteFailed: "מחיקת התמונה נכשלה",
+  photoAddTitle: "הוספת תמונה לנקודה",
+  photoAddSubtitle:
+    "צילמתם כאן שקיעה? הוסיפו תמונה כדי לעזור לאחרים לדעת איך המקום נראה.",
+  photoAddSubmit: "הוספת תמונה",
+  photoAddUploading: "מעלה…",
+  photoAddThanks: "התמונה נוספה. תודה ששיתפתם!",
+  photoAddFailed: "הוספת התמונה נכשלה",
+  photoAddSignIn: "התחברו כדי להוסיף תמונה לנקודה הזו",
+  photoAddPickFirst: "בחרו תמונה להעלאה.",
+  photoAddDuplicate: "התמונה הזו כבר קיימת בנקודה.",
+  photoAddSpotLimit: "הנקודה הגיעה למספר המרבי של תמונות.",
+  photoAddUserLimit: "הגעתם למספר המרבי של תמונות שאפשר להוסיף לנקודה זו.",
+  photoAddTooMany: "העליתם יותר מדי תמונות. נסו שוב מאוחר יותר.",
   uploadTermsNotice:
     "אתם אחראים לתוכן שאתם משתפים. מותר רק נקודות ותמונות נוף/מקום שקיעה שיש לכם רשות לפרסם. אפשר להסיר תוכן שלא עומד בכללים.",
   uploadTermsCheckbox:
@@ -161,12 +200,8 @@ export const dictionary: Dict = {
   backToMap: "חזרה למפה",
   latitude: "קו רוחב",
   longitude: "קו אורך",
-  openOsm: "פתיחה ב־OpenStreetMap",
   navigateToSpot: "ניווט לנקודה",
-  navigateChooseApp: "בחרו אפליקציית ניווט",
-  navigateWaze: "Waze",
-  navigateGoogleMaps: "Google Maps",
-  navigateCancel: "ביטול",
+  themeToggle: "החלפת מצב תצוגה",
   welcomeTitle: "ברוכים הבאים ל-After the Sun",
   welcomeBody:
     "הקהילה של אוהבי השקיעות. בואו לגלות לוקיישנים נסתרים, לדרג תצפיות מרהיבות ולהוסיף את המקומות הסודיים שלכם למפה.",

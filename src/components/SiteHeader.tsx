@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useEffect, useState } from "react";
@@ -55,6 +56,7 @@ export default function SiteHeader() {
       </Link>
 
       <nav className="pointer-events-auto flex items-center gap-3 text-sm md:gap-4">
+        <ThemeToggle />
         {authReady && configured && email ? (
           <Link
             href="/spots/mine"

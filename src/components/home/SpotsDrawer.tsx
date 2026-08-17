@@ -24,7 +24,7 @@ export function SpotsDrawer({
     <div
       className={`pointer-events-none absolute z-30 flex flex-col border border-[var(--ember)]/25 bg-[var(--surface)] shadow-[0_-8px_32px_rgb(42_18_16/0.12)] backdrop-blur-md transition-[height,max-height] duration-300 ease-out ats-fade-in
         inset-x-0 bottom-0 border-x-0 border-b-0
-        lg:inset-y-4 lg:inset-s-4 lg:inset-e-auto lg:bottom-auto lg:h-auto lg:max-h-none lg:w-[min(100%,380px)] lg:border lg:shadow-[0_12px_40px_rgb(42_18_16/0.12)]
+        lg:inset-y-4 lg:inset-s-4 lg:inset-e-auto lg:bottom-auto lg:h-auto lg:max-h-[calc(100%-2rem)] lg:w-[min(100%,380px)] lg:border lg:shadow-[0_12px_40px_rgb(42_18_16/0.12)]
         ${expanded ? "h-[55dvh] max-h-[70dvh]" : "h-[28dvh] max-h-[28dvh]"} lg:!h-auto`}
     >
       <button
@@ -34,7 +34,7 @@ export function SpotsDrawer({
         aria-expanded={expanded}
         aria-label={expanded ? t("drawerCollapse") : t("drawerExpand")}
       >
-        <span className="h-1 w-10 rounded-full bg-[var(--ink)]/25" aria-hidden />
+        <span className="h-1 w-10 rounded-full bg-[var(--sand)]/25" aria-hidden />
         <span className="w-full text-start text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sand-muted)]">
           {heading}
         </span>
@@ -51,7 +51,9 @@ export function SpotsDrawer({
           </div>
         ) : null}
 
-        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -34,6 +34,14 @@ with check (
 create policy "spot photos public read"
 on storage.objects for select to public
 using (bucket_id = 'spot-photos');
+
+-- Contributors can remove their own uploads (storage cleanup when a photo is deleted)
+create policy "spot photos delete own folder"
+on storage.objects for delete to authenticated
+using (
+  bucket_id = 'spot-photos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
 ```
 
 5. Install and push schema:
@@ -58,9 +66,11 @@ Open [http://localhost:3004](http://localhost:3004).
 
 ## Product (Beta)
 
-- Map of spots centered on Israel
-- Spot detail pages
+- Map of spots centered on Israel, with photo previews in the marker popups and the spot list
+- Spot detail pages with a photo gallery and full-screen lightbox
 - Magic-link sign-in
 - Authenticated users can add a spot (map pin + form + optional sunset photo upload)
+- Authenticated users can contribute photos to **any** existing spot; the uploader or the
+  spot owner can remove them. Capped at 24 photos per spot and 5 per user per spot.
 
 AI recommendations are intentionally **not** in Beta; a future `src/ai/` layer can call the same `services/spots` API.

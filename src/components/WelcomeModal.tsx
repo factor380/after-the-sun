@@ -82,7 +82,7 @@ export default function WelcomeModal() {
           type="button"
           onClick={dismiss}
           aria-label={t("welcomeClose")}
-          className="absolute top-4 end-4 flex size-10 items-center justify-center text-[var(--ink)]/55 transition hover:text-[var(--ink)]"
+          className="absolute top-4 end-4 flex size-10 items-center justify-center text-[var(--sand)]/70 transition hover:text-[var(--sand)]"
         >
           <svg
             viewBox="0 0 24 24"
@@ -102,7 +102,7 @@ export default function WelcomeModal() {
           <BrandLogo
             title={t("brand")}
             markClassName="size-14 sm:size-16"
-            titleClassName="font-[family-name:var(--font-display)] text-3xl tracking-tight text-[var(--ink)] sm:text-4xl"
+            titleClassName="font-[family-name:var(--font-display)] text-3xl tracking-tight text-[var(--sand)] sm:text-4xl"
             className="inline-flex flex-col items-center gap-3"
           />
         </div>
@@ -113,7 +113,7 @@ export default function WelcomeModal() {
 
         <p
           id={descriptionId}
-          className="ats-fade-up-delay mt-5 max-w-md text-center text-base leading-relaxed text-[var(--ink)]/80 sm:mx-auto sm:text-lg"
+          className="ats-fade-up-delay mt-5 max-w-md text-center text-base leading-relaxed text-[var(--sand)]/80 sm:mx-auto sm:text-lg"
         >
           {t("tagline")}
         </p>
@@ -130,7 +130,7 @@ export default function WelcomeModal() {
           <button
             type="button"
             onClick={addSpot}
-            className="w-full border border-[var(--ink)]/25 bg-[var(--surface)]/55 px-5 py-3 font-medium text-[var(--ink)] backdrop-blur-sm transition hover:border-[var(--ink)]/40 hover:bg-[var(--surface)]/80"
+            className="w-full border border-[var(--sand)]/25 bg-[var(--surface)]/55 px-5 py-3 font-medium text-[var(--sand)] backdrop-blur-sm transition hover:border-[var(--sand)]/40 hover:bg-[var(--surface)]/80"
           >
             {t("welcomeAddSpot")}
           </button>

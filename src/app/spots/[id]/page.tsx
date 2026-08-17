@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import AddSpotPhoto from "@/components/spots/AddSpotPhoto";
 import NavigateToSpot from "@/components/spots/NavigateToSpot";
 import ReportSpot from "@/components/spots/ReportSpot";
+import SpotGallery, {
+  type GalleryPhoto,
+} from "@/components/spots/SpotGallery";
 import { T } from "@/components/T";
+import { MAX_PHOTOS_PER_SPOT } from "@/lib/spot-photo";
 import { createClient } from "@/lib/supabase/server";
-import { getSpotById } from "@/services/spots";
+import { getSpotWithPhotos } from "@/services/spots";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -22,49 +27,45 @@ export default async function SpotDetailPage({ params }: PageProps) {
 
   let spot;
   try {
-    spot = await getSpotById(id);
+    spot = await getSpotWithPhotos(id);
   } catch {
     notFound();
   }
 
   if (!spot) notFound();
 
-  let isAuthenticated = false;
-  let isOwner = false;
+  let userId: string | null = null;
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    isAuthenticated = Boolean(user);
-    isOwner = Boolean(user && user.id === spot.createdById);
+    userId = user?.id ?? null;
   }
+
+  const isAuthenticated = Boolean(userId);
+  const isOwner = userId === spot.createdById;
+
+  const galleryPhotos: GalleryPhoto[] = [
+    ...(spot.photoUrl
+      ? [{ id: null, url: spot.photoUrl, canDelete: false }]
+      : []),
+    ...spot.photos.map((photo) => ({
+      id: photo.id,
+      url: photo.url,
+      canDelete: isOwner || photo.uploadedById === userId,
+    })),
+  ];
 
   return (
     <article className="pb-16">
-      {spot.photoUrl ? (
-        <div className="relative -mt-16 aspect-[4/3] w-full overflow-hidden sm:aspect-[16/9]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={spot.photoUrl}
-            alt={spot.name}
-            className="h-full w-full object-cover object-center"
-          />
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--dusk-deep)] to-transparent"
-            aria-hidden
-          />
-        </div>
-      ) : (
-        <div
-          className="sky-afterglow relative -mt-16 h-48 w-full sm:h-64"
-          aria-hidden
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--dusk-deep)] to-transparent" />
-        </div>
-      )}
+      <SpotGallery
+        spotId={spot.id}
+        spotName={spot.name}
+        photos={galleryPhotos}
+      />
 
-      <div className="relative mx-auto w-full max-w-2xl px-5">
+      <div className="relative mx-auto w-full max-w-2xl px-5 pt-4">
         <Link
           href="/"
           className="inline-flex items-center text-sm text-[var(--sand-muted)] transition hover:text-[var(--sand)]"
@@ -118,16 +119,13 @@ export default async function SpotDetailPage({ params }: PageProps) {
           </div>
         ) : null}
 
-        <NavigateToSpot lat={spot.lat} lng={spot.lng} />
+        <NavigateToSpot lat={spot.lat} lng={spot.lng} name={spot.name} />
 
-        <a
-          href={`https://www.openstreetmap.org/?mlat=${spot.lat}&mlon=${spot.lng}#map=15/${spot.lat}/${spot.lng}`}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-8 hidden bg-[var(--ember)] px-5 py-3 text-sm font-medium text-white transition hover:brightness-110 md:inline-block"
-        >
-          <T k="openOsm" />
-        </a>
+        <AddSpotPhoto
+          spotId={spot.id}
+          isAuthenticated={isAuthenticated}
+          isFull={spot.photos.length >= MAX_PHOTOS_PER_SPOT}
+        />
 
         <ReportSpot spotId={spot.id} isAuthenticated={isAuthenticated} />
       </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import MySpotsList from "@/components/spots/MySpotsList";
 import { T } from "@/components/T";
+import { toPublicSpot } from "@/lib/public-spot";
 import { createClient } from "@/lib/supabase/server";
 import { listSpotsByUser } from "@/services/spots";
 
@@ -46,12 +47,17 @@ export default async function MySpotsPage() {
         <T k="mySpotsSubtitle" />
       </p>
       <MySpotsList
-        spots={spots.map((spot) => ({
-          id: spot.id,
-          name: spot.name,
-          region: spot.region,
-          createdAt: spot.createdAt.toISOString(),
-        }))}
+        spots={spots.map((spot) => {
+          const summary = toPublicSpot(spot);
+          return {
+            id: summary.id,
+            name: summary.name,
+            region: summary.region,
+            photoUrl: summary.photoUrl,
+            photoCount: summary.photoCount,
+            createdAt: summary.createdAt,
+          };
+        })}
       />
     </div>
   );

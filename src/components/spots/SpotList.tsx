@@ -36,24 +36,28 @@ export function SpotCard({
   return (
     <Link
       href={`/spots/${spot.id}`}
-      className="block border-b border-[var(--line)] py-3 transition hover:bg-[var(--dusk-mid)]/40"
+      className="flex gap-3 border-b border-[var(--line)] py-3 transition hover:bg-[var(--dusk-mid)]/40"
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="font-[family-name:var(--font-display)] text-lg text-[var(--sand)]">
-          {spot.name}
-        </p>
-        {distanceMeters != null ? (
-          <span className="shrink-0 text-xs tabular-nums text-[var(--ember)]">
-            {formatDistanceMeters(distanceMeters)}
-          </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="truncate font-[family-name:var(--font-display)] text-lg text-[var(--sand)]">
+            {spot.name}
+          </p>
+          {distanceMeters != null ? (
+            <span className="shrink-0 text-xs tabular-nums text-[var(--ember)]">
+              {formatDistanceMeters(distanceMeters)}
+            </span>
+          ) : null}
+        </div>
+        {spot.region ? (
+          <p className="truncate text-sm text-[var(--sand-muted)]">
+            {spot.region}
+          </p>
         ) : null}
+        <p className="mt-1 line-clamp-2 text-sm text-[var(--sand-muted)]">
+          {spot.description}
+        </p>
       </div>
-      {spot.region ? (
-        <p className="text-sm text-[var(--sand-muted)]">{spot.region}</p>
-      ) : null}
-      <p className="mt-1 line-clamp-2 text-sm text-[var(--sand-muted)]">
-        {spot.description}
-      </p>
     </Link>
   );
 }
@@ -217,7 +221,7 @@ export function SpotList({ spots }: { spots: SpotSummary[] }) {
   const virtualizer = useVirtualizer({
     count: displaySpots.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 100,
+    estimateSize: () => 116,
     overscan: 6,
   });
 
@@ -228,7 +232,7 @@ export function SpotList({ spots }: { spots: SpotSummary[] }) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <LocationSortBar status={status} onRequest={requestLocation} />
       <div
         ref={parentRef}

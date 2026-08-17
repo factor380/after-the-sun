@@ -3,6 +3,7 @@ import { Frank_Ruhl_Libre, Heebo } from "next/font/google";
 import SiteHeader from "@/components/SiteHeader";
 import WelcomeModal from "@/components/WelcomeModal";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
+import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import "./globals.css";
 
 const display = Frank_Ruhl_Libre({
@@ -38,14 +39,16 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="atmosphere flex h-dvh flex-col overflow-hidden antialiased">
-        {/* eslint-disable-next-line @next/next/no-sync-scripts -- blocking boot avoids RTL flash */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts -- blocking boot avoids RTL/theme flash */}
         <script src="/scripts/locale-boot.js" />
         <LocaleProvider>
-          <SiteHeader />
-          <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pt-16">
-            {children}
-          </main>
-          <WelcomeModal />
+          <ThemeProvider>
+            <SiteHeader />
+            <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pt-16">
+              {children}
+            </main>
+            <WelcomeModal />
+          </ThemeProvider>
         </LocaleProvider>
       </body>
     </html>

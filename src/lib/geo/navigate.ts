@@ -1,9 +1,18 @@
-/** Deep links that open turn-by-turn navigation in external apps. */
+/** Hands the destination to the device so it offers the navigation apps installed on it. */
 
-export function wazeNavigateUrl(lat: number, lng: number): string {
-  return `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+/** Android and most desktop OSes resolve `geo:` through their app chooser. */
+export function geoNavigateUrl(lat: number, lng: number, label?: string): string {
+  const query = label
+    ? `${lat},${lng}(${encodeURIComponent(label)})`
+    : `${lat},${lng}`;
+  return `geo:${lat},${lng}?q=${query}`;
 }
 
-export function googleMapsNavigateUrl(lat: number, lng: number): string {
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+/** iOS ignores `geo:`, so it gets handed to Maps, which then offers other routing apps. */
+export function appleMapsNavigateUrl(lat: number, lng: number): string {
+  return `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`;
+}
+
+export function isIosUserAgent(userAgent: string): boolean {
+  return /iPad|iPhone|iPod/.test(userAgent);
 }
