@@ -5,7 +5,7 @@ Sunset spots sharing app for Israel — Beta (MVP).
 ## Stack (free-tier)
 
 - **Next.js** (App Router) + TypeScript + Tailwind
-- **Supabase** Free — Postgres, Auth (magic link), Storage (spot photos)
+- **Supabase** Free — Postgres, Auth (Google sign-in), Storage (spot photos)
 - **Prisma** — ORM + migrations
 - **Leaflet** + OpenStreetMap — maps (no Mapbox cost)
 - **Vercel** Hobby — deploy when ready
@@ -19,7 +19,13 @@ Sunset spots sharing app for Israel — Beta (MVP).
    - `DIRECT_URL` (Session / direct, port **5432**)
 3. In Supabase Auth → URL configuration, add redirect:
    - `http://localhost:3004/auth/callback`
-4. Create a **public** Storage bucket named `spot-photos` (Dashboard → Storage → New bucket). Then in SQL Editor:
+   - (production) `https://your-domain/auth/callback`
+4. Enable **Google** sign-in:
+   - Supabase Dashboard → Authentication → Providers → Google → Enable
+   - In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an **OAuth 2.0 Client ID** (Web application)
+   - Authorized redirect URI: copy from Supabase (e.g. `https://<project-ref>.supabase.co/auth/v1/callback`)
+   - Paste the Client ID and Client Secret into Supabase
+5. Create a **public** Storage bucket named `spot-photos` (Dashboard → Storage → New bucket). Then in SQL Editor:
 
 ```sql
 -- Authenticated users upload only into their own folder
@@ -44,7 +50,7 @@ using (
 );
 ```
 
-5. Install and push schema:
+6. Install and push schema:
 
 ```bash
 npm install
@@ -68,7 +74,7 @@ Open [http://localhost:3004](http://localhost:3004).
 
 - Map of spots centered on Israel, with photo previews in the marker popups and the spot list
 - Spot detail pages with a photo gallery and full-screen lightbox
-- Magic-link sign-in
+- Google sign-in
 - Authenticated users can add a spot (map pin + form + optional sunset photo upload)
 - Authenticated users can contribute photos to **any** existing spot; the uploader or the
   spot owner can remove them. Capped at 24 photos per spot and 5 per user per spot.

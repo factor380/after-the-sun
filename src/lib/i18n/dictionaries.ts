@@ -73,12 +73,11 @@ type Dict = {
   shareSpot: string;
   signInTitle: string;
   signInSubtitle: string;
-  email: string;
-  sendMagicLink: string;
-  sending: string;
-  checkInbox: string;
+  signInWithGoogle: string;
+  signingInWithGoogle: string;
+  googleSignInFailed: string;
+  authCallbackFailed: string;
   supabaseNotConfigured: string;
-  magicLinkFailed: string;
   loading: string;
   loadingMap: string;
   viewSpot: string;
@@ -95,6 +94,7 @@ type Dict = {
   welcomeClose: string;
   drawerExpand: string;
   drawerCollapse: string;
+  drawerHide: string;
   sortByDistance: string;
   locatingPosition: string;
   sortedByDistance: string;
@@ -210,13 +210,12 @@ export const dictionary: Dict = {
   saving: "שומר…",
   shareSpot: "שיתוף נקודה",
   signInTitle: "התחברות",
-  signInSubtitle: "נשלח אליכם קישור קסם במייל — בלי סיסמה.",
-  email: "אימייל",
-  sendMagicLink: "שליחת קישור קסם",
-  sending: "שולח…",
-  checkInbox: "בדקו את תיבת הדואר לקישור להשלמת ההתחברות.",
+  signInSubtitle: "התחברו עם חשבון Google כדי לשתף נקודות ותמונות.",
+  signInWithGoogle: "המשך עם Google",
+  signingInWithGoogle: "מעביר ל-Google…",
+  googleSignInFailed: "ההתחברות עם Google נכשלה",
+  authCallbackFailed: "ההתחברות נכשלה. נסו שוב.",
   supabaseNotConfigured: "Supabase עדיין לא מוגדר. הוסיפו מפתחות ל־.env.",
-  magicLinkFailed: "לא ניתן לשלוח קישור קסם",
   loading: "טוען…",
   loadingMap: "טוען מפה…",
   viewSpot: "צפייה בנקודה",
@@ -234,6 +233,7 @@ export const dictionary: Dict = {
   welcomeClose: "סגירת ברוכים הבאים",
   drawerExpand: "הרחבת רשימת נקודות",
   drawerCollapse: "צמצום רשימת נקודות",
+  drawerHide: "הסתרת רשימת נקודות",
   sortByDistance: "מיון לפי קרבה אליי",
   locatingPosition: "מאתר מיקום…",
   sortedByDistance: "ממוין לפי מרחק ממך",

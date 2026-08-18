@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import { useSpotSelection } from "@/components/home/SpotSelectionProvider";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
@@ -11,6 +18,61 @@ type SpotsDrawerProps = {
   setupNotice?: ReactNode;
 };
 
+type DrawerSnap = "hidden" | "collapsed" | "expanded";
+
+const HIDDEN_HEIGHT_PX = 52;
+const COLLAPSED_RATIO = 0.28;
+const EXPANDED_RATIO = 0.85;
+const DRAG_THRESHOLD_PX = 8;
+
+const SNAP_HEIGHT_CLASS: Record<DrawerSnap, string> = {
+  hidden: "h-[52px] max-h-[52px]",
+  collapsed: "h-[28dvh] max-h-[28dvh]",
+  expanded: "h-[85dvh] max-h-[85dvh]",
+};
+
+function snapHeightPx(snap: DrawerSnap, viewportHeight: number): number {
+  switch (snap) {
+    case "hidden":
+      return HIDDEN_HEIGHT_PX;
+    case "collapsed":
+      return viewportHeight * COLLAPSED_RATIO;
+    case "expanded":
+      return viewportHeight * EXPANDED_RATIO;
+  }
+}
+
+function nearestSnap(heightPx: number, viewportHeight: number): DrawerSnap {
+  const candidates: DrawerSnap[] = ["hidden", "collapsed", "expanded"];
+  let best: DrawerSnap = "collapsed";
+  let bestDist = Infinity;
+
+  for (const snap of candidates) {
+    const dist = Math.abs(snapHeightPx(snap, viewportHeight) - heightPx);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = snap;
+    }
+  }
+
+  return best;
+}
+
+function nextSnap(current: DrawerSnap): DrawerSnap {
+  if (current === "hidden") return "collapsed";
+  if (current === "collapsed") return "expanded";
+  return "hidden";
+}
+
+function drawerAriaLabel(
+  snap: DrawerSnap,
+  t: (key: "drawerExpand" | "drawerCollapse" | "drawerHide") => string,
+): string {
+  if (snap === "hidden") return t("drawerExpand");
+  if (snap === "expanded") return t("drawerHide");
+  return t("drawerExpand");
+}
+
 export function SpotsDrawer({
   children,
   spotCount,
@@ -18,29 +80,116 @@ export function SpotsDrawer({
   setupNotice,
 }: SpotsDrawerProps) {
   const { t } = useLocale();
-  const [expanded, setExpanded] = useState(true);
+  const [snap, setSnap] = useState<DrawerSnap>("expanded");
+  const [dragHeightPx, setDragHeightPx] = useState<number | null>(null);
+  const dragRef = useRef<{
+    startY: number;
+    startHeight: number;
+    currentHeight: number;
+    moved: boolean;
+  } | null>(null);
+
   const heading = `${t("spots")} (${spotCount})`;
   const subscribeToFocus = useSpotSelection()?.subscribeToFocus;
 
   // On phones the drawer would cover the spot the map just centered on.
   // Desktop keeps its own height, so collapsing there is a no-op.
   useEffect(() => {
-    return subscribeToFocus?.(() => setExpanded(false));
+    return subscribeToFocus?.(() => setSnap("collapsed"));
   }, [subscribeToFocus]);
+
+  const getCurrentHeightPx = useCallback(() => {
+    if (typeof window === "undefined") return snapHeightPx(snap, 800);
+    return snapHeightPx(snap, window.innerHeight);
+  }, [snap]);
+
+  const handlePointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const startHeight = getCurrentHeightPx();
+      dragRef.current = {
+        startY: event.clientY,
+        startHeight,
+        currentHeight: startHeight,
+        moved: false,
+      };
+      setDragHeightPx(startHeight);
+    },
+    [getCurrentHeightPx],
+  );
+
+  const handlePointerMove = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+
+    const deltaY = drag.startY - event.clientY;
+    if (Math.abs(deltaY) > DRAG_THRESHOLD_PX) {
+      drag.moved = true;
+    }
+
+    const viewportHeight = window.innerHeight;
+    const maxHeight = viewportHeight * EXPANDED_RATIO;
+    const nextHeight = Math.min(
+      maxHeight,
+      Math.max(HIDDEN_HEIGHT_PX, drag.startHeight + deltaY),
+    );
+    drag.currentHeight = nextHeight;
+    setDragHeightPx(nextHeight);
+  }, []);
+
+  const finishDrag = useCallback(() => {
+    const drag = dragRef.current;
+    dragRef.current = null;
+
+    if (!drag) return;
+
+    if (!drag.moved) {
+      setDragHeightPx(null);
+      setSnap((current) => nextSnap(current));
+      return;
+    }
+
+    const viewportHeight = window.innerHeight;
+    setDragHeightPx(null);
+    setSnap(nearestSnap(drag.currentHeight, viewportHeight));
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    finishDrag();
+  }, [finishDrag]);
+
+  const handlePointerCancel = useCallback(() => {
+    finishDrag();
+  }, [finishDrag]);
+
+  const isDragging = dragHeightPx !== null;
+  const isHidden = snap === "hidden" && !isDragging;
 
   return (
     <div
-      className={`pointer-events-none absolute z-30 flex flex-col border border-[var(--ember)]/25 bg-[var(--surface)] shadow-[0_-8px_32px_rgb(42_18_16/0.12)] backdrop-blur-md transition-[height,max-height] duration-300 ease-out ats-fade-in
+      className={`pointer-events-none absolute z-30 flex flex-col border border-[var(--ember)]/25 bg-[var(--surface)] shadow-[0_-8px_32px_rgb(42_18_16/0.12)] backdrop-blur-md ats-fade-in
         inset-x-0 bottom-0 border-x-0 border-b-0
         lg:inset-y-4 lg:inset-s-4 lg:inset-e-auto lg:bottom-auto lg:h-auto lg:max-h-[calc(100%-2rem)] lg:w-[min(100%,380px)] lg:border lg:shadow-[0_12px_40px_rgb(42_18_16/0.12)]
-        ${expanded ? "h-[55dvh] max-h-[70dvh]" : "h-[28dvh] max-h-[28dvh]"} lg:!h-auto`}
+        ${isDragging ? "" : `transition-[height,max-height] duration-300 ease-out ${SNAP_HEIGHT_CLASS[snap]}`}
+        lg:!h-auto`}
+      style={
+        isDragging
+          ? {
+              height: `${dragHeightPx}px`,
+              maxHeight: `${window.innerHeight * EXPANDED_RATIO}px`,
+            }
+          : undefined
+      }
     >
       <button
         type="button"
-        className="pointer-events-auto flex w-full shrink-0 flex-col items-center gap-2 px-4 pb-2 pt-3 lg:hidden"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-        aria-label={expanded ? t("drawerCollapse") : t("drawerExpand")}
+        className="pointer-events-auto flex w-full shrink-0 touch-none flex-col items-center gap-2 px-4 pb-2 pt-3 lg:hidden"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        aria-expanded={!isHidden}
+        aria-label={drawerAriaLabel(snap, t)}
       >
         <span className="h-1 w-10 rounded-full bg-[var(--sand)]/25" aria-hidden />
         <span className="w-full text-start text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sand-muted)]">
@@ -48,7 +197,11 @@ export function SpotsDrawer({
         </span>
       </button>
 
-      <div className="pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 lg:px-5 lg:pb-5 lg:pt-5">
+      <div
+        className={`pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 lg:px-5 lg:pb-5 lg:pt-5 ${
+          isHidden ? "hidden lg:flex" : ""
+        }`}
+      >
         <h2 className="mb-3 hidden shrink-0 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sand-muted)] lg:block">
           {heading}
         </h2>
