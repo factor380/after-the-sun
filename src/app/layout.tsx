@@ -18,11 +18,33 @@ const body = Heebo({
   weight: ["400", "500", "600", "700"],
 });
 
+const BASE_URL = "https://after-the-sun.vercel.app";
+
 export const metadata: Metadata = {
   title: "After the Sun — נקודות שקיעה בישראל",
   description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
+  metadataBase: new URL(BASE_URL),
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/icon" }],
+  },
+  openGraph: {
+    title: "After the Sun — נקודות שקיעה בישראל",
+    description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
+    url: BASE_URL,
+    siteName: "After the Sun",
+    locale: "he_IL",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "After the Sun — נקודות שקיעה בישראל",
+    description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
+  },
+  alternates: {
+    canonical: BASE_URL,
+  },
+  verification: {
+    google: "U9tACvFFsvys8bDLBHwatwejUVYEGK5FKMC4t6jjRTI",
   },
 };
 

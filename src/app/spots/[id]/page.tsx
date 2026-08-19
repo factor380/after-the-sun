@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AddSpotPhoto from "@/components/spots/AddSpotPhoto";
@@ -9,11 +10,51 @@ import SpotGallery, {
 import { T } from "@/components/T";
 import { MAX_PHOTOS_PER_SPOT } from "@/lib/spot-photo";
 import { createClient } from "@/lib/supabase/server";
-import { getSpotWithPhotos } from "@/services/spots";
+import { getSpotWithPhotos, listSpots } from "@/services/spots";
+
+const BASE_URL = "https://after-the-sun.vercel.app";
 
 type PageProps = { params: Promise<{ id: string }> };
 
-export const dynamic = "force-dynamic";
+export async function generateStaticParams() {
+  const spots = await listSpots();
+  return spots.map((spot) => ({ id: spot.id }));
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const spot = await getSpotWithPhotos(id);
+  if (!spot) return {};
+
+  const coverPhoto =
+    spot.photoUrl ?? spot.photos[0]?.url ?? null;
+
+  const title = spot.region
+    ? `${spot.name} — שקיעה ב${spot.region} | After the Sun`
+    : `${spot.name} | After the Sun`;
+
+  const description = spot.description.slice(0, 155);
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/spots/${spot.id}`,
+      siteName: "After the Sun",
+      locale: "he_IL",
+      type: "article",
+      ...(coverPhoto ? { images: [{ url: coverPhoto, width: 1200, height: 630, alt: spot.name }] } : {}),
+    },
+    twitter: {
+      card: coverPhoto ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(coverPhoto ? { images: [coverPhoto] } : {}),
+    },
+  };
+}
 
 function isSupabaseConfigured() {
   return Boolean(
