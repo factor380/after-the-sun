@@ -61,7 +61,7 @@ export async function compressSpotPhoto(file: File): Promise<File> {
     return file;
   }
 
-  // Already under target and within upload cap — skip work.
+  // Already under target and within upload cap - skip work.
   if (file.size <= TARGET_SPOT_PHOTO_BYTES) {
     return file;
   }

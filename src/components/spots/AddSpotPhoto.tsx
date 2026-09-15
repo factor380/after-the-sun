@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { compressSpotPhoto } from "@/lib/compress-spot-photo";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import type { MessageKey } from "@/lib/i18n/dictionaries";
+import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
   ALLOWED_SPOT_PHOTO_TYPES,
   MAX_SPOT_PHOTO_INPUT_BYTES,
@@ -16,12 +16,6 @@ type AddSpotPhotoProps = {
   isAuthenticated: boolean;
   /** Hides the form once the spot reached its photo cap. */
   isFull: boolean;
-};
-
-const SERVER_ERROR_KEYS: Record<string, MessageKey> = {
-  DUPLICATE: "photoAddDuplicate",
-  SPOT_LIMIT: "photoAddSpotLimit",
-  USER_LIMIT: "photoAddUserLimit",
 };
 
 export default function AddSpotPhoto({
@@ -121,9 +115,13 @@ export default function AddSpotPhoto({
       const uploaded = await uploadRes.json().catch(() => ({}));
       if (!uploadRes.ok || typeof uploaded.photoUrl !== "string") {
         throw new Error(
-          typeof uploaded.error === "string"
-            ? uploaded.error
-            : t("photoUploadFailed"),
+          t(
+            messageKeyForRequestFailure(
+              uploadRes.status,
+              uploaded.error,
+              "photoUploadFailed",
+            ),
+          ),
         );
       }
 
@@ -138,11 +136,15 @@ export default function AddSpotPhoto({
       const attached = await attachRes.json().catch(() => ({}));
       if (!attachRes.ok) {
         if (attachRes.status === 429) throw new Error(t("photoAddTooMany"));
-        const key =
-          typeof attached.error === "string"
-            ? SERVER_ERROR_KEYS[attached.error]
-            : undefined;
-        throw new Error(key ? t(key) : t("photoAddFailed"));
+        throw new Error(
+          t(
+            messageKeyForRequestFailure(
+              attachRes.status,
+              attached.error,
+              "photoAddFailed",
+            ),
+          ),
+        );
       }
 
       reset();

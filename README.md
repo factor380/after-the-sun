@@ -1,14 +1,14 @@
 # After the Sun
 
-Sunset spots sharing app for Israel — Beta (MVP).
+Sunset spots sharing app for Israel - Beta (MVP).
 
 ## Stack (free-tier)
 
 - **Next.js** (App Router) + TypeScript + Tailwind
-- **Supabase** Free — Postgres, Auth (Google sign-in), Storage (spot photos)
-- **Prisma** — ORM + migrations
-- **Leaflet** + OpenStreetMap — maps (no Mapbox cost)
-- **Vercel** Hobby — deploy when ready
+- **Supabase** Free - Postgres, Auth (Google sign-in), Storage (spot photos)
+- **Prisma** - ORM + migrations
+- **Leaflet** + OpenStreetMap - maps (no Mapbox cost)
+- **Vercel** Hobby - deploy when ready
 
 ## Setup
 
@@ -17,9 +17,12 @@ Sunset spots sharing app for Israel — Beta (MVP).
    - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Project Settings → API)
    - `DATABASE_URL` (Transaction pooler, port **6543**, with `?pgbouncer=true`)
    - `DIRECT_URL` (Session / direct, port **5432**)
-3. In Supabase Auth → URL configuration, add redirect:
-   - `http://localhost:3004/auth/callback`
-   - (production) `https://your-domain/auth/callback`
+3. In Supabase Auth → URL Configuration:
+   - **Site URL** = production (e.g. `https://after-the-sun.vercel.app`)
+   - **Redirect URLs** must include both production *and* local, or Google login from localhost will bounce to the live site:
+     - `http://localhost:3004/auth/callback`
+     - `http://localhost:3004/**`
+     - `https://your-domain/auth/callback`
 4. Enable **Google** sign-in:
    - Supabase Dashboard → Authentication → Providers → Google → Enable
    - In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an **OAuth 2.0 Client ID** (Web application)

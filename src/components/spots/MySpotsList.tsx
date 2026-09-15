@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
   PhotoCountBadge,
   SpotThumbnail,
@@ -41,7 +42,13 @@ export default function MySpotsList({ spots }: MySpotsListProps) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(
-          typeof data.error === "string" ? data.error : t("deleteSpotFailed"),
+          t(
+            messageKeyForRequestFailure(
+              res.status,
+              data.error,
+              "deleteSpotFailed",
+            ),
+          ),
         );
       }
       router.refresh();
@@ -94,7 +101,7 @@ export default function MySpotsList({ spots }: MySpotsListProps) {
               <div className="min-w-0">
                 <Link
                   href={`/spots/${spot.id}`}
-                  className="font-medium text-[var(--sand)] transition hover:text-[var(--ember)]"
+                  className="font-[family-name:var(--font-display)] font-medium text-[var(--sand)] transition hover:text-[var(--ember)]"
                 >
                   {spot.name}
                 </Link>

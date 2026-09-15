@@ -43,7 +43,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex h-16 shrink-0 items-center justify-between bg-gradient-to-b from-[var(--dusk-deep)]/90 to-transparent px-5 md:px-8">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex h-[4.5rem] shrink-0 items-center justify-between bg-gradient-to-b from-[var(--dusk-deep)]/90 to-transparent px-5 md:h-20 md:px-8">
       <Link
         href="/"
         className="pointer-events-auto group transition-opacity hover:opacity-90"
@@ -51,7 +51,8 @@ export default function SiteHeader() {
       >
         <BrandLogo
           title={t("brand")}
-          titleClassName="font-[family-name:var(--font-display)] text-xl tracking-tight text-[var(--sand)] md:text-2xl"
+          markClassName="size-7 md:size-8"
+          titleClassName="font-[family-name:var(--font-display)] text-lg tracking-tight text-[var(--sand)] md:text-xl"
         />
       </Link>
 

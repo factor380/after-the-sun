@@ -51,7 +51,7 @@ model SpotPhoto {
   @@index([uploadedById])
 }
 
-/** User reports for moderation — review via Prisma Studio for now. */
+/** User reports for moderation - review via Prisma Studio for now. */
 model SpotReport {
   id         String   @id @default(cuid())
   spotId     String

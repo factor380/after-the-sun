@@ -14,7 +14,7 @@ export const ISRAEL_MAX_BOUNDS: [[number, number], [number, number]] = [
 
 /**
  * Home-map pan limits. Wider than ISRAEL_MAX_BOUNDS so a spot can sit at the
- * viewport center at the default zoom — Leaflet otherwise refuses to pan
+ * viewport center at the default zoom - Leaflet otherwise refuses to pan
  * when the viewport is larger than the tight Israel box.
  */
 export const ISRAEL_BROWSE_BOUNDS: [[number, number], [number, number]] = [

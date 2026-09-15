@@ -88,7 +88,9 @@ type Dict = {
   navigateToSpot: string;
   themeToggle: string;
   welcomeTitle: string;
+  welcomeLead: string;
   welcomeBody: string;
+  welcomeInvite: string;
   welcomeViewMap: string;
   welcomeAddSpot: string;
   welcomeClose: string;
@@ -133,6 +135,15 @@ type Dict = {
   deletingSpot: string;
   deleteSpotConfirm: string;
   deleteSpotFailed: string;
+  somethingWentWrong: string;
+  somethingWentWrongHint: string;
+  tryAgain: string;
+  notFoundTitle: string;
+  notFoundHint: string;
+  needSignIn: string;
+  notAllowed: string;
+  tooManyRequests: string;
+  locationOutsideIsrael: string;
 };
 
 export const dictionary: Dict = {
@@ -225,12 +236,13 @@ export const dictionary: Dict = {
   longitude: "קו אורך",
   navigateToSpot: "ניווט לנקודה",
   themeToggle: "החלפת מצב תצוגה",
-  welcomeTitle: "ברוכים הבאים ל-After the Sun",
-  welcomeBody:
-    "הקהילה של אוהבי השקיעות. בואו לגלות לוקיישנים נסתרים, לדרג תצפיות מרהיבות ולהוסיף את המקומות הסודיים שלכם למפה.",
+  welcomeTitle: "איפה רואים שקיעה היום?",
+  welcomeLead: "מפה של המקומות הכי יפים לראות בהם שקיעה.",
+  welcomeBody: "גלו מקומות שאחרים המליצו עליהם, או הוסיפו מקום משלכם.",
+  welcomeInvite: "פתחו את המפה ומצאו את השקיעה הבאה שלכם.",
   welcomeViewMap: "למפה",
   welcomeAddSpot: "הוספת נקודה",
-  welcomeClose: "סגירת ברוכים הבאים",
+  welcomeClose: "סגירת מסך הפתיחה",
   drawerExpand: "הרחבת רשימת נקודות",
   drawerCollapse: "צמצום רשימת נקודות",
   drawerHide: "הסתרת רשימת נקודות",
@@ -263,7 +275,7 @@ export const dictionary: Dict = {
   mySpotsTitle: "הנקודות שלי",
   mySpotsSubtitle: "צפייה, עריכה או מחיקה של נקודות ששיתפתם.",
   mySpotsEmpty: "עדיין לא שיתפתם נקודות. אפשר להתחיל עכשיו.",
-  mySpotsNav: "שלי",
+  mySpotsNav: "הנקודות שלי",
   editSpot: "עריכה",
   editSpotTitle: "עריכת נקודה",
   editSpotSubtitle: "עדכנו את הפרטים או המיקום במפה.",
@@ -272,6 +284,15 @@ export const dictionary: Dict = {
   deletingSpot: "מוחק…",
   deleteSpotConfirm: "למחוק את \"{name}\"? פעולה זו לא ניתנת לביטול.",
   deleteSpotFailed: "מחיקת הנקודה נכשלה",
+  somethingWentWrong: "משהו השתבש",
+  somethingWentWrongHint: "לא הצלחנו לטעון את העמוד. נסו שוב בעוד רגע.",
+  tryAgain: "נסו שוב",
+  notFoundTitle: "העמוד לא נמצא",
+  notFoundHint: "ייתכן שהקישור שגוי או שהנקודה הוסרה.",
+  needSignIn: "יש להתחבר כדי להמשיך.",
+  notAllowed: "אין הרשאה לפעולה זו.",
+  tooManyRequests: "יותר מדי בקשות. נסו שוב בעוד רגע.",
+  locationOutsideIsrael: "המיקום חייב להיות בתוך ישראל.",
 };
 
 /** @deprecated Prefer `dictionary` — kept for call sites that still use Record access */

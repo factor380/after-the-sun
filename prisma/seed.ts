@@ -2,14 +2,14 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-/** Demo seeder profile — replace with a real auth user id in production */
+/** Demo seeder profile - replace with a real auth user id in production */
 const SEED_USER_ID = "00000000-0000-4000-8000-000000000001";
 
 const spots = [
   {
     name: "נמל יפו",
     description:
-      "שקיעה ים־תיכונית קלאסית מעל הנמל העתיק — סירות דיג, רציפי אבן ושמיים רחבים למערב.",
+      "שקיעה ים־תיכונית קלאסית מעל הנמל העתיק - סירות דיג, רציפי אבן ושמיים רחבים למערב.",
     lat: 32.0525,
     lng: 34.7511,
     region: "תל אביב–יפו",
@@ -33,7 +33,7 @@ const spots = [
   {
     name: "טיילת בת גלים",
     description:
-      "הקצה המערבי של חיפה — צללית הכרמל מאחוריכם, והשמש יורדת אל המפרץ.",
+      "הקצה המערבי של חיפה - צללית הכרמל מאחוריכם, והשמש יורדת אל המפרץ.",
     lat: 32.8322,
     lng: 34.9724,
     region: "חיפה",
@@ -49,7 +49,7 @@ const spots = [
   {
     name: "פארק הצוק נתניה",
     description:
-      "צוקי כורכר גבוהים מול הים התיכון — צלליות דרמטיות בשקיעה.",
+      "צוקי כורכר גבוהים מול הים התיכון - צלליות דרמטיות בשקיעה.",
     lat: 32.3285,
     lng: 34.8515,
     region: "נתניה",
@@ -57,7 +57,7 @@ const spots = [
   {
     name: "חוף הצפון אילת",
     description:
-      "זוהר ים סוף עם ירדן ומצרים באופק — שקיעות קצרות בחורף וארוכות בקיץ.",
+      "זוהר ים סוף עם ירדן ומצרים באופק - שקיעות קצרות בחורף וארוכות בקיץ.",
     lat: 29.5581,
     lng: 34.9515,
     region: "אילת",
@@ -65,14 +65,14 @@ const spots = [
   {
     name: "מרינה אשקלון",
     description:
-      "מרינה בחוף הדרומי עם מבט מערבי פתוח — מים רגועים וצבעי ערב רכים.",
+      "מרינה בחוף הדרומי עם מבט מערבי פתוח - מים רגועים וצבעי ערב רכים.",
     lat: 31.6825,
     lng: 34.5555,
     region: "אשקלון",
   },
 ];
 
-/** English names from older seeds — update matching rows to Hebrew */
+/** English names from older seeds - update matching rows to Hebrew */
 const englishNameByLatLng = new Map(
   [
     ["Jaffa Port", spots[0]],

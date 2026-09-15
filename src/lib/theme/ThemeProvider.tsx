@@ -31,7 +31,7 @@ function applyTheme(theme: Theme) {
   root.style.colorScheme = dark ? "dark" : "light";
 }
 
-/** The `<html>` class is the source of truth — set by the boot script before paint. */
+/** The `<html>` class is the source of truth - set by the boot script before paint. */
 function getSnapshot(): Theme {
   return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }

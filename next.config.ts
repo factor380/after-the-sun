@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Static CSP must allow 'unsafe-inline' scripts — Next.js bootstrap sets self.__next_r inline.
+// Static CSP must allow 'unsafe-inline' scripts - Next.js bootstrap sets self.__next_r inline.
 const isDev = process.env.NODE_ENV === "development";
 
 const securityHeaders = [

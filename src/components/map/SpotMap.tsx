@@ -26,7 +26,6 @@ import {
 } from "@/lib/geo/israel";
 import type { GeocodeResult } from "@/lib/geo/geocode";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { useTheme } from "@/lib/theme/ThemeProvider";
 import type { SpotSummary } from "@/types/spot";
 import "leaflet/dist/leaflet.css";
 
@@ -51,20 +50,14 @@ const selectedMarkerIcon = L.icon({
   className: "spot-marker-selected",
 });
 
-const LIGHT_TILES =
-  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-const DARK_TILES =
-  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
 function BasemapTiles() {
-  const { theme } = useTheme();
-  const dark = theme === "dark";
-
   return (
     <TileLayer
-      key={dark ? "dark" : "light"}
-      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-      url={dark ? DARK_TILES : LIGHT_TILES}
+      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      url={OSM_TILES}
+      maxZoom={19}
     />
   );
 }
@@ -228,7 +221,7 @@ export default function SpotMap({ spots }: SpotMapProps) {
                   </Link>
                 ) : null}
                 <div className="space-y-1 px-3 py-2.5">
-                  <p className="font-semibold text-sm text-[var(--sand)]">
+                  <p className="font-[family-name:var(--font-display)] text-sm font-medium text-[var(--sand)]">
                     {spot.name}
                   </p>
                   {spot.region ? (

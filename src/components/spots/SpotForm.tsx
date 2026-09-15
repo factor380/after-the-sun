@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import LocationPickerClient from "@/components/map/LocationPickerClient";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { compressSpotPhoto } from "@/lib/compress-spot-photo";
+import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
   ALLOWED_SPOT_PHOTO_TYPES,
   MAX_SPOT_PHOTO_INPUT_BYTES,
@@ -123,7 +124,9 @@ export default function SpotForm({ initial }: SpotFormProps) {
     });
     const data = await res.json();
     if (!res.ok) {
-      throw new Error(data.error ?? t("photoUploadFailed"));
+      throw new Error(
+        t(messageKeyForRequestFailure(res.status, data.error, "photoUploadFailed")),
+      );
     }
     if (typeof data.photoUrl !== "string" || !data.photoUrl.startsWith("https://")) {
       throw new Error(t("photoUploadFailed"));
@@ -178,7 +181,9 @@ export default function SpotForm({ initial }: SpotFormProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error ?? t("saveFailed"));
+        throw new Error(
+          t(messageKeyForRequestFailure(res.status, data.error, "saveFailed")),
+        );
       }
 
       router.push(`/spots/${data.id}`);

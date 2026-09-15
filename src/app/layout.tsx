@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Frank_Ruhl_Libre, Heebo } from "next/font/google";
+import { Fredoka, Heebo } from "next/font/google";
 import SiteHeader from "@/components/SiteHeader";
 import WelcomeModal from "@/components/WelcomeModal";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import "./globals.css";
 
-const display = Frank_Ruhl_Libre({
+const display = Fredoka({
   variable: "--font-display",
   subsets: ["latin", "hebrew"],
   weight: ["400", "500", "600", "700"],
@@ -21,11 +21,11 @@ const body = Heebo({
 const BASE_URL = "https://after-the-sun.vercel.app";
 
 export const metadata: Metadata = {
-  title: "After the Sun — נקודות שקיעה בישראל",
+  title: "After the Sun - נקודות שקיעה בישראל",
   description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
   metadataBase: new URL(BASE_URL),
   openGraph: {
-    title: "After the Sun — נקודות שקיעה בישראל",
+    title: "After the Sun - נקודות שקיעה בישראל",
     description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
     url: BASE_URL,
     siteName: "After the Sun",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "After the Sun — נקודות שקיעה בישראל",
+    title: "After the Sun - נקודות שקיעה בישראל",
     description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
   },
   alternates: {
@@ -63,7 +63,7 @@ export default function RootLayout({
         <LocaleProvider>
           <ThemeProvider>
             <SiteHeader />
-            <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pt-16">
+            <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pt-[4.5rem] md:pt-20">
               {children}
             </main>
             <WelcomeModal />

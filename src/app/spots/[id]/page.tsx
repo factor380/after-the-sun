@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     spot.photoUrl ?? spot.photos[0]?.url ?? null;
 
   const title = spot.region
-    ? `${spot.name} — שקיעה ב${spot.region} | After the Sun`
+    ? `${spot.name} - שקיעה ב${spot.region} | After the Sun`
     : `${spot.name} | After the Sun`;
 
   const description = spot.description.slice(0, 155);

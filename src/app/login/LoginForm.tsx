@@ -54,18 +54,18 @@ export default function LoginForm() {
     setLoading(true);
     try {
       const supabase = createClient();
-      const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+      // Always return to the origin the user started on (localhost vs production).
+      // NEXT_PUBLIC_SITE_URL would send local logins to the live site.
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       });
 
       if (authError) throw authError;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("googleSignInFailed"));
+    } catch {
+      setError(t("googleSignInFailed"));
       setLoading(false);
     }
   }

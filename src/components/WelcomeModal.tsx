@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
-const SEEN_KEY = "ats-afterglow-entrance";
+const SEEN_KEY = "ats-welcome-v2";
 
 export default function WelcomeModal() {
   const { t, dir } = useLocale();
@@ -101,22 +101,26 @@ export default function WelcomeModal() {
         <div className="ats-fade-up flex flex-col items-center text-center">
           <BrandLogo
             title={t("brand")}
-            markClassName="size-14 sm:size-16"
-            titleClassName="font-[family-name:var(--font-display)] text-3xl tracking-tight text-[var(--sand)] sm:text-4xl"
-            className="inline-flex flex-col items-center gap-3"
+            markClassName="size-9 sm:size-10"
+            titleClassName="font-[family-name:var(--font-display)] text-2xl tracking-tight text-[var(--sand)] sm:text-3xl"
+            className="inline-flex items-center"
           />
+          <h2
+            id={titleId}
+            className="mt-8 font-[family-name:var(--font-display)] text-3xl leading-snug tracking-tight text-[var(--sand)] sm:text-4xl"
+          >
+            {t("welcomeTitle")}
+          </h2>
         </div>
 
-        <h2 id={titleId} className="sr-only">
-          {t("welcomeTitle")}
-        </h2>
-
-        <p
+        <div
           id={descriptionId}
-          className="ats-fade-up-delay mt-5 max-w-md text-center text-base leading-relaxed text-[var(--sand)]/80 sm:mx-auto sm:text-lg"
+          className="ats-fade-up-delay mx-auto mt-5 max-w-md space-y-3 text-center text-base leading-relaxed text-[var(--sand)]/80 sm:text-lg"
         >
-          {t("tagline")}
-        </p>
+          <p className="text-[var(--sand)]/90">{t("welcomeLead")}</p>
+          <p>{t("welcomeBody")}</p>
+          <p>{t("welcomeInvite")}</p>
+        </div>
 
         <div className="ats-fade-up-delay-2 mt-10 flex w-full flex-col gap-3 sm:mx-auto sm:max-w-sm">
           <button

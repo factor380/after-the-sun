@@ -78,7 +78,6 @@ export default function ReportSpot({
           details: details.trim() || null,
         }),
       });
-      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (res.status === 401) {
           throw new Error(t("reportNeedSignIn"));
@@ -86,9 +85,7 @@ export default function ReportSpot({
         if (res.status === 429) {
           throw new Error(t("reportTooMany"));
         }
-        throw new Error(
-          typeof data.error === "string" ? data.error : t("reportFailed"),
-        );
+        throw new Error(t("reportFailed"));
       }
       setDone(true);
     } catch (err) {

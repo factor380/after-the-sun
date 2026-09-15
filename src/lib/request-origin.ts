@@ -23,6 +23,6 @@ export function isSameOriginRequest(request: Request): boolean {
     }
   }
 
-  // Non-browser clients (no Origin/Referer) — allow; SameSite cookies still apply
+  // Non-browser clients (no Origin/Referer) - allow; SameSite cookies still apply
   return true;
 }
