@@ -144,6 +144,9 @@ type Dict = {
   notAllowed: string;
   tooManyRequests: string;
   locationOutsideIsrael: string;
+  homeSeoTitle: string;
+  homeSeoLead: string;
+  homeSpotIndex: string;
 };
 
 export const dictionary: Dict = {
@@ -293,6 +296,10 @@ export const dictionary: Dict = {
   notAllowed: "אין הרשאה לפעולה זו.",
   tooManyRequests: "יותר מדי בקשות. נסו שוב בעוד רגע.",
   locationOutsideIsrael: "המיקום חייב להיות בתוך ישראל.",
+  homeSeoTitle: "נקודות שקיעה בישראל",
+  homeSeoLead:
+    "מפה קהילתית של מקומות לראות בהם שקיעה ברחבי הארץ — תצפיות, חופים ונקודות מומלצות.",
+  homeSpotIndex: "כל נקודות השקיעה",
 };
 
 /** @deprecated Prefer `dictionary` — kept for call sites that still use Record access */

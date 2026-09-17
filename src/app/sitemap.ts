@@ -1,29 +1,37 @@
 import type { MetadataRoute } from "next";
-
-const BASE_URL = "https://after-the-sun.vercel.app";
+import { getSiteUrl } from "@/lib/seo";
+import { listSpots } from "@/services/spots";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let spots: { id: string; createdAt: string }[] = [];
+  const baseUrl = getSiteUrl();
+  let spots: {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    photoUrl: string | null;
+    photos?: { url: string }[];
+  }[] = [];
 
   try {
-    const res = await fetch(`${BASE_URL}/api/spots`, { next: { revalidate: 3600 } });
-    if (res.ok) {
-      spots = await res.json();
-    }
+    spots = await listSpots();
   } catch {
-    // fallback to home only if API is unreachable
+    // fallback to home only if the database is unreachable
   }
 
-  const spotEntries: MetadataRoute.Sitemap = spots.map((spot) => ({
-    url: `${BASE_URL}/spots/${spot.id}`,
-    lastModified: new Date(spot.createdAt),
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
+  const spotEntries: MetadataRoute.Sitemap = spots.map((spot) => {
+    const cover = spot.photoUrl ?? spot.photos?.[0]?.url;
+    return {
+      url: `${baseUrl}/spots/${spot.id}`,
+      lastModified: spot.updatedAt ?? spot.createdAt,
+      changeFrequency: "weekly",
+      priority: 0.8,
+      ...(cover ? { images: [cover] } : {}),
+    };
+  });
 
   return [
     {
-      url: BASE_URL,
+      url: baseUrl,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1,

@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { T } from "@/components/T";
+import { dictionary } from "@/lib/i18n/dictionaries";
+import { noIndexRobots } from "@/lib/seo";
 import LoginForm from "./LoginForm";
+
+export const metadata: Metadata = {
+  title: dictionary.signInTitle,
+  robots: noIndexRobots,
+};
 
 export default function LoginPage() {
   return (

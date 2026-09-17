@@ -1,10 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import MySpotsList from "@/components/spots/MySpotsList";
 import { T } from "@/components/T";
+import { dictionary } from "@/lib/i18n/dictionaries";
 import { toPublicSpot } from "@/lib/public-spot";
+import { noIndexRobots } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { listSpotsByUser } from "@/services/spots";
+
+export const metadata: Metadata = {
+  title: dictionary.mySpotsTitle,
+  robots: noIndexRobots,
+};
 
 export const dynamic = "force-dynamic";
 

@@ -7,12 +7,18 @@ import ReportSpot from "@/components/spots/ReportSpot";
 import SpotGallery, {
   type GalleryPhoto,
 } from "@/components/spots/SpotGallery";
+import JsonLd from "@/components/seo/JsonLd";
 import { T } from "@/components/T";
 import { MAX_PHOTOS_PER_SPOT } from "@/lib/spot-photo";
+import {
+  SITE_NAME,
+  noIndexRobots,
+  spotJsonLd,
+  spotPageDescription,
+  spotPageTitle,
+} from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { getSpotWithPhotos, listSpots } from "@/services/spots";
-
-const BASE_URL = "https://after-the-sun.vercel.app";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -24,32 +30,36 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
   const spot = await getSpotWithPhotos(id);
-  if (!spot) return {};
+  if (!spot) {
+    return { title: "הנקודה לא נמצאה", robots: noIndexRobots };
+  }
 
-  const coverPhoto =
-    spot.photoUrl ?? spot.photos[0]?.url ?? null;
-
-  const title = spot.region
-    ? `${spot.name} - שקיעה ב${spot.region} | After the Sun`
-    : `${spot.name} | After the Sun`;
-
-  const description = spot.description.slice(0, 155);
+  const coverPhoto = spot.photoUrl ?? spot.photos[0]?.url ?? null;
+  const title = spotPageTitle(spot.name, spot.region);
+  const description = spotPageDescription(spot.description, spot.region);
+  const brandedTitle = `${title} | ${SITE_NAME}`;
+  const path = `/spots/${spot.id}`;
 
   return {
     title,
     description,
+    alternates: { canonical: path },
     openGraph: {
-      title,
+      title: brandedTitle,
       description,
-      url: `${BASE_URL}/spots/${spot.id}`,
-      siteName: "After the Sun",
+      url: path,
+      siteName: SITE_NAME,
       locale: "he_IL",
       type: "article",
-      ...(coverPhoto ? { images: [{ url: coverPhoto, width: 1200, height: 630, alt: spot.name }] } : {}),
+      publishedTime: spot.createdAt.toISOString(),
+      modifiedTime: spot.updatedAt.toISOString(),
+      ...(coverPhoto
+        ? { images: [{ url: coverPhoto, alt: spot.name }] }
+        : {}),
     },
     twitter: {
       card: coverPhoto ? "summary_large_image" : "summary",
-      title,
+      title: brandedTitle,
       description,
       ...(coverPhoto ? { images: [coverPhoto] } : {}),
     },
@@ -100,6 +110,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
 
   return (
     <article className="pb-16">
+      <JsonLd data={spotJsonLd(spot)} />
       <SpotGallery
         spotId={spot.id}
         spotName={spot.name}

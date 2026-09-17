@@ -4,6 +4,13 @@ import SiteHeader from "@/components/SiteHeader";
 import WelcomeModal from "@/components/WelcomeModal";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TAGLINE,
+  getSiteUrl,
+  indexRobots,
+} from "@/lib/seo";
 import "./globals.css";
 
 const display = Fredoka({
@@ -18,27 +25,41 @@ const body = Heebo({
   weight: ["400", "500", "600", "700"],
 });
 
-const BASE_URL = "https://after-the-sun.vercel.app";
+const siteUrl = getSiteUrl();
+const defaultTitle = `${SITE_NAME} | ${SITE_TAGLINE}`;
 
 export const metadata: Metadata = {
-  title: "After the Sun - נקודות שקיעה בישראל",
-  description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
-  metadataBase: new URL(BASE_URL),
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: defaultTitle,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  category: "travel",
+  keywords: [
+    "נקודות שקיעה",
+    "נקודות שקיעה בישראל",
+    "שקיעה",
+    "תצפית שקיעה",
+    "מפת שקיעות",
+    "After the Sun",
+  ],
+  authors: [{ name: SITE_NAME, url: siteUrl }],
+  creator: SITE_NAME,
+  robots: indexRobots,
   openGraph: {
-    title: "After the Sun - נקודות שקיעה בישראל",
-    description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
-    url: BASE_URL,
-    siteName: "After the Sun",
+    title: defaultTitle,
+    description: SITE_DESCRIPTION,
+    url: siteUrl,
+    siteName: SITE_NAME,
     locale: "he_IL",
     type: "website",
   },
   twitter: {
-    card: "summary",
-    title: "After the Sun - נקודות שקיעה בישראל",
-    description: "גלו ושתפו את נקודות השקיעה הטובות ביותר ברחבי ישראל.",
-  },
-  alternates: {
-    canonical: BASE_URL,
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: SITE_DESCRIPTION,
   },
   verification: {
     google: "U9tACvFFsvys8bDLBHwatwejUVYEGK5FKMC4t6jjRTI",

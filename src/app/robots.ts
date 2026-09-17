@@ -1,14 +1,23 @@
 import type { MetadataRoute } from "next";
-
-const BASE_URL = "https://after-the-sun.vercel.app";
+import { getSiteUrl } from "@/lib/seo";
 
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = getSiteUrl();
+
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/login", "/auth/", "/spots/new", "/spots/mine", "/api/"],
+      disallow: [
+        "/login",
+        "/auth/",
+        "/spots/new",
+        "/spots/mine",
+        "/spots/*/edit",
+        "/api/",
+      ],
     },
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }

@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import SpotForm from "@/components/spots/SpotForm";
 import { T } from "@/components/T";
+import { dictionary } from "@/lib/i18n/dictionaries";
+import { noIndexRobots } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: dictionary.shareSpotTitle,
+  robots: noIndexRobots,
+};
 
 export const dynamic = "force-dynamic";
 

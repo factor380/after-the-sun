@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import SpotForm from "@/components/spots/SpotForm";
 import { T } from "@/components/T";
+import { dictionary } from "@/lib/i18n/dictionaries";
+import { noIndexRobots } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { getSpotById } from "@/services/spots";
+
+export const metadata: Metadata = {
+  title: dictionary.editSpotTitle,
+  robots: noIndexRobots,
+};
 
 type PageProps = { params: Promise<{ id: string }> };
 
