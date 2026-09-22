@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isSameOriginRequest } from "@/lib/request-origin";
 import { SPOT_PHOTOS_BUCKET, spotPhotoObjectPath } from "@/lib/spot-photo";
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePublishedSpots } from "@/lib/revalidate-public";
 import { deleteSpotPhoto, SpotPhotoError } from "@/services/spot-photos";
 
 type RouteContext = { params: Promise<{ id: string; photoId: string }> };
@@ -23,6 +24,7 @@ export async function DELETE(request: Request, context: RouteContext) {
     }
 
     const photo = await deleteSpotPhoto(id, photoId, user.id);
+    revalidatePublishedSpots(id);
 
     // Storage cleanup is best effort: the row is already gone, and bucket
     // policies may not let a spot owner remove another user's object.

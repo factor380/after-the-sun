@@ -22,6 +22,9 @@ import { getSpotWithPhotos, listSpots } from "@/services/spots";
 
 type PageProps = { params: Promise<{ id: string }> };
 
+/** Always render from the database so a crawler sees edits without a new deploy. */
+export const dynamic = "force-dynamic";
+
 export async function generateStaticParams() {
   const spots = await listSpots();
   return spots.map((spot) => ({ id: spot.id }));

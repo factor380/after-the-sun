@@ -49,9 +49,16 @@ export async function addSpotPhoto(spotId: string, userId: string, url: string) 
 
   await ensureProfile(userId);
 
-  return prisma.spotPhoto.create({
-    data: { spotId, url, uploadedById: userId },
-    select: { id: true, url: true, uploadedById: true, createdAt: true },
+  return prisma.$transaction(async (tx) => {
+    const photo = await tx.spotPhoto.create({
+      data: { spotId, url, uploadedById: userId },
+      select: { id: true, url: true, uploadedById: true, createdAt: true },
+    });
+    await tx.spot.update({
+      where: { id: spotId },
+      data: { updatedAt: new Date() },
+    });
+    return photo;
   });
 }
 
@@ -77,6 +84,12 @@ export async function deleteSpotPhoto(
     throw new SpotPhotoError("FORBIDDEN");
   }
 
-  await prisma.spotPhoto.delete({ where: { id: photoId } });
+  await prisma.$transaction([
+    prisma.spotPhoto.delete({ where: { id: photoId } }),
+    prisma.spot.update({
+      where: { id: spotId },
+      data: { updatedAt: new Date() },
+    }),
+  ]);
   return photo;
 }

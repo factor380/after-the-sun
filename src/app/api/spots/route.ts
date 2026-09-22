@@ -4,6 +4,7 @@ import { toPublicSpot } from "@/lib/public-spot";
 import { rateLimit } from "@/lib/rate-limit";
 import { isSameOriginRequest } from "@/lib/request-origin";
 import { createSpotSchema } from "@/lib/validations/spot";
+import { revalidatePublishedSpots } from "@/lib/revalidate-public";
 import { createSpot, listSpots } from "@/services/spots";
 
 const CREATE_RATE_LIMIT = 10;
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
     }
 
     const spot = await createSpot(user.id, parsed.data);
+    revalidatePublishedSpots(spot.id);
     return NextResponse.json(toPublicSpot(spot), { status: 201 });
   } catch (error) {
     console.error("POST /api/spots", error);

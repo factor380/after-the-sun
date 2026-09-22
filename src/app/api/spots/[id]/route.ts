@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toPublicSpot } from "@/lib/public-spot";
 import { isSameOriginRequest } from "@/lib/request-origin";
 import { updateSpotSchema } from "@/lib/validations/spot";
+import { revalidatePublishedSpots } from "@/lib/revalidate-public";
 import { deleteSpot, getSpotById, updateSpot } from "@/services/spots";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -50,6 +51,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!spot) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
+    revalidatePublishedSpots(spot.id);
     return NextResponse.json(toPublicSpot(spot));
   } catch (error) {
     console.error("PATCH /api/spots/[id]", error);
@@ -84,6 +86,7 @@ export async function DELETE(request: Request, context: RouteContext) {
     if (!spot) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
+    revalidatePublishedSpots(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("DELETE /api/spots/[id]", error);

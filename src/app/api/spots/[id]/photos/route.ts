@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { isSameOriginRequest } from "@/lib/request-origin";
 import { createClient } from "@/lib/supabase/server";
 import { addSpotPhotoSchema } from "@/lib/validations/spot-photo";
+import { revalidatePublishedSpots } from "@/lib/revalidate-public";
 import { addSpotPhoto, listSpotPhotos, SpotPhotoError } from "@/services/spot-photos";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -69,6 +70,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const photo = await addSpotPhoto(id, user.id, parsed.data.url);
+    revalidatePublishedSpots(id);
     return NextResponse.json(toPublicSpotPhoto(photo), { status: 201 });
   } catch (error) {
     if (error instanceof SpotPhotoError) {

@@ -164,18 +164,9 @@ export function spotJsonLd(spot: {
             name: SITE_NAME,
             item: getSiteUrl(),
           },
-          ...(spot.region
-            ? [
-                {
-                  "@type": "ListItem",
-                  position: 2,
-                  name: spot.region,
-                },
-              ]
-            : []),
           {
             "@type": "ListItem",
-            position: spot.region ? 3 : 2,
+            position: 2,
             name: spot.name,
             item: url,
           },
