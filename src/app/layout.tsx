@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fredoka, Heebo } from "next/font/google";
+import SiteAnalytics from "@/components/SiteAnalytics";
 import SiteHeader from "@/components/SiteHeader";
 import WelcomeModal from "@/components/WelcomeModal";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
@@ -90,6 +91,7 @@ export default function RootLayout({
             <WelcomeModal />
           </ThemeProvider>
         </LocaleProvider>
+        <SiteAnalytics />
       </body>
     </html>
   );

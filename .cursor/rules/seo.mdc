@@ -1,0 +1,23 @@
+---
+description: Keep public pages crawlable and private pages out of Google
+globs: src/app/**/*.{ts,tsx},src/lib/seo.ts,src/components/seo/**/*,src/components/home/HomeSpotIndex.tsx
+alwaysApply: false
+---
+
+# SEO on every page change
+
+Public routes need unique title, description, and a **per-page** canonical. Never set a homepage canonical on the root layout.
+
+- Helpers live in `src/lib/seo.ts` (`getSiteUrl`, `noIndexRobots`, `spotPageTitle`, JSON-LD builders).
+- Index: `/` and `/spots/[id]`. Noindex: `/login`, `/spots/new`, `/spots/mine`, `/spots/[id]/edit`, `/auth/*`, `/api/*`.
+- New public URLs go in `sitemap.ts` (via `listSpots()`, not `/api/spots`) and must not be `disallow`ed in `robots.ts`.
+- Map lists that are virtualized in the client still need server-rendered links (`HomeSpotIndex`).
+- Spot pages keep an `h1` and `spotJsonLd`. JSON-LD only through `JsonLd`.
+
+```tsx
+// ❌ BAD — inherited by every route
+export const metadata = { alternates: { canonical: "https://after-the-sun.vercel.app" } };
+
+// ✅ GOOD — homepage only
+export const metadata = { alternates: { canonical: "/" } };
+```
