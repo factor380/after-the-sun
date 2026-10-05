@@ -20,6 +20,9 @@ type Dict = {
   description: string;
   regionOptional: string;
   photoOptional: string;
+  photoOptionalCreate: string;
+  photoCreateHint: string;
+  photoCreateLimit: string;
   photoHint: string;
   photoRemove: string;
   photoTooLarge: string;
@@ -169,6 +172,9 @@ export const dictionary: Dict = {
   description: "תיאור",
   regionOptional: "אזור (אופציונלי)",
   photoOptional: "תמונת שקיעה (אופציונלי)",
+  photoOptionalCreate: "תמונות שקיעה (עד 2, אופציונלי)",
+  photoCreateHint: "אפשר לבחור שתי תמונות יחד, או להוסיף את השנייה אחר כך.",
+  photoCreateLimit: "אפשר להוסיף עד שתי תמונות.",
   photoHint: "JPEG, PNG או WebP · עד ~12MB לפני דחיסה אוטומטית",
   photoRemove: "הסרה",
   photoTooLarge: "התמונה גדולה מדי — מקסימום 12MB לפני דחיסה.",

@@ -6,6 +6,9 @@ export const MAX_PHOTOS_PER_SPOT = 24;
 /** Upper bound of community photos a single user may add to one spot. */
 export const MAX_PHOTOS_PER_USER_PER_SPOT = 5;
 
+/** Photos the creator can attach while creating a spot (cover plus one more). */
+export const MAX_PHOTOS_ON_CREATE = 2;
+
 const PUBLIC_OBJECT_PREFIX = `/storage/v1/object/public/${SPOT_PHOTOS_BUCKET}/`;
 
 function storageOrigin(): string | null {

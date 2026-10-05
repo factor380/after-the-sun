@@ -79,6 +79,8 @@ export async function createSpot(userId: string, input: CreateSpotInput) {
   assertIsraelCoordinates(input.lat, input.lng);
   await ensureProfile(userId);
 
+  const extraPhotoUrls = input.extraPhotoUrls ?? [];
+
   return prisma.spot.create({
     data: {
       name: input.name,
@@ -88,6 +90,22 @@ export async function createSpot(userId: string, input: CreateSpotInput) {
       region: input.region ?? null,
       photoUrl: input.photoUrl ?? null,
       createdById: userId,
+      ...(extraPhotoUrls.length > 0
+        ? {
+            photos: {
+              create: extraPhotoUrls.map((url) => ({
+                url,
+                uploadedById: userId,
+              })),
+            },
+          }
+        : {}),
+    },
+    include: {
+      photos: {
+        orderBy: { createdAt: "asc" },
+        select: { id: true, url: true, uploadedById: true, createdAt: true },
+      },
     },
   });
 }
