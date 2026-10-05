@@ -2,7 +2,7 @@ import Link from "next/link";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import type { SpotSummary } from "@/types/spot";
 
-/** Crawlable heading and links — the map list is virtualized in the client. */
+/** Crawlable heading and links - the map list is virtualized in the client. */
 export function HomeSpotIndex({ spots }: { spots: SpotSummary[] }) {
   return (
     <section className="sr-only">
@@ -14,7 +14,7 @@ export function HomeSpotIndex({ spots }: { spots: SpotSummary[] }) {
             {spots.map((spot) => (
               <li key={spot.id}>
                 <Link href={`/spots/${spot.id}`}>
-                  {spot.region ? `${spot.name} — ${spot.region}` : spot.name}
+                  {spot.region ? `${spot.name} - ${spot.region}` : spot.name}
                 </Link>
               </li>
             ))}

@@ -10,7 +10,7 @@ type BrandLogoProps = {
   showTitle?: boolean;
 };
 
-/** Sunset disc settling behind a hill triangle — brand mark for After the Sun. */
+/** Sunset disc settling behind a hill triangle - brand mark for After the Sun. */
 export function BrandMark({ className = "size-8" }: { className?: string }) {
   const uid = useId().replace(/:/g, "");
   const sunId = `ats-sun-${uid}`;
