@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
 import ThemeToggle from "@/components/ThemeToggle";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 
 export default function SiteHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useLocale();
   const [email, setEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
@@ -43,7 +44,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex h-[4.5rem] shrink-0 items-center justify-between bg-gradient-to-b from-[var(--dusk-deep)]/90 to-transparent px-5 md:h-20 md:px-8">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex h-[6.75rem] flex-wrap content-center items-center justify-between gap-y-1 bg-gradient-to-b from-[var(--dusk-deep)]/95 via-[var(--dusk-deep)]/80 to-transparent px-4 md:h-20 md:flex-nowrap md:px-8">
       <Link
         href="/"
         className="pointer-events-auto group transition-opacity hover:opacity-90"
@@ -56,7 +57,7 @@ export default function SiteHeader() {
         />
       </Link>
 
-      <nav className="pointer-events-auto flex items-center gap-3 text-sm md:gap-4">
+      <nav className="pointer-events-auto flex w-full items-center justify-end gap-2 text-sm md:w-auto md:gap-4">
         <ThemeToggle />
         {authReady && configured && email ? (
           <Link
@@ -66,6 +67,17 @@ export default function SiteHeader() {
             {t("mySpotsNav")}
           </Link>
         ) : null}
+        <Link
+          href="/about"
+          aria-current={pathname === "/about" ? "page" : undefined}
+          className={`transition hover:text-[var(--sand)] ${
+            pathname === "/about"
+              ? "text-[var(--sand)]"
+              : "text-[var(--sand-muted)]"
+          }`}
+        >
+          {t("campaignNav")}
+        </Link>
         <Link
           href="/spots/new"
           className="bg-[var(--ember)] px-3.5 py-2 font-medium text-white transition hover:brightness-110"

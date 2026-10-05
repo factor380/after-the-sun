@@ -85,7 +85,7 @@ export default function RootLayout({
         <LocaleProvider>
           <ThemeProvider>
             <SiteHeader />
-            <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pt-[4.5rem] md:pt-20">
+            <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pt-[6.75rem] md:pt-20">
               {children}
             </main>
             <WelcomeModal />

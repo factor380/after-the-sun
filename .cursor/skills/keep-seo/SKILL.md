@@ -36,6 +36,7 @@ If the work touches routing, rendered text, photos, or metadata, check:
 | Route | Index? | Required |
 |---|---|---|
 | `/` | yes | canonical `/`, `websiteJsonLd` + `spotsItemListJsonLd`, crawlable spot links, `h1` |
+| `/about` | yes | unique title + description, canonical `/about`, `h1`, `aboutPageJsonLd`. `/50` 308s here and stays out of the sitemap |
 | `/spots/[id]` | yes | `generateMetadata` via `spotPageTitle` / `spotPageDescription`, canonical `/spots/{id}`, `spotJsonLd` |
 | login, new, mine, edit, auth, api | no | `noIndexRobots`; listed in `robots.ts` `disallow` |
 

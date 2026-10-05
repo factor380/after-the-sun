@@ -49,12 +49,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return latest;
   }, null);
 
+  const aboutPublished = new Date("2026-10-05T16:00:00.000Z");
+  const aboutLastModified =
+    newest && newest > aboutPublished ? lastModified(newest) : aboutPublished;
+
   return [
     {
       url: baseUrl,
       ...(newest ? { lastModified: lastModified(newest) } : {}),
       changeFrequency: "daily",
       priority: 1,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: aboutLastModified,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     ...spotEntries,
   ];

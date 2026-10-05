@@ -87,6 +87,45 @@ export function spotPageDescription(
   return truncateMeta(`${ended} ${place}.`);
 }
 
+export function aboutPageJsonLd(input: { title: string; description: string }) {
+  const url = absoluteUrl("/about");
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${url}#webpage`,
+        name: input.title,
+        description: input.description,
+        url,
+        inLanguage: "he-IL",
+        isPartOf: {
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: getSiteUrl(),
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: SITE_NAME,
+            item: getSiteUrl(),
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: input.title,
+            item: url,
+          },
+        ],
+      },
+    ],
+  };
+}
+
 export function websiteJsonLd() {
   const url = getSiteUrl();
   return {
