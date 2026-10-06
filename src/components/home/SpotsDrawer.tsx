@@ -8,6 +8,8 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import { SunsetChip } from "@/components/home/SunsetChip";
+import { useSunsetLabel } from "@/components/home/useSunsetLabel";
 import { useSpotSelection } from "@/components/home/SpotSelectionProvider";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
@@ -29,6 +31,12 @@ const SNAP_HEIGHT_CLASS: Record<DrawerSnap, string> = {
   hidden: "h-[52px] max-h-[52px]",
   collapsed: "h-[28dvh] max-h-[28dvh]",
   expanded: "h-[85dvh] max-h-[85dvh]",
+};
+
+const CHIP_BOTTOM_CLASS: Record<DrawerSnap, string> = {
+  hidden: "bottom-[62px]",
+  collapsed: "bottom-[calc(28dvh+10px)]",
+  expanded: "bottom-[calc(85dvh+10px)]",
 };
 
 function snapHeightPx(snap: DrawerSnap, viewportHeight: number): number {
@@ -80,6 +88,7 @@ export function SpotsDrawer({
   setupNotice,
 }: SpotsDrawerProps) {
   const { t } = useLocale();
+  const sunset = useSunsetLabel();
   const [snap, setSnap] = useState<DrawerSnap>("expanded");
   const [dragHeightPx, setDragHeightPx] = useState<number | null>(null);
   const dragRef = useRef<{
@@ -164,8 +173,20 @@ export function SpotsDrawer({
 
   const isDragging = dragHeightPx !== null;
   const isHidden = snap === "hidden" && !isDragging;
+  const showInlineSunset = Boolean(sunset) && snap === "expanded" && !isDragging;
 
   return (
+    <>
+    {sunset ? (
+      <div
+        className={`pointer-events-none absolute left-1/2 z-40 -translate-x-1/2 lg:bottom-6 ${
+          isDragging ? "" : `transition-[bottom] duration-300 ease-out ${CHIP_BOTTOM_CLASS[snap]}`
+        } ${showInlineSunset ? "max-lg:hidden" : ""}`}
+        style={isDragging ? { bottom: dragHeightPx + 10 } : undefined}
+      >
+        <SunsetChip time={sunset} />
+      </div>
+    ) : null}
     <div
       className={`pointer-events-none absolute z-30 flex flex-col border border-[var(--ember)]/25 bg-[var(--surface)] shadow-[0_-8px_32px_rgb(42_18_16/0.12)] backdrop-blur-md ats-fade-in
         inset-x-0 bottom-0 border-x-0 border-b-0
@@ -192,8 +213,18 @@ export function SpotsDrawer({
         aria-label={drawerAriaLabel(snap, t)}
       >
         <span className="h-1 w-10 rounded-full bg-[var(--sand)]/25" aria-hidden />
-        <span className="w-full text-start text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sand-muted)]">
-          {heading}
+        <span className="flex w-full items-baseline justify-between gap-3">
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sand-muted)]">
+            {heading}
+          </span>
+          {showInlineSunset && sunset ? (
+            <span className="shrink-0 text-xs font-medium normal-case tracking-normal text-[var(--sand)] lg:hidden">
+              <span className="text-[var(--sand-muted)]">{t("sunsetToday")}</span>{" "}
+              <time dateTime={sunset} className="tabular-nums">
+                {sunset}
+              </time>
+            </span>
+          ) : null}
         </span>
       </button>
 
@@ -217,5 +248,6 @@ export function SpotsDrawer({
         </div>
       </div>
     </div>
+    </>
   );
 }

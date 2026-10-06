@@ -9,6 +9,7 @@ import SpotGallery, {
 } from "@/components/spots/SpotGallery";
 import JsonLd from "@/components/seo/JsonLd";
 import { T } from "@/components/T";
+import { sunsetTime } from "@/lib/geo/sunset";
 import { MAX_PHOTOS_PER_SPOT } from "@/lib/spot-photo";
 import {
   SITE_NAME,
@@ -99,6 +100,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
 
   const isAuthenticated = Boolean(userId);
   const isOwner = userId === spot.createdById;
+  const sunset = sunsetTime(spot.lat, spot.lng);
 
   const galleryPhotos: GalleryPhoto[] = [
     ...(spot.photoUrl
@@ -136,6 +138,14 @@ export default async function SpotDetailPage({ params }: PageProps) {
         </h1>
         {spot.region ? (
           <p className="mt-2 text-[var(--ember)]">{spot.region}</p>
+        ) : null}
+        {sunset ? (
+          <p className="mt-3 text-sm text-[var(--sand-muted)]">
+            <T k="sunsetToday" />{" "}
+            <time dateTime={sunset} className="font-medium tabular-nums text-[var(--sand)]">
+              {sunset}
+            </time>
+          </p>
         ) : null}
 
         <p className="mt-6 text-lg leading-relaxed text-[var(--sand-muted)]">

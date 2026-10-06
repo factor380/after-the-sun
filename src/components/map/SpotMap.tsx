@@ -24,6 +24,7 @@ import {
   ISRAEL_DEFAULT_ZOOM,
   ISRAEL_MAX_BOUNDS,
 } from "@/lib/geo/israel";
+import { publishMapCenter } from "@/lib/geo/map-center";
 import type { GeocodeResult } from "@/lib/geo/geocode";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { SpotSummary } from "@/types/spot";
@@ -97,6 +98,24 @@ function DeselectOnMapClick({ onDeselect }: { onDeselect: () => void }) {
   return null;
 }
 
+function MapCenterReporter() {
+  const map = useMap();
+
+  useEffect(() => {
+    const publish = () => {
+      const next = map.getCenter();
+      publishMapCenter(next.lat, next.lng);
+    };
+    publish();
+    map.on("moveend", publish);
+    return () => {
+      map.off("moveend", publish);
+    };
+  }, [map]);
+
+  return null;
+}
+
 /** Shared selection when the map sits inside a provider, local state otherwise. */
 function useMapSelection() {
   const shared = useSpotSelection();
@@ -153,6 +172,7 @@ export default function SpotMap({ spots }: SpotMapProps) {
     >
       <ZoomControl position="topleft" />
       <BasemapTiles />
+      <MapCenterReporter />
       <SelectionController
         spot={selectedSpot}
         focusNonce={focusNonce}
