@@ -6,17 +6,17 @@
     r.classList.add("locale-he");
     try {
       localStorage.removeItem("ats-locale");
-    } catch (_) {}
+    } catch {}
 
     var stored = null;
     try {
       stored = localStorage.getItem("ats-theme");
-    } catch (_) {}
+    } catch {}
     var dark =
       stored === "dark" ||
       (stored !== "light" &&
         window.matchMedia("(prefers-color-scheme: dark)").matches);
     r.classList.toggle("dark", dark);
     r.style.colorScheme = dark ? "dark" : "light";
-  } catch (_) {}
+  } catch {}
 })();
