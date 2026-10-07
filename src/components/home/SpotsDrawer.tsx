@@ -89,7 +89,7 @@ export function SpotsDrawer({
 }: SpotsDrawerProps) {
   const { t } = useLocale();
   const sunset = useSunsetLabel();
-  const [snap, setSnap] = useState<DrawerSnap>("expanded");
+  const [snap, setSnap] = useState<DrawerSnap>("collapsed");
   const [dragHeightPx, setDragHeightPx] = useState<number | null>(null);
   const dragRef = useRef<{
     startY: number;
@@ -173,16 +173,21 @@ export function SpotsDrawer({
 
   const isDragging = dragHeightPx !== null;
   const isHidden = snap === "hidden" && !isDragging;
-  const showInlineSunset = Boolean(sunset) && snap === "expanded" && !isDragging;
+  // Switching between the floating chip and the in-header time waits for
+  // release. While the chip is floating it tracks the drawer.
+  const showInlineSunset = Boolean(sunset) && snap === "expanded";
+  const chipFollowsDrag = isDragging && !showInlineSunset;
 
   return (
     <>
     {sunset ? (
       <div
         className={`pointer-events-none absolute left-1/2 z-40 -translate-x-1/2 lg:bottom-6 ${
-          isDragging ? "" : `transition-[bottom] duration-300 ease-out ${CHIP_BOTTOM_CLASS[snap]}`
+          chipFollowsDrag
+            ? ""
+            : `transition-[bottom] duration-300 ease-out ${CHIP_BOTTOM_CLASS[snap]}`
         } ${showInlineSunset ? "max-lg:hidden" : ""}`}
-        style={isDragging ? { bottom: dragHeightPx + 10 } : undefined}
+        style={chipFollowsDrag ? { bottom: dragHeightPx + 10 } : undefined}
       >
         <SunsetChip time={sunset} />
       </div>
