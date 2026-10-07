@@ -273,6 +273,7 @@ export function SpotList({ spots }: { spots: SpotSummary[] }) {
       ? sortSpotsByDistance(spots, userPos.lat, userPos.lng)
       : spots;
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- useVirtualizer returns functions the React Compiler cannot memoize
   const virtualizer = useVirtualizer({
     count: displaySpots.length,
     getScrollElement: () => parentRef.current,
