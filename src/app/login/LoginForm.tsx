@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -33,21 +33,20 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const nextPath = safeRedirectPath(searchParams.get("next"));
   const { t } = useLocale();
-  const [error, setError] = useState<string | null>(null);
+  const callbackError =
+    searchParams.get("error") === "auth" ? t("authCallbackFailed") : null;
+  const [formError, setFormError] = useState<string | null>(null);
+  const [hideCallbackError, setHideCallbackError] = useState(false);
+  const error = formError ?? (hideCallbackError ? null : callbackError);
   const [loading, setLoading] = useState(false);
   const configured = isSupabaseConfigured();
 
-  useEffect(() => {
-    if (searchParams.get("error") === "auth") {
-      setError(t("authCallbackFailed"));
-    }
-  }, [searchParams, t]);
-
   async function signInWithGoogle() {
-    setError(null);
+    setHideCallbackError(true);
+    setFormError(null);
 
     if (!configured) {
-      setError(t("supabaseNotConfigured"));
+      setFormError(t("supabaseNotConfigured"));
       return;
     }
 
@@ -65,7 +64,7 @@ export default function LoginForm() {
 
       if (authError) throw authError;
     } catch {
-      setError(t("googleSignInFailed"));
+      setFormError(t("googleSignInFailed"));
       setLoading(false);
     }
   }

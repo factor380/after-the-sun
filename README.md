@@ -1,5 +1,7 @@
 # After the Sun 🌅
 
+[![CI](https://github.com/factor380/after-the-sun/actions/workflows/ci.yml/badge.svg)](https://github.com/factor380/after-the-sun/actions/workflows/ci.yml)
+
 **A community map of the best sunset spots in Israel.** Find a spot near you, see today's sunset time there, browse photos from other visitors, and add the places you love.
 
 **Live:** [after-the-sun.vercel.app](https://after-the-sun.vercel.app/) · Hebrew, RTL · Beta (MVP)
@@ -132,6 +134,8 @@ Open [http://localhost:3004](http://localhost:3004).
 | `npm run build` | Production build |
 | `npm run start` | Production server on port 3004 |
 | `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript check, no emit |
+| `npm test` | Unit tests (Vitest) |
 | `npm run db:push` | Sync the Prisma schema to Supabase |
 | `npm run db:seed` | Seed 8 sunset spots in Israel |
 | `npm run db:studio` | Open Prisma Studio |
@@ -139,7 +143,7 @@ Open [http://localhost:3004](http://localhost:3004).
 
 ## Roadmap
 
-- [ ] Unit tests for the sunset calculation and validation schemas, plus CI on every pull request
+- [x] CI on every push and pull request (install, lint, typecheck, Vitest)
 - [ ] Move rate limiting to a shared store (e.g. Redis), since the in-memory limiter is per serverless instance
 - [ ] Moderation dashboard for reports, which are currently reviewed in Prisma Studio
 - [ ] AI-powered spot recommendations through a separate `src/ai/` layer on top of the existing services

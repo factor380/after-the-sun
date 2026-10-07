@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint, typecheck, and test
+    runs-on: ubuntu-latest
+    env:
+      # prisma generate runs on npm ci (postinstall) and only checks that these
+      # exist. This job does not connect to a database or call Supabase.
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
+      DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test

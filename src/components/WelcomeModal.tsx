@@ -36,13 +36,17 @@ export default function WelcomeModal() {
   }, [dismiss, router]);
 
   useEffect(() => {
-    try {
-      if (sessionStorage.getItem(SEEN_KEY)) return;
-    } catch {
-      /* show once if storage blocked */
-    }
-    previouslyFocused.current = document.activeElement as HTMLElement | null;
-    setOpen(true);
+    // Read storage after mount so server and client HTML match, then open.
+    const frame = requestAnimationFrame(() => {
+      try {
+        if (sessionStorage.getItem(SEEN_KEY)) return;
+      } catch {
+        /* show once if storage blocked */
+      }
+      previouslyFocused.current = document.activeElement as HTMLElement | null;
+      setOpen(true);
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {

@@ -12,15 +12,12 @@ export default function SiteHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLocale();
-  const [email, setEmail] = useState<string | null>(null);
-  const [authReady, setAuthReady] = useState(false);
   const configured = isSupabaseConfigured();
+  const [email, setEmail] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(!configured);
 
   useEffect(() => {
-    if (!configured) {
-      setAuthReady(true);
-      return;
-    }
+    if (!configured) return;
 
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
