@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
+import { SpotLinkList } from "@/components/spots/SpotLinkList";
 import {
   CAMPAIGN_GOAL,
   campaignDescription,
@@ -9,7 +10,11 @@ import {
   campaignWhyNow,
   getCampaignSpotCount,
 } from "@/lib/campaign";
+import { toPublicSpot } from "@/lib/public-spot";
+import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
 import { SITE_NAME, aboutPageJsonLd, indexRobots } from "@/lib/seo";
+import { listSpots } from "@/services/spots";
+import type { SpotSummary } from "@/types/spot";
 
 export const dynamic = "force-dynamic";
 
@@ -58,8 +63,22 @@ function AddSpotCta() {
   );
 }
 
+const RECENT_SPOT_LIMIT = 5;
+
+async function loadRecentSpots(): Promise<SpotSummary[]> {
+  try {
+    const spots = await listSpots();
+    return spots.slice(0, RECENT_SPOT_LIMIT).map(toPublicSpot);
+  } catch {
+    return [];
+  }
+}
+
 export default async function AboutPage() {
-  const count = await getCampaignSpotCount();
+  const [count, recentSpots] = await Promise.all([
+    getCampaignSpotCount(),
+    loadRecentSpots(),
+  ]);
   const title = campaignTitle(count);
   const description = campaignDescription(count);
   const progress = Math.min(100, Math.round((count / CAMPAIGN_GOAL) * 100));
@@ -102,7 +121,42 @@ export default async function AboutPage() {
         <AddSpotCta />
       </div>
 
-      <section className="mt-14 border-t border-[var(--line)] pt-8">
+      {recentSpots.length > 0 ? (
+        <section className="mt-14 border-t border-[var(--line)] pt-8">
+          <h2 className="font-[family-name:var(--font-display)] text-2xl text-[var(--sand)]">
+            נוספו לאחרונה
+          </h2>
+          <p className="mt-4 leading-relaxed text-[var(--sand-muted)]">
+            הנקודות האחרונות שנוספו למפה.
+          </p>
+          <div className="mt-5">
+            <SpotLinkList spots={recentSpots} />
+          </div>
+        </section>
+      ) : null}
+
+      <section className={recentSpots.length > 0 ? "mt-12" : "mt-14 border-t border-[var(--line)] pt-8"}>
+        <h2 className="font-[family-name:var(--font-display)] text-2xl text-[var(--sand)]">
+          לפי אזור
+        </h2>
+        <p className="mt-4 leading-relaxed text-[var(--sand-muted)]">
+          עמודים לפי אזור, עם הנקודות שסומנו שם.
+        </p>
+        <ul className="mt-4 space-y-3">
+          {SUNSET_REGIONS.map((region) => (
+            <li key={region.slug}>
+              <Link
+                href={regionPath(region.slug)}
+                className="text-[var(--sand)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--ember)]"
+              >
+                {region.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="mt-12 border-t border-[var(--line)] pt-8">
         <h2 className="font-[family-name:var(--font-display)] text-2xl text-[var(--sand)]">
           מה זה After the Sun?
         </h2>

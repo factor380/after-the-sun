@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -12,6 +13,7 @@ import { SunsetChip } from "@/components/home/SunsetChip";
 import { useSunsetLabel } from "@/components/home/useSunsetLabel";
 import { useSpotSelection } from "@/components/home/SpotSelectionProvider";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
 
 type SpotsDrawerProps = {
   children: ReactNode;
@@ -241,6 +243,22 @@ export function SpotsDrawer({
         <h2 className="mb-3 hidden shrink-0 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sand-muted)] lg:block">
           {heading}
         </h2>
+
+        <nav
+          aria-label="נקודות שקיעה לפי אזור"
+          className="mb-3 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs"
+        >
+          <span className="text-[var(--sand-muted)]">לפי אזור</span>
+          {SUNSET_REGIONS.map((region) => (
+            <Link
+              key={region.slug}
+              href={regionPath(region.slug)}
+              className="text-[var(--ember)] underline-offset-2 hover:underline"
+            >
+              {region.name}
+            </Link>
+          ))}
+        </nav>
 
         {setupNeeded && setupNotice ? (
           <div className="mb-3 shrink-0 border border-[var(--ember)]/40 bg-[var(--dusk-mid)]/60 p-3 text-sm text-[var(--sand-muted)] lg:mb-4">
