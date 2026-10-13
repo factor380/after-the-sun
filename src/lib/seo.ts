@@ -126,6 +126,58 @@ export function aboutPageJsonLd(input: { title: string; description: string }) {
   };
 }
 
+export function regionPageJsonLd(input: {
+  title: string;
+  description: string;
+  path: string;
+  /** Null when the spot query failed, so the page does not claim an empty list. */
+  spots: SpotSummary[] | null;
+}) {
+  const url = absoluteUrl(input.path);
+  const graph: Record<string, unknown>[] = [];
+
+  if (input.spots !== null) {
+    graph.push({
+      "@type": "ItemList",
+      "@id": `${url}#spots`,
+      name: input.title,
+      description: input.description,
+      url,
+      inLanguage: "he-IL",
+      numberOfItems: input.spots.length,
+      itemListElement: input.spots.map((spot, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: absoluteUrl(`/spots/${spot.id}`),
+        name: spot.name,
+      })),
+    });
+  }
+
+  graph.push({
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: SITE_NAME,
+        item: getSiteUrl(),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: input.title,
+        item: url,
+      },
+    ],
+  });
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": graph,
+  };
+}
+
 export function websiteJsonLd() {
   const url = getSiteUrl();
   return {

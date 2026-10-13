@@ -11,6 +11,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import { T } from "@/components/T";
 import { sunsetTime } from "@/lib/geo/sunset";
 import { MAX_PHOTOS_PER_SPOT } from "@/lib/spot-photo";
+import { matchingRegion, regionPath } from "@/lib/regions";
 import {
   SITE_NAME,
   noIndexRobots,
@@ -136,9 +137,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
         <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl leading-tight text-[var(--sand)] md:text-5xl">
           {spot.name}
         </h1>
-        {spot.region ? (
-          <p className="mt-2 text-[var(--ember)]">{spot.region}</p>
-        ) : null}
+        {spot.region ? <SpotRegionLabel region={spot.region} /> : null}
         {sunset ? (
           <p className="mt-3 text-sm text-[var(--sand-muted)]">
             <T k="sunsetToday" />{" "}
@@ -195,5 +194,23 @@ export default async function SpotDetailPage({ params }: PageProps) {
         <ReportSpot spotId={spot.id} isAuthenticated={isAuthenticated} />
       </div>
     </article>
+  );
+}
+
+function SpotRegionLabel({ region }: { region: string }) {
+  const match = matchingRegion(region);
+  if (!match) {
+    return <p className="mt-2 text-[var(--ember)]">{region}</p>;
+  }
+
+  return (
+    <p className="mt-2">
+      <Link
+        href={regionPath(match.slug)}
+        className="text-[var(--ember)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--sand)]"
+      >
+        {region}
+      </Link>
+    </p>
   );
 }
