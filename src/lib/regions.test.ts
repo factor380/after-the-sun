@@ -48,6 +48,8 @@ const LIVE_REGION_LABELS = [
   "תל אביב",
   "חיפה",
   "קיסריה",
+  "רמות מנשה",
+  "מישור החוף הדרומי",
 ];
 
 describe("sunset regions", () => {
@@ -57,6 +59,8 @@ describe("sunset regions", () => {
       "jerusalem",
       "haifa-north",
       "south-shfela",
+      "judea-samaria",
+      "sharon-coast",
     ]);
     expect(new Set(SUNSET_REGIONS.map((region) => region.slug)).size).toBe(
       SUNSET_REGIONS.length,
@@ -77,7 +81,7 @@ describe("sunset regions", () => {
     );
   });
 
-  it("groups the live region labels into Tel Aviv, Jerusalem, the north, and the south", () => {
+  it("groups the live region labels onto one page each", () => {
     const spots = LIVE_REGION_LABELS.map((region, index) => ({
       id: String(index),
       region,
@@ -100,13 +104,38 @@ describe("sunset regions", () => {
 
     expect(filterSpotsForRegion(spots, SUNSET_REGIONS[3]).map((spot) => spot.region)).toEqual([
       "אשקלון",
+      "עוטף עזה",
       "אילת",
+      "דימונה",
       "אילת",
       "אשקלון",
+      "מישור החוף הדרומי",
+    ]);
+    expect(filterSpotsForRegion(spots, SUNSET_REGIONS[4]).map((spot) => spot.region)).toEqual([
+      "נווה דניאל",
+      "גוש עציון בת עין",
+      "מרכז שומרון",
+      "גוש עציון",
+      "גוש עציון",
+      "אלקנה",
+      "שומרון",
+      "בנימין",
+      "עתניאל",
+      "גוש עציון",
+    ]);
+    expect(filterSpotsForRegion(spots, SUNSET_REGIONS[5]).map((spot) => spot.region)).toEqual([
+      "הרצליה",
+      "נתניה",
+      "עמק חפר",
+      "נתניה",
+      "קיסריה",
+      "רמות מנשה",
     ]);
 
     const assigned = spots.filter((spot) => matchingRegion(spot.region));
-    expect(assigned).toHaveLength(19);
+    expect(assigned).toHaveLength(spots.length);
+    const counts = SUNSET_REGIONS.map((region) => filterSpotsForRegion(spots, region).length);
+    expect(counts.reduce((sum, count) => sum + count, 0)).toBe(spots.length);
     expect(new Set(assigned.map((spot) => spot.id)).size).toBe(assigned.length);
   });
 
@@ -121,7 +150,9 @@ describe("sunset regions", () => {
     expect(matchingRegion("תל אביב חוף")?.slug).toBe("tel-aviv");
     expect(matchingRegion("ירושלים דרום")?.slug).toBe("jerusalem");
     expect(matchingRegion("חיפה דרום")?.slug).toBe("haifa-north");
-    expect(matchingRegion("הרצליה")).toBeUndefined();
+    expect(matchingRegion("הרצליה")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("הרצלייה")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("השרון")?.slug).toBe("sharon-coast");
     expect(matchingRegion("אילת")?.slug).toBe("south-shfela");
     expect(matchingRegion("השפלה")?.slug).toBe("south-shfela");
     expect(matchingRegion("באר שבע")?.slug).toBe("south-shfela");
@@ -130,11 +161,20 @@ describe("sunset regions", () => {
     expect(matchingRegion("קרית גת")?.slug).toBe("south-shfela");
     expect(matchingRegion("מישור החוף הדרומי")?.slug).toBe("south-shfela");
     expect(matchingRegion("הדרומי")).toBeUndefined();
-    expect(matchingRegion("דימונה")).toBeUndefined();
-    expect(matchingRegion("עוטף עזה")).toBeUndefined();
-    expect(matchingRegion("רמות מנשה")).toBeUndefined();
-    expect(matchingRegion("גוש עציון")).toBeUndefined();
-    expect(matchingRegion("קיסריה")).toBeUndefined();
+    expect(matchingRegion("דימונה")?.slug).toBe("south-shfela");
+    expect(matchingRegion("עוטף עזה")?.slug).toBe("south-shfela");
+    expect(matchingRegion("רמות מנשה")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("גוש עציון")?.slug).toBe("judea-samaria");
+    expect(matchingRegion("השומרון")?.slug).toBe("judea-samaria");
+    expect(matchingRegion("מרכז שומרון")?.slug).toBe("judea-samaria");
+    expect(matchingRegion("גוש עציון בת עין")?.slug).toBe("judea-samaria");
+    expect(matchingRegion("הר חברון")?.slug).toBe("judea-samaria");
+    expect(matchingRegion("קיסריה")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("זכרון יעקב")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("אפק")).toBeUndefined();
+    expect(matchingRegion("ירושלים גוש עציון")?.slug).toBe("jerusalem");
+    expect(matchingRegion("תל אביב הרצליה")?.slug).toBe("tel-aviv");
+    expect(matchingRegion("שומרון נתניה")?.slug).toBe("judea-samaria");
     expect(matchingRegion(null)).toBeUndefined();
     expect(matchingRegion("   ")).toBeUndefined();
     expect(getRegionBySlug("nope")).toBeUndefined();
