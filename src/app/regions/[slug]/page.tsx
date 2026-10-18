@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import JsonLd from "@/components/seo/JsonLd";
 import { SpotLinkList } from "@/components/spots/SpotLinkList";
 import { T } from "@/components/T";
+import { dictionary } from "@/lib/i18n/dictionaries";
 import { toPublicSpot } from "@/lib/public-spot";
 import {
   SUNSET_REGIONS,
@@ -82,7 +83,7 @@ function AddSpotCta() {
         הוספת נקודה
       </Link>
       <p className="mt-3 text-sm leading-relaxed text-[var(--sand-muted)]">
-        לפני ההוספה צריך להתחבר עם Google - זה לוקח רגע.
+        {dictionary.shareSpotSignInNote}
       </p>
     </div>
   );

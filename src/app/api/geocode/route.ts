@@ -5,9 +5,18 @@ import { isSameOriginRequest } from "@/lib/request-origin";
 import { searchIsraelPlaces } from "@/lib/geo/geocode";
 
 const GEOCODE_RATE_LIMIT = 30;
+const ANON_GEOCODE_RATE_LIMIT = 12;
 const GEOCODE_RATE_WINDOW_MS = 60_000;
 const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 120;
+
+/** First public hop only. Unparseable values share one bucket. */
+function anonymousGeocodeKey(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  const first = (forwarded?.split(",")[0] ?? request.headers.get("x-real-ip") ?? "").trim();
+  const ip = /^[0-9a-fA-F:.]{3,64}$/.test(first) ? first : "unknown";
+  return `geocode:anon:${ip}`;
+}
 
 export async function GET(request: Request) {
   try {
@@ -15,22 +24,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Place search is not an insert. Anonymous visitors use it while filling
+    // /spots/new; creating a spot still requires a session.
+    let userId: string | null = null;
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      userId = user?.id ?? null;
+    } catch {
+      userId = null;
     }
 
-    if (
-      !rateLimit(
-        `geocode:${user.id}`,
-        GEOCODE_RATE_LIMIT,
-        GEOCODE_RATE_WINDOW_MS,
-      )
-    ) {
+    const limitKey = userId
+      ? { key: `geocode:user:${userId}`, limit: GEOCODE_RATE_LIMIT }
+      : { key: anonymousGeocodeKey(request), limit: ANON_GEOCODE_RATE_LIMIT };
+
+    if (!rateLimit(limitKey.key, limitKey.limit, GEOCODE_RATE_WINDOW_MS)) {
       return NextResponse.json(
         { error: "Too many requests. Try again shortly." },
         { status: 429 },

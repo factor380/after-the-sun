@@ -12,6 +12,7 @@ import {
 } from "@/lib/campaign";
 import { toPublicSpot } from "@/lib/public-spot";
 import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { dictionary } from "@/lib/i18n/dictionaries";
 import { SITE_NAME, aboutPageJsonLd, indexRobots } from "@/lib/seo";
 import { listSpots } from "@/services/spots";
 import type { SpotSummary } from "@/types/spot";
@@ -57,7 +58,7 @@ function AddSpotCta() {
         הוספת נקודה
       </Link>
       <p className="mt-3 text-sm leading-relaxed text-[var(--sand-muted)]">
-        לפני ההוספה צריך להתחבר עם Google - זה לוקח רגע.
+        {dictionary.shareSpotSignInNote}
       </p>
     </div>
   );
@@ -172,8 +173,8 @@ export default async function AboutPage() {
         </h2>
         <ol className="mt-4 list-decimal space-y-3 ps-5 leading-relaxed text-[var(--sand)] marker:text-[var(--ember)]">
           <li>הוספת נקודה</li>
-          <li>התחברות עם Google - אין הגשת אורח</li>
           <li>מיקום על המפה, תמונה, ותיאור קצר</li>
+          <li>התחברות עם Google רק בשליחה - הטופס נשמר</li>
         </ol>
         <div className="mt-8">
           <AddSpotCta />
@@ -222,7 +223,7 @@ export default async function AboutPage() {
           </Link>
         </p>
         <p className="mt-3 text-sm leading-relaxed text-[var(--sand-muted)]">
-          לפני ההוספה צריך להתחבר עם Google - זה לוקח רגע.
+          {dictionary.shareSpotSignInNote}
         </p>
       </section>
     </article>

@@ -51,11 +51,12 @@ const LIVE_REGION_LABELS = [
 ];
 
 describe("sunset regions", () => {
-  it("publishes three stable, indexable slugs", () => {
+  it("publishes stable, indexable slugs", () => {
     expect(SUNSET_REGIONS.map((region) => region.slug)).toEqual([
       "tel-aviv",
       "jerusalem",
       "haifa-north",
+      "south-shfela",
     ]);
     expect(new Set(SUNSET_REGIONS.map((region) => region.slug)).size).toBe(
       SUNSET_REGIONS.length,
@@ -68,11 +69,15 @@ describe("sunset regions", () => {
       expect(region.description.length).toBeGreaterThan(40);
       expect(region.intro.length).toBeGreaterThan(20);
     }
-    expect(new Set(SUNSET_REGIONS.map((region) => region.title)).size).toBe(3);
-    expect(new Set(SUNSET_REGIONS.map((region) => region.description)).size).toBe(3);
+    expect(new Set(SUNSET_REGIONS.map((region) => region.title)).size).toBe(
+      SUNSET_REGIONS.length,
+    );
+    expect(new Set(SUNSET_REGIONS.map((region) => region.description)).size).toBe(
+      SUNSET_REGIONS.length,
+    );
   });
 
-  it("groups the live region labels into Tel Aviv, Jerusalem, and the north", () => {
+  it("groups the live region labels into Tel Aviv, Jerusalem, the north, and the south", () => {
     const spots = LIVE_REGION_LABELS.map((region, index) => ({
       id: String(index),
       region,
@@ -93,8 +98,15 @@ describe("sunset regions", () => {
       "חיפה",
     ]);
 
+    expect(filterSpotsForRegion(spots, SUNSET_REGIONS[3]).map((spot) => spot.region)).toEqual([
+      "אשקלון",
+      "אילת",
+      "אילת",
+      "אשקלון",
+    ]);
+
     const assigned = spots.filter((spot) => matchingRegion(spot.region));
-    expect(assigned).toHaveLength(15);
+    expect(assigned).toHaveLength(19);
     expect(new Set(assigned.map((spot) => spot.id)).size).toBe(assigned.length);
   });
 
@@ -106,8 +118,21 @@ describe("sunset regions", () => {
     expect(matchingRegion("רמת הגולן")?.slug).toBe("haifa-north");
     expect(matchingRegion("ראש הנקרה")?.slug).toBe("haifa-north");
     expect(matchingRegion("תל אביב ירושלים")?.slug).toBe("tel-aviv");
+    expect(matchingRegion("תל אביב חוף")?.slug).toBe("tel-aviv");
+    expect(matchingRegion("ירושלים דרום")?.slug).toBe("jerusalem");
+    expect(matchingRegion("חיפה דרום")?.slug).toBe("haifa-north");
     expect(matchingRegion("הרצליה")).toBeUndefined();
-    expect(matchingRegion("אילת")).toBeUndefined();
+    expect(matchingRegion("אילת")?.slug).toBe("south-shfela");
+    expect(matchingRegion("השפלה")?.slug).toBe("south-shfela");
+    expect(matchingRegion("באר שבע")?.slug).toBe("south-shfela");
+    expect(matchingRegion("ים המלח")?.slug).toBe("south-shfela");
+    expect(matchingRegion("מודיעין-מכבים-רעות")?.slug).toBe("south-shfela");
+    expect(matchingRegion("קרית גת")?.slug).toBe("south-shfela");
+    expect(matchingRegion("מישור החוף הדרומי")?.slug).toBe("south-shfela");
+    expect(matchingRegion("הדרומי")).toBeUndefined();
+    expect(matchingRegion("דימונה")).toBeUndefined();
+    expect(matchingRegion("עוטף עזה")).toBeUndefined();
+    expect(matchingRegion("רמות מנשה")).toBeUndefined();
     expect(matchingRegion("גוש עציון")).toBeUndefined();
     expect(matchingRegion("קיסריה")).toBeUndefined();
     expect(matchingRegion(null)).toBeUndefined();

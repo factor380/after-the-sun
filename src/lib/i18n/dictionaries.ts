@@ -14,6 +14,11 @@ type Dict = {
   setupNeeded: string;
   shareSpotTitle: string;
   shareSpotSubtitle: string;
+  shareSpotSignInNote: string;
+  draftSignInHint: string;
+  draftRestored: string;
+  draftPhotosMissing: string;
+  draftSaveFailed: string;
   configureSupabase: string;
   backHome: string;
   name: string;
@@ -167,6 +172,14 @@ export const dictionary: Dict = {
     "חברו את Supabase ב־.env (ראו .env.example), ואז הריצו npx prisma db push ו־npm run db:seed.",
   shareSpotTitle: "שיתוף נקודת שקיעה",
   shareSpotSubtitle: "תנו שם, תארו את האווירה, וסמנו על המפה.",
+  shareSpotSignInNote:
+    "אפשר למלא את הטופס עכשיו. ההתחברות עם Google נדרשת רק בשליחה.",
+  draftSignInHint: "בשליחה תתבקשו להתחבר עם Google. הטופס יישמר ותחזרו לכאן.",
+  draftRestored: "הטופס שוחזר. אפשר לשלוח עכשיו.",
+  draftPhotosMissing:
+    "התמונות לא נשמרו במעבר להתחברות. צרפו אותן שוב לפני השליחה.",
+  draftSaveFailed:
+    "לא הצלחנו לשמור את הטופס בדפדפן. נסו שוב, או התחברו ואז מלאו מחדש.",
   configureSupabase: "הגדירו את Supabase ב־.env לפני הוספת נקודות.",
   backHome: "חזרה הביתה",
   name: "שם",

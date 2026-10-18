@@ -11,8 +11,8 @@ export const dynamic = "force-dynamic";
  * Spot edits newer than this still win, so Google is not told every deploy is a content change.
  */
 const PUBLIC_MARKUP_REVISION = new Date("2026-09-22T18:00:00.000Z");
-/** About and region landing pages gained HTML on this date. */
-const REGION_PAGES_PUBLISHED = new Date("2026-10-13T06:00:00.000Z");
+/** About copy, region pages, and their social images were updated on this date. */
+const REGION_PAGES_PUBLISHED = new Date("2026-10-18T17:00:00.000Z");
 
 function lastModified(updatedAt: Date): Date {
   return updatedAt > PUBLIC_MARKUP_REVISION ? updatedAt : PUBLIC_MARKUP_REVISION;
