@@ -81,6 +81,7 @@ type Dict = {
   changeLocation: string;
   confirmLocationFirst: string;
   poweredByGeoapify: string;
+  poweredByOsm: string;
   saveFailed: string;
   saving: string;
   shareSpot: string;
@@ -250,6 +251,7 @@ export const dictionary: Dict = {
   changeLocation: "שינוי מיקום",
   confirmLocationFirst: "אשרו את המיקום לפני השמירה.",
   poweredByGeoapify: "חיפוש מבוסס Geoapify",
+  poweredByOsm: "חיפוש מבוסס OpenStreetMap",
   saveFailed: "שמירת הנקודה נכשלה",
   saving: "שומר…",
   shareSpot: "שיתוף נקודה",
