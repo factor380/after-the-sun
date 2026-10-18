@@ -78,7 +78,7 @@ prisma/           Schema and seed data
    - `DATABASE_URL` (transaction pooler, port **6543**, with `?pgbouncer=true`)
    - `DIRECT_URL` (session / direct connection, port **5432**)
    - `NEXT_PUBLIC_SITE_URL` (`http://localhost:3004` locally)
-   - `GEOAPIFY_API_KEY` (optional; enables place search. Pin dropping works without it)
+   - `GEOAPIFY_API_KEY` (optional. When set, place search uses Geoapify. Without it, search uses OpenStreetMap)
 3. In Supabase, go to Auth → URL Configuration:
    - **Site URL**: your production URL (e.g. `https://after-the-sun.vercel.app`)
    - **Redirect URLs**: include both production *and* local, or Google login from localhost will bounce to the live site:

@@ -484,7 +484,7 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
             ? ` · ${draftLat!.toFixed(5)}, ${draftLng!.toFixed(5)}`
             : ""}
         </p>
-        <div className="h-64 w-full overflow-hidden rounded-sm">
+        <div className="relative z-10 h-64 w-full rounded-sm">
           <LocationPickerClient
             lat={draftLat}
             lng={draftLng}

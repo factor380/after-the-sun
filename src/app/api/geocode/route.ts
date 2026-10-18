@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { isSameOriginRequest } from "@/lib/request-origin";
-import { searchIsraelPlaces } from "@/lib/geo/geocode";
+import { PlaceSearchError, searchIsraelPlaces } from "@/lib/geo/geocode";
 
 const GEOCODE_RATE_LIMIT = 30;
 const ANON_GEOCODE_RATE_LIMIT = 12;
@@ -66,21 +66,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Query too long" }, { status: 400 });
     }
 
-    if (!process.env.GEOAPIFY_API_KEY) {
-      console.error("GET /api/geocode 503: search is not configured");
-      return NextResponse.json(
-        { error: "Search is not configured", results: [] },
-        { status: 503 },
-      );
-    }
-
-    const results = await searchIsraelPlaces(query);
-    return NextResponse.json({ results });
+    const { results, provider } = await searchIsraelPlaces(query, request.signal);
+    return NextResponse.json({ results, provider });
   } catch (error) {
-    console.error("GET /api/geocode 502", geocodeLogDetail(error));
+    if (error instanceof Error && error.name === "AbortError") {
+      return new NextResponse(null, { status: 499 });
+    }
+    const status = error instanceof PlaceSearchError && error.status === 429 ? 429 : 502;
+    console.error(`GET /api/geocode ${status}`, geocodeLogDetail(error));
     return NextResponse.json(
-      { error: "Search failed", results: [] },
-      { status: 502 },
+      {
+        error: status === 429 ? "Too many requests. Try again shortly." : "Search failed",
+        results: [],
+      },
+      { status },
     );
   }
 }

@@ -25,7 +25,7 @@ import {
   ISRAEL_MAX_BOUNDS,
 } from "@/lib/geo/israel";
 import { publishMapCenter } from "@/lib/geo/map-center";
-import type { GeocodeResult } from "@/lib/geo/geocode";
+import type { GeocodeResult, PlaceSearchProvider } from "@/lib/geo/geocode";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n/dictionaries";
 import type { SpotSummary } from "@/types/spot";
@@ -318,6 +318,7 @@ function PlaceSearch({
   const [searching, setSearching] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [provider, setProvider] = useState<PlaceSearchProvider>("openstreetmap");
   const boxRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
@@ -352,7 +353,13 @@ function PlaceSearch({
           setMessage(t(searchMessageKey(res.status)));
           return;
         }
-        const data = (await res.json()) as { results?: GeocodeResult[] };
+        const data = (await res.json()) as {
+          results?: GeocodeResult[];
+          provider?: PlaceSearchProvider;
+        };
+        if (data.provider === "geoapify" || data.provider === "openstreetmap") {
+          setProvider(data.provider);
+        }
         const next = Array.isArray(data.results) ? data.results : [];
         setResults(next);
         setMessage(next.length === 0 ? t("searchNoResults") : null);
@@ -453,6 +460,7 @@ function PlaceSearch({
                 <li key={`${result.lat},${result.lng},${index}`}>
                   <button
                     type="button"
+                    onPointerDown={(e) => e.preventDefault()}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => choose(result)}
                     className="block w-full px-3 py-2 text-start text-sm text-[var(--sand)] transition hover:bg-[var(--dusk-mid)]"
@@ -471,7 +479,18 @@ function PlaceSearch({
       ) : null}
 
       <p className="mt-1 text-[10px] text-[var(--sand-muted)]">
-        {t("poweredByGeoapify")}
+        {provider === "geoapify" ? (
+          t("poweredByGeoapify")
+        ) : (
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            {t("poweredByOsm")}
+          </a>
+        )}
       </p>
     </div>
   );
@@ -488,7 +507,7 @@ export function LocationPicker({ lat, lng, onPick }: LocationPickerProps) {
         zoom={lat !== null && lng !== null ? 14 : 9}
         maxBounds={ISRAEL_MAX_BOUNDS}
         maxBoundsViscosity={0.85}
-        className="h-64 w-full rounded-sm"
+        className="h-64 w-full overflow-hidden rounded-sm"
         style={{ height: "16rem", width: "100%" }}
         scrollWheelZoom
         zoomControl={false}
