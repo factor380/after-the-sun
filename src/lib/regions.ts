@@ -66,6 +66,106 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
       "קרית שמונה",
     ],
   },
+  {
+    slug: "south-shfela",
+    name: "הדרום והשפלה",
+    title: "נקודות שקיעה בדרום ובשפלה",
+    description:
+      "נקודות שקיעה בדרום, בשפלה, בנגב, באילת ובים המלח על המפה הקהילתית After the Sun. רשימה עם קישור לכל נקודה.",
+    intro:
+      "אלה נקודות השקיעה שסומנו בדרום או בשפלה על המפה. נקודה מופיעה כאן כשהאזור שנכתב בה מציין דרום, שפלה, נגב, אילת, אשקלון, דימונה, או יישוב אחר באזור.",
+    // "חוף" keeps "מישור החוף הדרומי" on this page; the Sharon page matches its own town names.
+    // Yehuda is tested first (see regionsInMatchOrder) so "דרום הר חברון" is not caught by "דרום".
+    matchers: [
+      "דרום",
+      "שפלה",
+      "אילת",
+      "אשקלון",
+      "אשדוד",
+      "באר שבע",
+      "נגב",
+      "ערבה",
+      "מצפה רמון",
+      "ים המלח",
+      "קריית גת",
+      "קרית גת",
+      "שפירא",
+      "רחובות",
+      "בית שמש",
+      "מודיעין",
+      "לכיש",
+      "חוף",
+      "דימונה",
+      "עוטף עזה",
+    ],
+  },
+  {
+    slug: "judea",
+    name: "יהודה",
+    title: "נקודות שקיעה ביהודה",
+    description:
+      "נקודות שקיעה ביהודה, בגוש עציון ובהר חברון על המפה הקהילתית After the Sun. רשימה עם קישור לכל נקודה.",
+    intro:
+      "אלה נקודות השקיעה שסומנו ביהודה על המפה. נקודה מופיעה כאן כשהאזור שנכתב בה מציין גוש עציון, הר חברון, אפרת, תקוע, עתניאל, או יישוב אחר ביהודה.",
+    matchers: [
+      "גוש עציון",
+      "עציון",
+      "נווה דניאל",
+      "בת עין",
+      "כרמי צור",
+      "כפר עציון",
+      "אפרת",
+      "תקוע",
+      "דרום הר חברון",
+      "הר חברון",
+      "עתניאל",
+      "קריית ארבע",
+      "קרית ארבע",
+      "יהודה",
+    ],
+  },
+  {
+    slug: "samaria",
+    name: "שומרון ובנימין",
+    title: "נקודות שקיעה בשומרון ובבנימין",
+    description:
+      "נקודות שקיעה בשומרון ובבנימין על המפה הקהילתית After the Sun. רשימה עם קישור לכל נקודה.",
+    intro:
+      "אלה נקודות השקיעה שסומנו בשומרון או בבנימין על המפה. נקודה מופיעה כאן כשהאזור שנכתב בה מציין שומרון, בנימין, אריאל, עפרה, אלקנה, או יישוב אחר באזור.",
+    matchers: [
+      "שומרון",
+      "בנימין",
+      "עפרה",
+      "אלקנה",
+      "אריאל",
+      "מרכז שומרון",
+      "קרני שומרון",
+      "בית אל",
+    ],
+  },
+  {
+    slug: "sharon-coast",
+    name: "השרון והחוף",
+    title: "נקודות שקיעה בשרון ובחוף",
+    description:
+      "נקודות שקיעה בנתניה, בהרצליה, בקיסריה ובעמק חפר על המפה הקהילתית After the Sun. רשימה עם קישור לכל נקודה.",
+    intro:
+      "אלה נקודות השקיעה שסומנו בשרון או בחוף הסמוך על המפה. נקודה מופיעה כאן כשהאזור שנכתב בה מציין נתניה, הרצליה, קיסריה, עמק חפר, רמות מנשה, או יישוב אחר בשרון.",
+    matchers: [
+      "נתניה",
+      "הרצליה",
+      "הרצלייה",
+      "קיסריה",
+      "עמק חפר",
+      "שרון",
+      "רמות מנשה",
+      "דליה",
+      "כפר סבא",
+      "רעננה",
+      "חדרה",
+      "זכרון",
+    ],
+  },
 ];
 
 const PLACE_SEPARATORS = /[\s\-–—−־/|,·•]+/u;
@@ -78,11 +178,25 @@ export function getRegionBySlug(slug: string): SunsetRegion | undefined {
   return SUNSET_REGIONS.find((region) => region.slug === slug);
 }
 
-/** The first configured region whose matchers hit `regionText`, if any. */
+/**
+ * Drawer and page order follow `SUNSET_REGIONS`. Yehuda and Shomron are
+ * tested before the south page so "דרום הר חברון" is not taken by "דרום".
+ * A label that only says "דרום" still reaches the south page.
+ */
+function regionsInMatchOrder(): SunsetRegion[] {
+  const ahead = new Set(["judea", "samaria"]);
+  const early = SUNSET_REGIONS.filter((region) => ahead.has(region.slug));
+  const rest = SUNSET_REGIONS.filter((region) => !ahead.has(region.slug));
+  const southAt = rest.findIndex((region) => region.slug === "south-shfela");
+  if (southAt < 0) return [...SUNSET_REGIONS];
+  return [...rest.slice(0, southAt), ...early, ...rest.slice(southAt)];
+}
+
+/** The first matching region in match order, if any. */
 export function matchingRegion(regionText: string | null | undefined): SunsetRegion | undefined {
   const tokens = placeTokens(regionText);
   if (tokens.length === 0) return undefined;
-  return SUNSET_REGIONS.find((region) =>
+  return regionsInMatchOrder().find((region) =>
     region.matchers.some((matcher) => tokensIncludePhrase(tokens, matcher)),
   );
 }

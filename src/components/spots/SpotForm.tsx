@@ -7,6 +7,11 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { compressSpotPhoto } from "@/lib/compress-spot-photo";
 import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
+  clearNewSpotDraft,
+  loadNewSpotDraft,
+  saveNewSpotDraft,
+} from "@/lib/new-spot-draft";
+import {
   ALLOWED_SPOT_PHOTO_TYPES,
   MAX_PHOTOS_ON_CREATE,
   MAX_SPOT_PHOTO_INPUT_BYTES,
@@ -30,12 +35,16 @@ export type SpotFormInitial = {
 
 type SpotFormProps = {
   initial?: SpotFormInitial;
+  /** Create flow only. Edit always posts to the API. */
+  signedIn?: boolean;
 };
 
-export default function SpotForm({ initial }: SpotFormProps) {
+export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
   const router = useRouter();
   const { t } = useLocale();
   const isEdit = Boolean(initial);
+  const canSubmitDirectly = isEdit || signedIn;
+  const touchedRef = useRef(false);
   const photoInputId = useId();
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(initial?.name ?? "");
@@ -54,6 +63,8 @@ export default function SpotForm({ initial }: SpotFormProps) {
   const photoFilesRef = useRef<DraftPhoto[]>([]);
   const [acceptedGuidelines, setAcceptedGuidelines] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
+  const [photosMissing, setPhotosMissing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const maxPhotos = isEdit ? 1 : MAX_PHOTOS_ON_CREATE;
@@ -70,6 +81,39 @@ export default function SpotForm({ initial }: SpotFormProps) {
     },
     [],
   );
+
+  useEffect(() => {
+    if (isEdit) return;
+    let cancelled = false;
+    void (async () => {
+      const restoredDraft = await loadNewSpotDraft();
+      if (cancelled || !restoredDraft || touchedRef.current) return;
+      const { fields, photos } = restoredDraft;
+      setName(fields.name);
+      setDescription(fields.description);
+      setRegion(fields.region);
+      setDraftLat(fields.lat);
+      setDraftLng(fields.lng);
+      setConfirmedLat(fields.confirmedLat);
+      setConfirmedLng(fields.confirmedLng);
+      setPhotoUrl(fields.photoUrl);
+      setAcceptedGuidelines(fields.acceptedGuidelines);
+      if (photos.length > 0) {
+        setPhotoFiles(
+          photos.map((file) => ({
+            id: crypto.randomUUID(),
+            file,
+            previewUrl: URL.createObjectURL(file),
+          })),
+        );
+      }
+      setPhotosMissing(restoredDraft.photosMissing);
+      setRestored(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isEdit]);
 
   const pastedPhotoUrl = photoUrl.trim().startsWith("https://")
     ? photoUrl.trim()
@@ -102,7 +146,9 @@ export default function SpotForm({ initial }: SpotFormProps) {
   }
 
   async function onPhotoSelected(fileList: FileList | null) {
+    touchedRef.current = true;
     setError(null);
+    setPhotosMissing(false);
     const picked = Array.from(fileList ?? []);
     if (photoInputRef.current) photoInputRef.current.value = "";
     if (picked.length === 0) return;
@@ -205,6 +251,34 @@ export default function SpotForm({ initial }: SpotFormProps) {
       return;
     }
 
+    if (!canSubmitDirectly) {
+      setSaving(true);
+      try {
+        const saved = await saveNewSpotDraft({
+          name,
+          description,
+          region,
+          lat: draftLat,
+          lng: draftLng,
+          confirmedLat,
+          confirmedLng,
+          photoUrl,
+          acceptedGuidelines,
+          photos: photoFiles.map((photo) => photo.file),
+        });
+        if (!saved.stored) {
+          setError(t("draftSaveFailed"));
+          return;
+        }
+        router.push("/login?next=/spots/new");
+      } catch {
+        setError(t("draftSaveFailed"));
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
     setSaving(true);
     try {
       let resolvedPhotoUrl = photoUrl.trim() || null;
@@ -245,6 +319,7 @@ export default function SpotForm({ initial }: SpotFormProps) {
         );
       }
 
+      if (!isEdit) await clearNewSpotDraft();
       router.push(`/spots/${data.id}`);
       router.refresh();
     } catch (err) {
@@ -255,7 +330,13 @@ export default function SpotForm({ initial }: SpotFormProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
+    <form
+      onSubmit={onSubmit}
+      onChange={() => {
+        touchedRef.current = true;
+      }}
+      className="space-y-5"
+    >
       <div>
         <label className="mb-1 block text-sm text-[var(--sand-muted)]">
           {t("name")}
@@ -327,6 +408,9 @@ export default function SpotForm({ initial }: SpotFormProps) {
             {t("photoLandscapeGuide")}
           </p>
         )}
+        {photosMissing ? (
+          <p className="mt-2 text-sm text-[var(--ember)]">{t("draftPhotosMissing")}</p>
+        ) : null}
 
         {photoFiles.length > 0 ? (
           <ul
@@ -405,6 +489,7 @@ export default function SpotForm({ initial }: SpotFormProps) {
             lat={draftLat}
             lng={draftLng}
             onPick={(nextLat, nextLng) => {
+              touchedRef.current = true;
               setDraftLat(nextLat);
               setDraftLng(nextLng);
             }}
@@ -462,6 +547,15 @@ export default function SpotForm({ initial }: SpotFormProps) {
             <span>{t("uploadTermsCheckbox")}</span>
           </label>
         </div>
+      ) : null}
+
+      {restored ? (
+        <p className="text-sm text-[var(--ember)]">{t("draftRestored")}</p>
+      ) : null}
+      {!canSubmitDirectly ? (
+        <p className="text-sm leading-relaxed text-[var(--sand-muted)]">
+          {t("draftSignInHint")}
+        </p>
       ) : null}
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

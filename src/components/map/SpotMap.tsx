@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -27,6 +27,7 @@ import {
 import { publishMapCenter } from "@/lib/geo/map-center";
 import type { GeocodeResult } from "@/lib/geo/geocode";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import type { MessageKey } from "@/lib/i18n/dictionaries";
 import type { SpotSummary } from "@/types/spot";
 import "leaflet/dist/leaflet.css";
 
@@ -298,6 +299,14 @@ function MapController({ target }: { target: FlyTarget }) {
 
 const SEARCH_DEBOUNCE_MS = 350;
 
+function searchMessageKey(status: number): MessageKey {
+  if (status === 401) return "searchNeedSignIn";
+  if (status === 429) return "searchTooMany";
+  if (status === 503) return "searchNotConfigured";
+  if (status === 502) return "searchFailed";
+  return "searchError";
+}
+
 function PlaceSearch({
   onSelect,
 }: {
@@ -310,11 +319,16 @@ function PlaceSearch({
   const [message, setMessage] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  /** Query text applied by a pick, so filling the field does not search again. */
+  const suppressQueryRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    const trimmed = query.trim();
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
+  const runSearch = useCallback(
+    async (trimmed: string) => {
+      abortRef.current?.abort();
+      const id = ++requestIdRef.current;
       if (trimmed.length < 2) {
         setResults([]);
         setMessage(null);
@@ -322,16 +336,20 @@ function PlaceSearch({
         return;
       }
 
+      const controller = new AbortController();
+      abortRef.current = controller;
       setSearching(true);
       setMessage(null);
+      setOpen(true);
       try {
         const res = await fetch(
           `/api/geocode?q=${encodeURIComponent(trimmed)}`,
           { signal: controller.signal },
         );
+        if (id !== requestIdRef.current) return;
         if (!res.ok) {
           setResults([]);
-          setMessage(t("searchError"));
+          setMessage(t(searchMessageKey(res.status)));
           return;
         }
         const data = (await res.json()) as { results?: GeocodeResult[] };
@@ -339,19 +357,59 @@ function PlaceSearch({
         setResults(next);
         setMessage(next.length === 0 ? t("searchNoResults") : null);
       } catch (err) {
+        if (id !== requestIdRef.current) return;
         if ((err as Error).name === "AbortError") return;
         setResults([]);
-        setMessage(t("searchError"));
+        setMessage(t("searchFailed"));
       } finally {
-        setSearching(false);
+        if (id === requestIdRef.current) setSearching(false);
       }
-    }, SEARCH_DEBOUNCE_MS);
+    },
+    [t],
+  );
 
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
-  }, [query, t]);
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (
+      suppressQueryRef.current !== null &&
+      trimmed === suppressQueryRef.current
+    ) {
+      suppressQueryRef.current = null;
+      return;
+    }
+    suppressQueryRef.current = null;
+
+    const timer = setTimeout(() => {
+      void runSearch(trimmed);
+    }, SEARCH_DEBOUNCE_MS);
+    debounceRef.current = timer;
+    return () => clearTimeout(timer);
+  }, [query, runSearch]);
+
+  function choose(result: GeocodeResult) {
+    suppressQueryRef.current = result.label.trim();
+    abortRef.current?.abort();
+    requestIdRef.current += 1;
+    onSelect(result);
+    setQuery(result.label);
+    setResults([]);
+    setMessage(null);
+    setSearching(false);
+    setOpen(false);
+  }
+
+  function onSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") return;
+    // The field sits inside the spot form. Enter would submit it.
+    event.preventDefault();
+    event.stopPropagation();
+    if (results[0]) {
+      choose(results[0]);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    void runSearch(query.trim());
+  }
 
   // Keep Leaflet from hijacking clicks/scroll over the search UI.
   useEffect(() => {
@@ -374,12 +432,14 @@ function PlaceSearch({
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={onSearchKeyDown}
+          enterKeyHint="search"
           aria-label={t("searchPlaceLabel")}
           placeholder={t("searchPlacePlaceholder")}
-          className="w-full rounded-sm border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--sand)] shadow-md outline-none focus:border-[var(--ember)]"
+          className={`w-full rounded-sm border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--sand)] shadow-md outline-none focus:border-[var(--ember)]${searching ? " pe-16" : ""}`}
         />
         {searching ? (
-          <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-xs text-[var(--sand-muted)]">
+          <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-[var(--sand-muted)]">
             {t("searching")}
           </span>
         ) : null}
@@ -394,12 +454,7 @@ function PlaceSearch({
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      onSelect(result);
-                      setQuery(result.label);
-                      setResults([]);
-                      setOpen(false);
-                    }}
+                    onClick={() => choose(result)}
                     className="block w-full px-3 py-2 text-start text-sm text-[var(--sand)] transition hover:bg-[var(--dusk-mid)]"
                   >
                     {result.label}

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import SpotForm from "@/components/spots/SpotForm";
 import { T } from "@/components/T";
 import { dictionary } from "@/lib/i18n/dictionaries";
@@ -33,13 +32,14 @@ export default async function NewSpotPage() {
     );
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login?next=/spots/new");
+  let user: { id: string } | null = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // A failed session check stays signed out. The create API still requires a user.
+    user = null;
   }
 
   return (
@@ -47,10 +47,17 @@ export default async function NewSpotPage() {
       <h1 className="font-[family-name:var(--font-display)] text-4xl text-[var(--sand)]">
         <T k="shareSpotTitle" />
       </h1>
-      <p className="mt-2 mb-8 text-[var(--sand-muted)]">
+      <p className="mt-2 text-[var(--sand-muted)]">
         <T k="shareSpotSubtitle" />
       </p>
-      <SpotForm />
+      {user ? null : (
+        <p className="mt-3 text-sm leading-relaxed text-[var(--sand-muted)]">
+          <T k="shareSpotSignInNote" />
+        </p>
+      )}
+      <div className="mt-8">
+        <SpotForm signedIn={Boolean(user)} />
+      </div>
     </div>
   );
 }
