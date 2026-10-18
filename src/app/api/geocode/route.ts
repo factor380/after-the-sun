@@ -10,6 +10,13 @@ const GEOCODE_RATE_WINDOW_MS = 60_000;
 const MIN_QUERY_LENGTH = 2;
 const MAX_QUERY_LENGTH = 120;
 
+/** Drop query-string secrets if an upstream error echoes the request URL. */
+function geocodeLogDetail(error: unknown): string {
+  const message =
+    error instanceof Error ? error.message : "upstream search failed";
+  return message.replace(/apiKey=[^&\s]+/gi, "apiKey=[redacted]");
+}
+
 /** First public hop only. Unparseable values share one bucket. */
 function anonymousGeocodeKey(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -60,6 +67,7 @@ export async function GET(request: Request) {
     }
 
     if (!process.env.GEOAPIFY_API_KEY) {
+      console.error("GET /api/geocode 503: search is not configured");
       return NextResponse.json(
         { error: "Search is not configured", results: [] },
         { status: 503 },
@@ -69,7 +77,7 @@ export async function GET(request: Request) {
     const results = await searchIsraelPlaces(query);
     return NextResponse.json({ results });
   } catch (error) {
-    console.error("GET /api/geocode", error);
+    console.error("GET /api/geocode 502", geocodeLogDetail(error));
     return NextResponse.json(
       { error: "Search failed", results: [] },
       { status: 502 },

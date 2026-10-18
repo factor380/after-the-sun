@@ -1,4 +1,8 @@
-import { isWithinIsraelBounds, ISRAEL_CENTER } from "@/lib/geo/israel";
+import {
+  isWithinIsraelBounds,
+  ISRAEL_CENTER,
+  ISRAEL_MAX_BOUNDS,
+} from "@/lib/geo/israel";
 
 export type GeocodeResult = {
   label: string;
@@ -22,9 +26,18 @@ type GeoapifyFeature = {
 };
 
 /**
- * Server-only: query Geoapify autocomplete, biased and filtered to Israel.
- * Returns only results inside Israel bounds. Throws if the API key is missing
- * or the upstream request fails.
+ * Geoapify rect for the same box as `isWithinIsraelBounds`.
+ * `countrycode:il` drops Judea and Samaria, which OpenStreetMap tags as `ps`.
+ */
+export function israelGeocodeFilter(): string {
+  const [[south, west], [north, east]] = ISRAEL_MAX_BOUNDS;
+  return `rect:${west},${south},${east},${north}`;
+}
+
+/**
+ * Server-only: query Geoapify autocomplete, biased to Israel and limited to
+ * the shared bounds rectangle. Returns only results inside those bounds.
+ * Throws if the API key is missing or the upstream request fails.
  */
 export async function searchIsraelPlaces(
   query: string,
@@ -37,7 +50,7 @@ export async function searchIsraelPlaces(
 
   const url = new URL(GEOAPIFY_AUTOCOMPLETE_URL);
   url.searchParams.set("text", query);
-  url.searchParams.set("filter", "countrycode:il");
+  url.searchParams.set("filter", israelGeocodeFilter());
   url.searchParams.set(
     "bias",
     `proximity:${ISRAEL_CENTER.lng},${ISRAEL_CENTER.lat}`,

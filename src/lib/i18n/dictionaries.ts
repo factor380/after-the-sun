@@ -71,6 +71,10 @@ type Dict = {
   searching: string;
   searchNoResults: string;
   searchError: string;
+  searchNeedSignIn: string;
+  searchTooMany: string;
+  searchNotConfigured: string;
+  searchFailed: string;
   dragMarkerHint: string;
   confirmLocation: string;
   locationConfirmed: string;
@@ -236,6 +240,10 @@ export const dictionary: Dict = {
   searching: "מחפש…",
   searchNoResults: "לא נמצאו תוצאות — אפשר לסמן ידנית על המפה.",
   searchError: "החיפוש אינו זמין כרגע — אפשר לסמן ידנית על המפה.",
+  searchNeedSignIn: "כדי לחפש מקום צריך להתחבר. אפשר לסמן ידנית על המפה.",
+  searchTooMany: "יותר מדי חיפושים. נסו שוב בעוד רגע, או סמנו ידנית על המפה.",
+  searchNotConfigured: "החיפוש לא מוגדר כרגע. אפשר לסמן ידנית על המפה.",
+  searchFailed: "החיפוש נכשל. אפשר לסמן ידנית על המפה.",
   dragMarkerHint: "גררו את הסיכה או לחצו על המפה לכוונון מדויק.",
   confirmLocation: "אישור המיקום",
   locationConfirmed: "המיקום אושר",
