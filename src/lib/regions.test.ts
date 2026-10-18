@@ -59,7 +59,8 @@ describe("sunset regions", () => {
       "jerusalem",
       "haifa-north",
       "south-shfela",
-      "judea-samaria",
+      "judea",
+      "samaria",
       "sharon-coast",
     ]);
     expect(new Set(SUNSET_REGIONS.map((region) => region.slug)).size).toBe(
@@ -114,16 +115,18 @@ describe("sunset regions", () => {
     expect(filterSpotsForRegion(spots, SUNSET_REGIONS[4]).map((spot) => spot.region)).toEqual([
       "נווה דניאל",
       "גוש עציון בת עין",
-      "מרכז שומרון",
       "גוש עציון",
       "גוש עציון",
-      "אלקנה",
-      "שומרון",
-      "בנימין",
       "עתניאל",
       "גוש עציון",
     ]);
     expect(filterSpotsForRegion(spots, SUNSET_REGIONS[5]).map((spot) => spot.region)).toEqual([
+      "מרכז שומרון",
+      "אלקנה",
+      "שומרון",
+      "בנימין",
+    ]);
+    expect(filterSpotsForRegion(spots, SUNSET_REGIONS[6]).map((spot) => spot.region)).toEqual([
       "הרצליה",
       "נתניה",
       "עמק חפר",
@@ -164,17 +167,30 @@ describe("sunset regions", () => {
     expect(matchingRegion("דימונה")?.slug).toBe("south-shfela");
     expect(matchingRegion("עוטף עזה")?.slug).toBe("south-shfela");
     expect(matchingRegion("רמות מנשה")?.slug).toBe("sharon-coast");
-    expect(matchingRegion("גוש עציון")?.slug).toBe("judea-samaria");
-    expect(matchingRegion("השומרון")?.slug).toBe("judea-samaria");
-    expect(matchingRegion("מרכז שומרון")?.slug).toBe("judea-samaria");
-    expect(matchingRegion("גוש עציון בת עין")?.slug).toBe("judea-samaria");
-    expect(matchingRegion("הר חברון")?.slug).toBe("judea-samaria");
+    expect(matchingRegion("גוש עציון")?.slug).toBe("judea");
+    expect(matchingRegion("השומרון")?.slug).toBe("samaria");
+    expect(matchingRegion("מרכז שומרון")?.slug).toBe("samaria");
+    expect(matchingRegion("גוש עציון בת עין")?.slug).toBe("judea");
+    expect(matchingRegion("הר חברון")?.slug).toBe("judea");
+    expect(matchingRegion("דרום הר חברון")?.slug).toBe("judea");
+    expect(matchingRegion("דרום")?.slug).toBe("south-shfela");
+    expect(matchingRegion("אשקלון דרום")?.slug).toBe("south-shfela");
+    expect(matchingRegion("אפרת")?.slug).toBe("judea");
+    expect(matchingRegion("תקוע")?.slug).toBe("judea");
+    expect(matchingRegion("קריית ארבע")?.slug).toBe("judea");
+    expect(matchingRegion("קרית ארבע")?.slug).toBe("judea");
+    expect(matchingRegion("אריאל")?.slug).toBe("samaria");
+    expect(matchingRegion("עפרה")?.slug).toBe("samaria");
+    expect(matchingRegion("קרני שומרון")?.slug).toBe("samaria");
+    expect(matchingRegion("בית אל")?.slug).toBe("samaria");
+    expect(matchingRegion("בית שמש")?.slug).toBe("south-shfela");
     expect(matchingRegion("קיסריה")?.slug).toBe("sharon-coast");
     expect(matchingRegion("זכרון יעקב")?.slug).toBe("sharon-coast");
     expect(matchingRegion("אפק")).toBeUndefined();
     expect(matchingRegion("ירושלים גוש עציון")?.slug).toBe("jerusalem");
     expect(matchingRegion("תל אביב הרצליה")?.slug).toBe("tel-aviv");
-    expect(matchingRegion("שומרון נתניה")?.slug).toBe("judea-samaria");
+    expect(matchingRegion("שומרון נתניה")?.slug).toBe("samaria");
+    expect(getRegionBySlug("judea-samaria")).toBeUndefined();
     expect(matchingRegion(null)).toBeUndefined();
     expect(matchingRegion("   ")).toBeUndefined();
     expect(getRegionBySlug("nope")).toBeUndefined();
