@@ -73,6 +73,23 @@ export function spotPageTitle(name: string, region: string | null): string {
   return region ? `${name} — שקיעה ב${region}` : name;
 }
 
+/**
+ * Sitewide social card (`src/app/opengraph-image.tsx`). Spot pages use this
+ * when a spot has no cover photo, at the file's 1200×630 size.
+ */
+export const DEFAULT_SHARE_IMAGE = {
+  url: "/opengraph-image",
+  width: 1200,
+  height: 630,
+  alt: `${SITE_NAME} - sunset spots in Israel`,
+} as const;
+
+/** Cover photo when the spot has one; otherwise the sitewide 1200×630 card. */
+export function spotShareImage(coverPhoto: string | null, coverAlt: string) {
+  if (coverPhoto) return { url: coverPhoto, alt: coverAlt };
+  return DEFAULT_SHARE_IMAGE;
+}
+
 export function spotPageDescription(
   description: string,
   region: string | null,

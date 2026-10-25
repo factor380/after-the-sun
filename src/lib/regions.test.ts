@@ -196,6 +196,87 @@ describe("sunset regions", () => {
     expect(getRegionBySlug("nope")).toBeUndefined();
   });
 
+  it("keeps the live map's region labels on the same pages", () => {
+    const live: Record<string, string | undefined> = {
+      "נפת חדרה": "sharon-coast",
+      "מישור החוף": "south-shfela",
+      "הרי הגלבוע": undefined,
+      "הרצליה": "sharon-coast",
+      "גוש עציון": "judea",
+      "רמות מנשה": "sharon-coast",
+      "מישור החוף הדרומי": "south-shfela",
+      "תל אביב": "tel-aviv",
+      "גוש עציון בת עין": "judea",
+      "גולן": "haifa-north",
+      "ירושלים": "jerusalem",
+      "נתניה": "sharon-coast",
+      "מרכז שומרון": "samaria",
+      "כנרת - מזרח": "haifa-north",
+      "כפר ורדים, גליל מערבי": "haifa-north",
+      "ירושלים שכונת רמות": "jerusalem",
+      "אשקלון": "south-shfela",
+      "עוטף עזה": "south-shfela",
+      "אילת": "south-shfela",
+      "חיפה": "haifa-north",
+      "דימונה": "south-shfela",
+      "עמק חפר": "sharon-coast",
+      "אלקנה": "samaria",
+      "שומרון": "samaria",
+      "בנימין": "samaria",
+      "עתניאל": "judea",
+      "גליל מערבי": "haifa-north",
+      "תל אביב–יפו": "tel-aviv",
+      "קיסריה": "sharon-coast",
+    };
+
+    for (const [label, slug] of Object.entries(live)) {
+      expect(matchingRegion(label)?.slug, label).toBe(slug);
+    }
+  });
+
+  it("does not send every coast or Yehuda label to the same page", () => {
+    expect(matchingRegion("חוף השרון")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("השרון")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("חוף פולג, נתניה")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("חוף פולג")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("אבן יהודה")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("נפת חדרה")?.slug).toBe("sharon-coast");
+
+    expect(matchingRegion("חוף הכרמל")?.slug).toBe("haifa-north");
+    expect(matchingRegion("הכרמל")?.slug).toBe("haifa-north");
+    expect(matchingRegion("חוף דור")?.slug).toBe("haifa-north");
+    expect(matchingRegion("דור")?.slug).toBe("haifa-north");
+
+    expect(matchingRegion("מישור החוף הדרומי")?.slug).toBe("south-shfela");
+    expect(matchingRegion("מישור החוף")?.slug).toBe("south-shfela");
+    expect(matchingRegion("חוף הדרומי")?.slug).toBe("south-shfela");
+    expect(matchingRegion("החוף הדרומי")?.slug).toBe("south-shfela");
+    expect(matchingRegion("אשדוד")?.slug).toBe("south-shfela");
+    expect(matchingRegion("אשקלון")?.slug).toBe("south-shfela");
+    expect(matchingRegion("חוף אשקלון")?.slug).toBe("south-shfela");
+    expect(matchingRegion("חוף אשדוד")?.slug).toBe("south-shfela");
+    expect(matchingRegion("בית שמש")?.slug).toBe("south-shfela");
+    expect(matchingRegion("בית שמש, מטה יהודה")?.slug).toBe("south-shfela");
+    expect(matchingRegion("מטה יהודה")?.slug).toBe("south-shfela");
+    expect(matchingRegion("מועצה אזורית מטה יהודה")?.slug).toBe("south-shfela");
+    expect(matchingRegion("שפלת יהודה")?.slug).toBe("south-shfela");
+    expect(matchingRegion("הרי יהודה")?.slug).toBe("south-shfela");
+    expect(matchingRegion("אבן ספיר, מטה יהודה")?.slug).toBe("south-shfela");
+
+    expect(matchingRegion("גוש עציון")?.slug).toBe("judea");
+    expect(matchingRegion("אפרת")?.slug).toBe("judea");
+    expect(matchingRegion("דרום הר חברון")?.slug).toBe("judea");
+    expect(matchingRegion("הר חברון")?.slug).toBe("judea");
+    expect(matchingRegion("יהודה")?.slug).toBe("judea");
+    expect(matchingRegion("יהודה ושומרון")?.slug).toBe("judea");
+    expect(matchingRegion("מזרח יהודה")?.slug).toBe("judea");
+
+    expect(matchingRegion("חוף")).toBeUndefined();
+    expect(matchingRegion("הרי הגלבוע")).toBeUndefined();
+    expect(matchingRegion("תל אביב חוף")?.slug).toBe("tel-aviv");
+    expect(matchingRegion("תל אביב, שוק הכרמל")?.slug).toBe("tel-aviv");
+  });
+
   it("builds ItemList and BreadcrumbList JSON-LD without raw <", () => {
     const data = regionPageJsonLd({
       title: "נקודות שקיעה בתל אביב–יפו",

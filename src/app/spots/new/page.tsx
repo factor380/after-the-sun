@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   robots: noIndexRobots,
 };
 
+/** Per-user draft. Never cache. */
 export const dynamic = "force-dynamic";
 
 function isSupabaseConfigured() {

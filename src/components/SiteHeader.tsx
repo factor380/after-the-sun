@@ -15,6 +15,7 @@ export default function SiteHeader() {
   const configured = isSupabaseConfigured();
   const [email, setEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(!configured);
+  const [elevated, setElevated] = useState(false);
 
   useEffect(() => {
     if (!configured) return;
@@ -34,6 +35,16 @@ export default function SiteHeader() {
     return () => subscription.unsubscribe();
   }, [configured]);
 
+  useEffect(() => {
+    const main = document.querySelector("main");
+    if (!main) return;
+
+    const onScroll = () => setElevated(main.scrollTop > 8);
+    onScroll();
+    main.addEventListener("scroll", onScroll, { passive: true });
+    return () => main.removeEventListener("scroll", onScroll);
+  }, []);
+
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -41,20 +52,25 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex h-[6.75rem] flex-wrap content-center items-center justify-between gap-y-1 bg-gradient-to-b from-[var(--dusk-deep)]/95 via-[var(--dusk-deep)]/80 to-transparent px-4 md:h-20 md:flex-nowrap md:px-8">
-      <Link
-        href="/"
-        className="pointer-events-auto group transition-opacity hover:opacity-90"
-        aria-label={t("brand")}
-      >
+    <header
+      className={`z-40 shrink-0 border-b border-[var(--line)] bg-[var(--dusk-deep)]/95 px-4 py-3 backdrop-blur-md transition-shadow md:px-8 ${
+        elevated ? "shadow-[0_10px_28px_rgb(22_16_24/0.16)]" : ""
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <Link
+          href="/"
+          className="group shrink-0 transition-opacity hover:opacity-90"
+          aria-label={t("brand")}
+        >
         <BrandLogo
           title={t("brand")}
           markClassName="size-7 md:size-8"
           titleClassName="font-[family-name:var(--font-display)] text-lg tracking-tight text-[var(--sand)] md:text-xl"
         />
-      </Link>
+        </Link>
 
-      <nav className="pointer-events-auto flex w-full items-center justify-end gap-2 text-sm md:w-auto md:gap-4">
+        <nav className="flex w-full flex-wrap items-center justify-end gap-x-3 gap-y-2 text-sm md:w-auto md:flex-nowrap md:gap-4">
         <ThemeToggle />
         {authReady && configured && email ? (
           <Link
@@ -99,7 +115,8 @@ export default function SiteHeader() {
             </Link>
           )
         ) : null}
-      </nav>
+        </nav>
+      </div>
     </header>
   );
 }

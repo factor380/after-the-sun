@@ -3,27 +3,32 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { useCurrentUserId } from "@/lib/supabase/use-current-user-id";
 
 export type GalleryPhoto = {
   /** `null` for the spot's own cover photo, which is managed from the edit form. */
   id: string | null;
   url: string;
-  canDelete: boolean;
+  /** Community photos record who uploaded them so delete can be decided in the browser. */
+  uploadedById?: string | null;
 };
 
 type SpotGalleryProps = {
   spotId: string;
   spotName: string;
+  createdById: string;
   photos: GalleryPhoto[];
 };
 
 export default function SpotGallery({
   spotId,
   spotName,
+  createdById,
   photos,
 }: SpotGalleryProps) {
   const { t } = useLocale();
   const router = useRouter();
+  const userId = useCurrentUserId();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +102,11 @@ export default function SpotGallery({
 
   const active = openIndex === null ? null : photos[openIndex];
 
+  function canDelete(photo: GalleryPhoto) {
+    if (!photo.id || !userId) return false;
+    return userId === createdById || photo.uploadedById === userId;
+  }
+
   if (count === 0) {
     return null;
   }
@@ -107,7 +117,7 @@ export default function SpotGallery({
         type="button"
         onClick={() => open(0)}
         aria-label={t("photoOpenFull")}
-        className="group relative -mt-16 block aspect-[4/3] w-full cursor-zoom-in overflow-hidden sm:aspect-[16/9]"
+        className="group relative block aspect-[4/3] w-full cursor-zoom-in overflow-hidden sm:aspect-[16/9]"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -187,7 +197,7 @@ export default function SpotGallery({
                 >
                   {t("photoClose")}
                 </button>
-                {active.canDelete ? (
+                {canDelete(active) ? (
                   <button
                     type="button"
                     disabled={deletingId === active.id}

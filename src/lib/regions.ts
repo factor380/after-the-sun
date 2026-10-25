@@ -64,6 +64,9 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
       "ראש הנקרה",
       "קריית שמונה",
       "קרית שמונה",
+      // Carmel coast (חוף הכרמל, חוף דור), not the southern coastal plain.
+      "כרמל",
+      "דור",
     ],
   },
   {
@@ -74,8 +77,11 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
       "נקודות שקיעה בדרום, בשפלה, בנגב, באילת ובים המלח על המפה הקהילתית After the Sun. רשימה עם קישור לכל נקודה.",
     intro:
       "אלה נקודות השקיעה שסומנו בדרום או בשפלה על המפה. נקודה מופיעה כאן כשהאזור שנכתב בה מציין דרום, שפלה, נגב, אילת, אשקלון, דימונה, או יישוב אחר באזור.",
-    // "חוף" keeps "מישור החוף הדרומי" on this page; the Sharon page matches its own town names.
+    // "מישור החוף" / "חוף הדרומי" keep the southern coastal plain here.
+    // A bare "חוף" is not a matcher: Sharon and Carmel coasts name their own places.
     // Yehuda is tested first (see regionsInMatchOrder) so "דרום הר חברון" is not caught by "דרום".
+    // מטה יהודה, שפלת יהודה, and הרי יהודה are the foothills and hills west of Jerusalem
+    // (with בית שמש), not the Judea settlements page.
     matchers: [
       "דרום",
       "שפלה",
@@ -94,7 +100,11 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
       "בית שמש",
       "מודיעין",
       "לכיש",
-      "חוף",
+      "מישור החוף",
+      "חוף הדרומי",
+      "מטה יהודה",
+      "שפלת יהודה",
+      "הרי יהודה",
       "דימונה",
       "עוטף עזה",
     ],
@@ -164,11 +174,23 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
       "רעננה",
       "חדרה",
       "זכרון",
+      // Even Yehuda is a Sharon town; "פולג" is the Netanya beach.
+      "אבן יהודה",
+      "פולג",
     ],
   },
 ];
 
 const PLACE_SEPARATORS = /[\s\-–—−־/|,·•]+/u;
+
+/**
+ * "יהודה" still means the Judea page, except after a word that names a different
+ * place: Even Yehuda (Sharon), or the Mateh Yehuda / Shephelah / Judean hills
+ * labels that belong with Beit Shemesh on the south page.
+ */
+const SINGLE_WORD_PREVIOUS_BLOCK: Readonly<Record<string, ReadonlySet<string>>> = {
+  יהודה: new Set(["אבן", "מטה", "שפלת", "הרי"]),
+};
 
 export function regionPath(slug: string): string {
   return `/regions/${slug}`;
@@ -234,7 +256,12 @@ function tokensIncludePhrase(tokens: string[], phrase: string): boolean {
   if (parts.length === 0) return false;
   if (parts.length === 1) {
     const word = parts[0];
-    return tokens.some((token) => token === word || token === `ה${word}`);
+    const blockedBy = SINGLE_WORD_PREVIOUS_BLOCK[word];
+    return tokens.some((token, index) => {
+      if (token !== word && token !== `ה${word}`) return false;
+      if (!blockedBy || index === 0) return true;
+      return !blockedBy.has(tokens[index - 1]);
+    });
   }
 
   for (let index = 0; index <= tokens.length - parts.length; index += 1) {

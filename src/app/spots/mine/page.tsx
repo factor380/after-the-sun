@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   robots: noIndexRobots,
 };
 
+/** Lists only the signed-in user's spots. Never cache. */
 export const dynamic = "force-dynamic";
 
 function isSupabaseConfigured() {

@@ -25,8 +25,8 @@ import type { SpotSummary } from "@/types/spot";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-/** Always render from the database so a crawler sees new spots without a deploy. */
-export const dynamic = "force-dynamic";
+/** Cached for 10 minutes; spot writes refresh it through `revalidatePublishedSpots`. */
+export const revalidate = 600;
 
 export const dynamicParams = false;
 
@@ -193,7 +193,8 @@ async function loadRegionSpots(
       ok: true,
       spots: filterSpotsForRegion(spots.map(toPublicSpot), region),
     };
-  } catch {
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") throw error;
     return { ok: false };
   }
 }

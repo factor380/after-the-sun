@@ -6,7 +6,7 @@ import { listSpots } from "@/services/spots";
 export const alt = "נקודות שקיעה לפי אזור";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
-export const dynamic = "force-dynamic";
+export const revalidate = 600;
 export const runtime = "nodejs";
 
 type ImageProps = { params: Promise<{ slug: string }> };
@@ -26,8 +26,9 @@ export default async function RegionOpenGraphImage({ params }: ImageProps) {
   try {
     const spots = await listSpots();
     subtitle = countLine(filterSpotsForRegion(spots, region).length);
-  } catch {
-    // The card still names the region when the database is unreachable.
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") throw error;
+    // In local development the card still names the region when the database is unreachable.
   }
 
   return renderOgCard({
