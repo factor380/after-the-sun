@@ -168,12 +168,12 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
 
   async function onPhotoSelected(fileList: FileList | null) {
     touchedRef.current = true;
+    // Copy first. Clearing the input empties the live FileList.
+    const picked = Array.from(fileList ?? []);
     if (photoInputRef.current) photoInputRef.current.value = "";
     // A second change event can arrive while the first cloud photo is still
     // downloading. Drop it instead of racing the in-flight read.
     if (compressingRef.current || saving) return;
-
-    const picked = Array.from(fileList ?? []);
     if (picked.length === 0) return;
 
     setError(null);
