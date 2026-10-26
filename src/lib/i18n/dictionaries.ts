@@ -83,6 +83,7 @@ type Dict = {
   poweredByGeoapify: string;
   poweredByOsm: string;
   saveFailed: string;
+  networkInterrupted: string;
   saving: string;
   shareSpot: string;
   signInTitle: string;
@@ -253,6 +254,8 @@ export const dictionary: Dict = {
   poweredByGeoapify: "חיפוש מבוסס Geoapify",
   poweredByOsm: "חיפוש מבוסס OpenStreetMap",
   saveFailed: "שמירת הנקודה נכשלה",
+  networkInterrupted:
+    "החיבור נקטע בזמן השליחה. בדקו את החיבור ונסו שוב.",
   saving: "שומר…",
   shareSpot: "שיתוף נקודה",
   signInTitle: "התחברות",

@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import LocationPickerClient from "@/components/map/LocationPickerClient";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { compressSpotPhoto } from "@/lib/compress-spot-photo";
+import {
+  fetchWithNetworkRetry,
+  readResponseJson,
+  submitErrorText,
+} from "@/lib/fetch-with-network-retry";
 import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
   clearNewSpotDraft,
@@ -22,6 +27,11 @@ type DraftPhoto = {
   file: File;
   previewUrl: string;
 };
+
+function responseField(data: unknown, key: string): unknown {
+  if (!data || typeof data !== "object") return undefined;
+  return (data as Record<string, unknown>)[key];
+}
 
 export type SpotFormInitial = {
   id: string;
@@ -216,20 +226,27 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
     const body = new FormData();
     body.append("file", file);
 
-    const res = await fetch("/api/spots/upload", {
+    const res = await fetchWithNetworkRetry("/api/spots/upload", {
       method: "POST",
       body,
     });
-    const data = await res.json();
+    const data = await readResponseJson(res);
     if (!res.ok) {
       throw new Error(
-        t(messageKeyForRequestFailure(res.status, data.error, "photoUploadFailed")),
+        t(
+          messageKeyForRequestFailure(
+            res.status,
+            responseField(data, "error"),
+            "photoUploadFailed",
+          ),
+        ),
       );
     }
-    if (typeof data.photoUrl !== "string" || !data.photoUrl.startsWith("https://")) {
+    const photoUrl = responseField(data, "photoUrl");
+    if (typeof photoUrl !== "string" || !photoUrl.startsWith("https://")) {
       throw new Error(t("photoUploadFailed"));
     }
-    return data.photoUrl;
+    return photoUrl;
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -303,7 +320,7 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         ...(isEdit ? {} : { acceptedGuidelines: true as const }),
       };
 
-      const res = await fetch(
+      const res = await fetchWithNetworkRetry(
         isEdit ? `/api/spots/${initial!.id}` : "/api/spots",
         {
           method: isEdit ? "PATCH" : "POST",
@@ -312,18 +329,29 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         },
       );
 
-      const data = await res.json();
+      const data = await readResponseJson(res);
       if (!res.ok) {
         throw new Error(
-          t(messageKeyForRequestFailure(res.status, data.error, "saveFailed")),
+          t(
+            messageKeyForRequestFailure(
+              res.status,
+              responseField(data, "error"),
+              "saveFailed",
+            ),
+          ),
         );
       }
 
+      const id = responseField(data, "id");
+      if (typeof id !== "string" || !id) {
+        throw new Error(t("saveFailed"));
+      }
+
       if (!isEdit) await clearNewSpotDraft();
-      router.push(`/spots/${data.id}`);
+      router.push(`/spots/${id}`);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("saveFailed"));
+      setError(submitErrorText(err, t, "saveFailed"));
     } finally {
       setSaving(false);
     }

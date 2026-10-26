@@ -53,16 +53,37 @@ function scaledSize(width: number, height: number, maxEdge: number) {
 }
 
 /**
- * Resize + recompress a spot photo in the browser (JPEG) to keep Storage cheap.
- * Prefer this before uploading; fall back to the original only if already small.
+ * Copy a small photo into a fresh in-memory File.
+ * Mobile browsers (Android Chrome cloud photos, iOS) can invalidate the
+ * original input handle before upload, which surfaces as a failed fetch.
+ * Reading here, at selection time, either captures the bytes or throws so
+ * the form can show photoCompressFailed before submit.
  */
-export async function compressSpotPhoto(file: File): Promise<File> {
-  if (typeof document === "undefined") {
-    return file;
+async function copyFileIntoMemory(file: File): Promise<File> {
+  let bytes: ArrayBuffer;
+  try {
+    bytes = await file.arrayBuffer();
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Failed to read photo");
   }
 
-  // Already under target and within upload cap - skip work.
+  return new File([bytes], file.name, {
+    type: file.type,
+    lastModified: file.lastModified,
+  });
+}
+
+/**
+ * Resize + recompress a spot photo in the browser (JPEG) to keep Storage cheap.
+ * Files already under the target size are still copied into memory; only the
+ * canvas path needs a document.
+ */
+export async function compressSpotPhoto(file: File): Promise<File> {
   if (file.size <= TARGET_SPOT_PHOTO_BYTES) {
+    return copyFileIntoMemory(file);
+  }
+
+  if (typeof document === "undefined") {
     return file;
   }
 
