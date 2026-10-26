@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   assertIsraelCoordinates,
@@ -75,39 +76,108 @@ export async function getSpotWithPhotos(id: string) {
   });
 }
 
-export async function createSpot(userId: string, input: CreateSpotInput) {
+const CREATED_SPOT_INCLUDE = {
+  photos: {
+    orderBy: { createdAt: "asc" as const },
+    select: { id: true, url: true, uploadedById: true, createdAt: true },
+  },
+};
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"
+  );
+}
+
+export async function findSpotByClientRequestId(
+  userId: string,
+  clientRequestId: string,
+) {
+  return prisma.spot.findUnique({
+    where: {
+      createdById_clientRequestId: {
+        createdById: userId,
+        clientRequestId,
+      },
+    },
+    include: CREATED_SPOT_INCLUDE,
+  });
+}
+
+export type CreateSpotResult =
+  | {
+      ok: true;
+      created: boolean;
+      spot: NonNullable<Awaited<ReturnType<typeof findSpotByClientRequestId>>>;
+    }
+  | { ok: false; reason: "rate_limited" };
+
+/**
+ * Create a spot, or return the one this user already saved for `clientRequestId`.
+ * `consumeRateLimit` runs only when a new row would be inserted, so a replay
+ * of the same submit is not counted.
+ */
+export async function createSpot(
+  userId: string,
+  input: CreateSpotInput,
+  options?: { consumeRateLimit?: () => boolean },
+): Promise<CreateSpotResult> {
   assertIsraelCoordinates(input.lat, input.lng);
   await ensureProfile(userId);
 
+  if (input.clientRequestId) {
+    const existing = await findSpotByClientRequestId(userId, input.clientRequestId);
+    if (existing) return { ok: true, created: false, spot: existing };
+  }
+
+  if (options?.consumeRateLimit && !options.consumeRateLimit()) {
+    if (input.clientRequestId) {
+      const existing = await findSpotByClientRequestId(
+        userId,
+        input.clientRequestId,
+      );
+      if (existing) return { ok: true, created: false, spot: existing };
+    }
+    return { ok: false, reason: "rate_limited" };
+  }
+
   const extraPhotoUrls = input.extraPhotoUrls ?? [];
 
-  return prisma.spot.create({
-    data: {
-      name: input.name,
-      description: input.description,
-      lat: input.lat,
-      lng: input.lng,
-      region: input.region ?? null,
-      photoUrl: input.photoUrl ?? null,
-      createdById: userId,
-      ...(extraPhotoUrls.length > 0
-        ? {
-            photos: {
-              create: extraPhotoUrls.map((url) => ({
-                url,
-                uploadedById: userId,
-              })),
-            },
-          }
-        : {}),
-    },
-    include: {
-      photos: {
-        orderBy: { createdAt: "asc" },
-        select: { id: true, url: true, uploadedById: true, createdAt: true },
+  try {
+    const spot = await prisma.spot.create({
+      data: {
+        name: input.name,
+        description: input.description,
+        lat: input.lat,
+        lng: input.lng,
+        region: input.region ?? null,
+        photoUrl: input.photoUrl ?? null,
+        createdById: userId,
+        clientRequestId: input.clientRequestId ?? null,
+        ...(extraPhotoUrls.length > 0
+          ? {
+              photos: {
+                create: extraPhotoUrls.map((url) => ({
+                  url,
+                  uploadedById: userId,
+                })),
+              },
+            }
+          : {}),
       },
-    },
-  });
+      include: CREATED_SPOT_INCLUDE,
+    });
+    return { ok: true, created: true, spot };
+  } catch (error) {
+    if (input.clientRequestId && isUniqueViolation(error)) {
+      const existing = await findSpotByClientRequestId(
+        userId,
+        input.clientRequestId,
+      );
+      if (existing) return { ok: true, created: false, spot: existing };
+    }
+    throw error;
+  }
 }
 
 export async function updateSpot(

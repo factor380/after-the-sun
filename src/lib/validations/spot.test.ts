@@ -36,6 +36,23 @@ describe("createSpotSchema", () => {
         .success,
     ).toBe(false);
   });
+
+  it("accepts a missing idempotency key and a UUID", () => {
+    expect(createSpotSchema.safeParse(spot).success).toBe(true);
+    expect(
+      createSpotSchema.safeParse({
+        ...spot,
+        clientRequestId: "550e8400-e29b-41d4-a716-446655440000",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects an idempotency key that is not a UUID", () => {
+    expect(
+      createSpotSchema.safeParse({ ...spot, clientRequestId: "submit-1" })
+        .success,
+    ).toBe(false);
+  });
 });
 
 describe("assertIsraelCoordinates", () => {
