@@ -33,6 +33,8 @@ type Dict = {
   photoTooLarge: string;
   photoCompressFailed: string;
   photoCompressing: string;
+  photoLoading: string;
+  photoLoadFailed: string;
   photoInvalidType: string;
   photoUploadFailed: string;
   photoUrlOptional: string;
@@ -199,6 +201,8 @@ export const dictionary: Dict = {
   photoTooLarge: "התמונה גדולה מדי — מקסימום 12MB לפני דחיסה.",
   photoCompressFailed: "דחיסת התמונה נכשלה. נסו תמונה אחרת או קטנה יותר.",
   photoCompressing: "דוחס תמונה…",
+  photoLoading: "טוען תמונה…",
+  photoLoadFailed: "התמונה לא נטענה. נסו שוב, או בחרו תמונה ששמורה בטלפון.",
   photoInvalidType: "סוג קובץ לא נתמך. בחרו JPEG, PNG או WebP.",
   photoUploadFailed: "העלאת התמונה נכשלה",
   photoUrlOptional: "או הדביקו כתובת תמונה (HTTPS)",

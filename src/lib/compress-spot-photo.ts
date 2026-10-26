@@ -1,8 +1,60 @@
 import {
+  declaredSpotPhotoType,
+  detectSpotPhotoMime,
+  extensionForSpotPhotoType,
   MAX_SPOT_PHOTO_BYTES,
   MAX_SPOT_PHOTO_EDGE,
+  MAX_SPOT_PHOTO_INPUT_BYTES,
   TARGET_SPOT_PHOTO_BYTES,
+  type AllowedSpotPhotoType,
 } from "@/lib/spot-photo";
+
+/** Budget for reading a picked photo (including a cloud download) and compressing it. */
+export const SPOT_PHOTO_LOAD_TIMEOUT_MS = 25_000;
+
+export class SpotPhotoLoadTimeoutError extends Error {
+  constructor() {
+    super("PHOTO_LOAD_TIMEOUT");
+    this.name = "SpotPhotoLoadTimeoutError";
+  }
+}
+
+export class SpotPhotoTooLargeError extends Error {
+  constructor() {
+    super("PHOTO_TOO_LARGE");
+    this.name = "SpotPhotoTooLargeError";
+  }
+}
+
+/**
+ * Resolve when `work` settles, or reject when `timeoutMs` elapses first.
+ * A late result from `work` is ignored so a cloud download cannot surface twice.
+ */
+export function withTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new SpotPhotoLoadTimeoutError());
+    }, timeoutMs);
+
+    work.then(
+      (value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 
 function canvasToBlob(
   canvas: HTMLCanvasElement,
@@ -52,21 +104,43 @@ function scaledSize(width: number, height: number, maxEdge: number) {
   };
 }
 
+function namedPhotoFile(
+  buffer: ArrayBuffer,
+  originalName: string,
+  type: AllowedSpotPhotoType,
+  lastModified: number,
+): File {
+  const baseName = originalName.replace(/\.[^.]+$/, "") || "sunset";
+  return new File([buffer], `${baseName}.${extensionForSpotPhotoType(type)}`, {
+    type,
+    lastModified,
+  });
+}
+
 /**
- * Resize + recompress a spot photo in the browser (JPEG) to keep Storage cheap.
- * Prefer this before uploading; fall back to the original only if already small.
+ * Read the whole file, then resize and recompress it to JPEG.
+ * `arrayBuffer` is what actually downloads a Google Photos cloud item.
  */
-export async function compressSpotPhoto(file: File): Promise<File> {
-  if (typeof document === "undefined") {
-    return file;
+async function readAndCompressSpotPhoto(file: File): Promise<File> {
+  const buffer = await file.arrayBuffer();
+  if (buffer.byteLength > MAX_SPOT_PHOTO_INPUT_BYTES) {
+    throw new SpotPhotoTooLargeError();
   }
 
-  // Already under target and within upload cap - skip work.
-  if (file.size <= TARGET_SPOT_PHOTO_BYTES) {
-    return file;
+  const declared = declaredSpotPhotoType(file.type);
+  if (declared && buffer.byteLength <= TARGET_SPOT_PHOTO_BYTES) {
+    return namedPhotoFile(buffer, file.name, declared, file.lastModified);
   }
 
-  const bitmap = await createImageBitmap(file);
+  const detected = detectSpotPhotoMime(new Uint8Array(buffer));
+  if (detected && buffer.byteLength <= TARGET_SPOT_PHOTO_BYTES) {
+    return namedPhotoFile(buffer, file.name, detected, file.lastModified);
+  }
+
+  const decodeType = detected ?? declared;
+  const bitmap = await createImageBitmap(
+    decodeType ? new Blob([buffer], { type: decodeType }) : new Blob([buffer]),
+  );
   try {
     const { width, height } = scaledSize(
       bitmap.width,
@@ -100,4 +174,20 @@ export async function compressSpotPhoto(file: File): Promise<File> {
   } finally {
     bitmap.close();
   }
+}
+
+/**
+ * Resize + recompress a spot photo in the browser (JPEG) to keep Storage cheap.
+ * Prefer this before uploading; fall back to the original bytes only if already small.
+ * Reading and encoding give up after {@link SPOT_PHOTO_LOAD_TIMEOUT_MS}.
+ */
+export async function compressSpotPhoto(
+  file: File,
+  timeoutMs = SPOT_PHOTO_LOAD_TIMEOUT_MS,
+): Promise<File> {
+  if (typeof document === "undefined") {
+    return file;
+  }
+
+  return withTimeout(readAndCompressSpotPhoto(file), timeoutMs);
 }

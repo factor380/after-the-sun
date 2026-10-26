@@ -4,7 +4,10 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import LocationPickerClient from "@/components/map/LocationPickerClient";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { compressSpotPhoto } from "@/lib/compress-spot-photo";
+import {
+  compressSpotPhoto,
+  SpotPhotoTooLargeError,
+} from "@/lib/compress-spot-photo";
 import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
   clearNewSpotDraft,
@@ -12,16 +15,24 @@ import {
   saveNewSpotDraft,
 } from "@/lib/new-spot-draft";
 import {
-  ALLOWED_SPOT_PHOTO_TYPES,
+  isAcceptableSpotPhotoFile,
   MAX_PHOTOS_ON_CREATE,
   MAX_SPOT_PHOTO_INPUT_BYTES,
+  SPOT_PHOTO_INPUT_ACCEPT,
+  spotPhotoPickRoom,
 } from "@/lib/spot-photo";
 
-type DraftPhoto = {
-  id: string;
-  file: File;
-  previewUrl: string;
-};
+type DraftPhoto =
+  | {
+      id: string;
+      status: "loading";
+    }
+  | {
+      id: string;
+      status: "ready";
+      file: File;
+      previewUrl: string;
+    };
 
 export type SpotFormInitial = {
   id: string;
@@ -61,6 +72,8 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
   const [photoUrl, setPhotoUrl] = useState(initial?.photoUrl ?? "");
   const [photoFiles, setPhotoFiles] = useState<DraftPhoto[]>([]);
   const photoFilesRef = useRef<DraftPhoto[]>([]);
+  const compressingRef = useRef(false);
+  const mountedRef = useRef(true);
   const [acceptedGuidelines, setAcceptedGuidelines] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
@@ -68,19 +81,17 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
   const [saving, setSaving] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const maxPhotos = isEdit ? 1 : MAX_PHOTOS_ON_CREATE;
+  const photoLoading = photoFiles.some((photo) => photo.status === "loading");
 
   useEffect(() => {
-    photoFilesRef.current = photoFiles;
-  }, [photoFiles]);
-
-  useEffect(
-    () => () => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
       for (const photo of photoFilesRef.current) {
-        URL.revokeObjectURL(photo.previewUrl);
+        if (photo.status === "ready") URL.revokeObjectURL(photo.previewUrl);
       }
-    },
-    [],
-  );
+    };
+  }, []);
 
   useEffect(() => {
     if (isEdit) return;
@@ -99,13 +110,14 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
       setPhotoUrl(fields.photoUrl);
       setAcceptedGuidelines(fields.acceptedGuidelines);
       if (photos.length > 0) {
-        setPhotoFiles(
-          photos.map((file) => ({
-            id: crypto.randomUUID(),
-            file,
-            previewUrl: URL.createObjectURL(file),
-          })),
-        );
+        const restoredPhotos: DraftPhoto[] = photos.map((file) => ({
+          id: crypto.randomUUID(),
+          status: "ready",
+          file,
+          previewUrl: URL.createObjectURL(file),
+        }));
+        photoFilesRef.current = restoredPhotos;
+        setPhotoFiles(restoredPhotos);
       }
       setPhotosMissing(restoredDraft.photosMissing);
       setRestored(true);
@@ -126,34 +138,52 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
     draftLng === confirmedLng;
 
   function releasePhotos(photos: DraftPhoto[]) {
-    for (const photo of photos) URL.revokeObjectURL(photo.previewUrl);
+    for (const photo of photos) {
+      if (photo.status === "ready") URL.revokeObjectURL(photo.previewUrl);
+    }
+  }
+
+  function commitPhotos(next: DraftPhoto[]) {
+    photoFilesRef.current = next;
+    setPhotoFiles(next);
+  }
+
+  function readyFiles(photos: DraftPhoto[]): File[] {
+    return photos.flatMap((photo) =>
+      photo.status === "ready" ? [photo.file] : [],
+    );
   }
 
   function clearPhoto() {
-    setPhotoFiles((current) => {
-      releasePhotos(current);
-      return [];
-    });
+    releasePhotos(photoFilesRef.current);
+    commitPhotos([]);
     setPhotoUrl("");
   }
 
   function removePhoto(id: string) {
-    setPhotoFiles((current) => {
-      const removed = current.find((photo) => photo.id === id);
-      if (removed) URL.revokeObjectURL(removed.previewUrl);
-      return current.filter((photo) => photo.id !== id);
-    });
+    const removed = photoFilesRef.current.find((photo) => photo.id === id);
+    if (removed?.status === "ready") URL.revokeObjectURL(removed.previewUrl);
+    commitPhotos(photoFilesRef.current.filter((photo) => photo.id !== id));
   }
 
   async function onPhotoSelected(fileList: FileList | null) {
     touchedRef.current = true;
-    setError(null);
-    setPhotosMissing(false);
-    const picked = Array.from(fileList ?? []);
     if (photoInputRef.current) photoInputRef.current.value = "";
+    // A second change event can arrive while the first cloud photo is still
+    // downloading. Drop it instead of racing the in-flight read.
+    if (compressingRef.current || saving) return;
+
+    const picked = Array.from(fileList ?? []);
     if (picked.length === 0) return;
 
-    const room = isEdit ? maxPhotos : maxPhotos - photoFiles.length;
+    setError(null);
+    setPhotosMissing(false);
+
+    const room = spotPhotoPickRoom(
+      photoFilesRef.current.length,
+      maxPhotos,
+      isEdit,
+    );
     if (picked.length > room) {
       setError(t("photoCreateLimit"));
       return;
@@ -164,51 +194,65 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         setError(t("photoTooLarge"));
         return;
       }
-      if (
-        file.type &&
-        !(ALLOWED_SPOT_PHOTO_TYPES as readonly string[]).includes(file.type)
-      ) {
+      if (!isAcceptableSpotPhotoFile(file)) {
         setError(t("photoInvalidType"));
         return;
       }
     }
 
+    const incoming: DraftPhoto[] = picked.map(() => ({
+      id: crypto.randomUUID(),
+      status: "loading",
+    }));
+
+    compressingRef.current = true;
     setCompressing(true);
     try {
-      const compressed: DraftPhoto[] = [];
-      for (const file of picked) {
-        compressed.push({
-          id: crypto.randomUUID(),
-          file: await compressSpotPhoto(file),
-          previewUrl: "",
-        });
+      if (isEdit) {
+        releasePhotos(photoFilesRef.current);
+        commitPhotos(incoming);
+      } else {
+        commitPhotos([...photoFilesRef.current, ...incoming]);
       }
-      for (const photo of compressed) {
-        photo.previewUrl = URL.createObjectURL(photo.file);
-      }
-      let rejected = false;
-      setPhotoFiles((current) => {
-        if (isEdit) {
-          releasePhotos(current);
-          return compressed.slice(0, 1);
+
+      let anyReady = false;
+      for (const [index, file] of picked.entries()) {
+        const placeholder = incoming[index];
+        if (!placeholder) continue;
+        const id = placeholder.id;
+        try {
+          const compressed = await compressSpotPhoto(file);
+          if (!mountedRef.current) return;
+          if (!photoFilesRef.current.some((photo) => photo.id === id)) continue;
+          commitPhotos(
+            photoFilesRef.current.map((photo) =>
+              photo.id === id
+                ? {
+                    id,
+                    status: "ready",
+                    file: compressed,
+                    previewUrl: URL.createObjectURL(compressed),
+                  }
+                : photo,
+            ),
+          );
+          anyReady = true;
+        } catch (error) {
+          if (!mountedRef.current) return;
+          const stillThere = photoFilesRef.current.some((photo) => photo.id === id);
+          if (!stillThere) continue;
+          commitPhotos(photoFilesRef.current.filter((photo) => photo.id !== id));
+          setError(
+            error instanceof SpotPhotoTooLargeError
+              ? t("photoTooLarge")
+              : t("photoLoadFailed"),
+          );
         }
-        const room = MAX_PHOTOS_ON_CREATE - current.length;
-        if (compressed.length > room) {
-          rejected = true;
-          releasePhotos(compressed);
-          return current;
-        }
-        return [...current, ...compressed];
-      });
-      if (rejected) {
-        setError(t("photoCreateLimit"));
-        return;
       }
-      setPhotoUrl("");
-    } catch {
-      setError(t("photoCompressFailed"));
+      if (anyReady) setPhotoUrl("");
     } finally {
-      setCompressing(false);
+      compressingRef.current = false;
+      if (mountedRef.current) setCompressing(false);
     }
   }
 
@@ -234,6 +278,7 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (compressingRef.current || saving) return;
     setError(null);
 
     if (!hasDraftLocation) {
@@ -264,7 +309,7 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
           confirmedLng,
           photoUrl,
           acceptedGuidelines,
-          photos: photoFiles.map((photo) => photo.file),
+          photos: readyFiles(photoFiles),
         });
         if (!saved.stored) {
           setError(t("draftSaveFailed"));
@@ -283,10 +328,11 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
     try {
       let resolvedPhotoUrl = photoUrl.trim() || null;
       let extraPhotoUrls: string[] = [];
-      if (photoFiles.length > 0) {
+      const photosToUpload = readyFiles(photoFiles);
+      if (photosToUpload.length > 0) {
         const uploaded: string[] = [];
-        for (const photo of photoFiles) {
-          uploaded.push(await uploadPhoto(photo.file));
+        for (const file of photosToUpload) {
+          uploaded.push(await uploadPhoto(file));
         }
         resolvedPhotoUrl = uploaded[0] ?? null;
         extraPhotoUrls = uploaded.slice(1);
@@ -376,7 +422,7 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         />
       </div>
 
-      <div>
+      <div aria-busy={compressing}>
         <label
           htmlFor={photoInputId}
           className="mb-1 block text-sm text-[var(--sand-muted)]"
@@ -387,7 +433,7 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
           id={photoInputId}
           ref={photoInputRef}
           type="file"
-          accept={ALLOWED_SPOT_PHOTO_TYPES.join(",")}
+          accept={SPOT_PHOTO_INPUT_ACCEPT}
           multiple={!isEdit}
           onChange={(e) => {
             void onPhotoSelected(e.target.files);
@@ -401,13 +447,14 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
             {t("photoCreateHint")}
           </p>
         ) : null}
-        {compressing ? (
-          <p className="mt-2 text-sm text-[var(--ember)]">{t("photoCompressing")}</p>
-        ) : (
-          <p className="mt-2 text-sm text-[var(--sand-muted)]">
-            {t("photoLandscapeGuide")}
+        <p className="mt-2 text-sm text-[var(--sand-muted)]">
+          {t("photoLandscapeGuide")}
+        </p>
+        {compressing && !photoLoading ? (
+          <p className="mt-2 text-sm text-[var(--ember)]" role="status">
+            {t("photoLoading")}
           </p>
-        )}
+        ) : null}
         {photosMissing ? (
           <p className="mt-2 text-sm text-[var(--ember)]">{t("draftPhotosMissing")}</p>
         ) : null}
@@ -421,20 +468,52 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
                 key={photo.id}
                 className="relative overflow-hidden rounded-sm border border-[var(--line)]"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photo.previewUrl}
-                  alt=""
-                  className="max-h-48 w-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => removePhoto(photo.id)}
-                  aria-label={`${t("photoRemove")} ${index + 1}`}
-                  className="absolute end-2 top-2 bg-[var(--dusk-deep)]/80 px-2 py-1 text-xs text-[var(--sand)]"
-                >
-                  {t("photoRemove")}
-                </button>
+                {photo.status === "loading" ? (
+                  <div
+                    className="flex h-48 w-full flex-col items-center justify-center gap-3 bg-[var(--surface)] px-3 text-center text-sm text-[var(--sand-muted)]"
+                    role="status"
+                  >
+                    <svg
+                      className="size-6 animate-spin text-[var(--ember)] motion-reduce:animate-none"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="9"
+                        stroke="currentColor"
+                        strokeOpacity="0.25"
+                        strokeWidth="3"
+                      />
+                      <path
+                        d="M21 12a9 9 0 0 0-9-9"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span>{t("photoLoading")}</span>
+                  </div>
+                ) : (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.previewUrl}
+                      alt=""
+                      className="max-h-48 w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(photo.id)}
+                      aria-label={`${t("photoRemove")} ${index + 1}`}
+                      className="absolute end-2 top-2 bg-[var(--dusk-deep)]/80 px-2 py-1 text-xs text-[var(--sand)]"
+                    >
+                      {t("photoRemove")}
+                    </button>
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -558,7 +637,11 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         </p>
       ) : null}
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <button
         type="submit"
