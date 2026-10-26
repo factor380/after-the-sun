@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Fragment } from "react";
 import JsonLd from "@/components/seo/JsonLd";
+import { SpotThumbnail } from "@/components/spots/SpotThumbnail";
 import { T } from "@/components/T";
 import {
   CLOSING_AFTER,
@@ -21,6 +23,8 @@ import {
   WINTER_SOURCE,
 } from "@/lib/guides/jerusalem-sunset";
 import { SITE_NAME, guideArticleJsonLd, indexRobots } from "@/lib/seo";
+import { canOptimizeSpotPhoto, spotCoverUrl } from "@/lib/spot-cover";
+import { listSpots } from "@/services/spots";
 
 const PATH = JERUSALEM_SUNSET_GUIDE.path;
 const TITLE = JERUSALEM_SUNSET_GUIDE.title;
@@ -29,6 +33,9 @@ const PUBLISHED = `${JERUSALEM_SUNSET_GUIDE.datePublished}T00:00:00.000Z`;
 
 const textLink =
   "text-[var(--sand)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--ember)]";
+
+/** Photos come from the database, so a new cover shows up without a redeploy. */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -66,7 +73,53 @@ function GuideText({ text }: { text: string }) {
   ));
 }
 
-export default function JerusalemSunsetGuidePage() {
+function spotIdFromPath(path: string): string {
+  return path.startsWith("/spots/") ? path.slice("/spots/".length) : path;
+}
+
+async function loadGuideCovers(): Promise<Map<string, string>> {
+  try {
+    const spots = await listSpots();
+    const covers = new Map<string, string>();
+    for (const spot of spots) {
+      const cover = spotCoverUrl(spot);
+      if (cover) covers.set(spot.id, cover);
+    }
+    return covers;
+  } catch {
+    return new Map();
+  }
+}
+
+function GuideSpotPhoto({ name, href, url }: { name: string; href: string; url: string }) {
+  const alt = `שקיעה מ${name}`;
+  return (
+    <Link href={href} className="mt-4 block">
+      <span className="relative block aspect-[4/3] w-full overflow-hidden border border-[var(--line)] sm:aspect-[16/9]">
+        {canOptimizeSpotPhoto(url) ? (
+          <Image
+            src={url}
+            alt={alt}
+            fill
+            loading="lazy"
+            sizes="(max-width: 672px) calc(100vw - 2.5rem), 672px"
+            className="object-cover object-center"
+          />
+        ) : (
+          <SpotThumbnail url={url} alt={alt} className="absolute inset-0 h-full w-full" />
+        )}
+      </span>
+    </Link>
+  );
+}
+
+export default async function JerusalemSunsetGuidePage() {
+  const covers = await loadGuideCovers();
+  const places = JERUSALEM_SUNSET_PLACES.map((place) => ({
+    ...place,
+    image: covers.get(spotIdFromPath(place.path)) ?? null,
+  }));
+
   return (
     <article className="mx-auto w-full max-w-2xl px-5 pb-20 pt-6 md:pt-10">
       <JsonLd
@@ -78,7 +131,7 @@ export default function JerusalemSunsetGuidePage() {
           dateModified: JERUSALEM_SUNSET_GUIDE.datePublished,
           regionName: JERUSALEM_SUNSET_GUIDE.regionName,
           regionPath: JERUSALEM_SUNSET_GUIDE.regionPath,
-          places: JERUSALEM_SUNSET_PLACES,
+          places,
           faqs: JERUSALEM_SUNSET_FAQS,
         })}
       />
@@ -164,7 +217,7 @@ export default function JerusalemSunsetGuidePage() {
           {SPOTS_HEADING}
         </h2>
         <div className="mt-8 space-y-10">
-          {JERUSALEM_SUNSET_PLACES.map((place, index) => (
+          {places.map((place, index) => (
             <section key={place.path} aria-labelledby={`place-${index + 1}`}>
               <h3
                 id={`place-${index + 1}`}
@@ -175,6 +228,9 @@ export default function JerusalemSunsetGuidePage() {
                   {place.name}
                 </Link>
               </h3>
+              {place.image ? (
+                <GuideSpotPhoto name={place.name} href={place.path} url={place.image} />
+              ) : null}
               <p className="mt-3 leading-relaxed text-[var(--sand-muted)]">
                 <GuideText text={place.lead} />
               </p>

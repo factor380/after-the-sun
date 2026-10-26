@@ -214,7 +214,7 @@ export function guideArticleJsonLd(input: {
   dateModified: string;
   regionName: string;
   regionPath: string;
-  places: readonly { name: string; path: string }[];
+  places: readonly { name: string; path: string; image?: string | null }[];
   faqs: readonly { question: string; answer: string }[];
 }) {
   const url = absoluteUrl(input.path);
@@ -274,6 +274,7 @@ export function guideArticleJsonLd(input: {
             "@type": "Place",
             name: place.name,
             url: absoluteUrl(place.path),
+            ...(place.image ? { image: place.image } : {}),
           },
         })),
       },

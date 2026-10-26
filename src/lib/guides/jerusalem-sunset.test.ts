@@ -57,6 +57,7 @@ describe("jerusalem sunset guide", () => {
       expect(entry.item?.name).toBe(place?.name);
       expect(entry.url).toContain(place?.path);
       expect(entry.item?.url).toContain(place?.path);
+      expect(entry.item).not.toHaveProperty("image");
       expect(entry.url).not.toContain("localhost");
     });
 
@@ -64,5 +65,29 @@ describe("jerusalem sunset guide", () => {
     expect(serialized).not.toContain("<");
     expect(serialized).not.toContain("localhost");
     expect(JERUSALEM_SUNSET_GUIDE.description.length).toBeLessThanOrEqual(160);
+  });
+
+  it("adds a Place image only when that spot has a photo", () => {
+    const photo = "https://example.supabase.co/storage/v1/object/public/spot-photos/a.jpg";
+    const data = guideArticleJsonLd({
+      title: JERUSALEM_SUNSET_GUIDE.title,
+      description: JERUSALEM_SUNSET_GUIDE.description,
+      path: JERUSALEM_SUNSET_GUIDE.path,
+      datePublished: JERUSALEM_SUNSET_GUIDE.datePublished,
+      dateModified: JERUSALEM_SUNSET_GUIDE.datePublished,
+      regionName: JERUSALEM_SUNSET_GUIDE.regionName,
+      regionPath: JERUSALEM_SUNSET_GUIDE.regionPath,
+      places: [
+        { name: JERUSALEM_SUNSET_PLACES[0].name, path: JERUSALEM_SUNSET_PLACES[0].path, image: photo },
+        { name: JERUSALEM_SUNSET_PLACES[1].name, path: JERUSALEM_SUNSET_PLACES[1].path, image: null },
+      ],
+      faqs: JERUSALEM_SUNSET_FAQS,
+    }) as {
+      "@graph": { itemListElement?: { item?: { image?: string } }[] }[];
+    };
+
+    const items = data["@graph"][2]?.itemListElement ?? [];
+    expect(items[0]?.item?.image).toBe(photo);
+    expect(items[1]?.item).not.toHaveProperty("image");
   });
 });
