@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import {
   isAcceptableSpotPhotoFile,
+  replacePhotoWhenReady,
   SPOT_PHOTO_INPUT_ACCEPT,
   spotPhotoPickRoom,
 } from "@/lib/spot-photo";
@@ -68,5 +69,25 @@ describe("spot photo picks", () => {
     expect(dictionary.photoLoadFailed).toBe(
       "התמונה לא נטענה. נסו שוב, או בחרו תמונה ששמורה בטלפון.",
     );
+    expect(dictionary.photoPickBusy).toBe(
+      "התמונה עדיין נטענת. אפשר לבחור שוב כשתסתיים.",
+    );
+  });
+
+  it("keeps the previous edit photo until the replacement is ready", () => {
+    const current = [
+      { id: "old", status: "ready" as const },
+      { id: "loading", status: "loading" as const },
+    ];
+    const failed = replacePhotoWhenReady(current, "loading", null);
+    expect(failed.releaseIds).toEqual([]);
+    expect(failed.photos.map((photo) => photo.id)).toEqual(["old"]);
+
+    const replaced = replacePhotoWhenReady(current, "loading", {
+      id: "new",
+      status: "ready",
+    });
+    expect(replaced.releaseIds).toEqual(["old"]);
+    expect(replaced.photos.map((photo) => photo.id)).toEqual(["new"]);
   });
 });

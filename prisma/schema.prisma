@@ -24,14 +24,17 @@ model Spot {
   lat         Float
   lng         Float
   region      String?
-  photoUrl    String?
-  createdById String   @db.Uuid
-  createdBy   Profile  @relation(fields: [createdById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  reports     SpotReport[]
-  photos      SpotPhoto[]
+  photoUrl        String?
+  createdById     String   @db.Uuid
+  /// One create-submit attempt. Null on spots saved before idempotency keys.
+  clientRequestId String?  @map("client_request_id")
+  createdBy       Profile  @relation(fields: [createdById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  reports         SpotReport[]
+  photos          SpotPhoto[]
 
+  @@unique([createdById, clientRequestId])
   @@index([lat, lng])
   @@index([region])
 }

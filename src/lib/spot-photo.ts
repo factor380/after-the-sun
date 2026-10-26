@@ -136,6 +136,31 @@ export function spotPhotoPickRoom(
   return Math.max(0, maxPhotos - currentCount);
 }
 
+/**
+ * Edit mode swaps the previous photo only after the new one is ready.
+ * A failed load passes `ready: null` and drops just the placeholder.
+ */
+export function replacePhotoWhenReady<
+  T extends { id: string; status: "loading" | "ready" },
+>(
+  current: readonly T[],
+  loadingId: string,
+  ready: T | null,
+): { photos: T[]; releaseIds: string[] } {
+  if (!ready) {
+    return {
+      photos: current.filter((photo) => photo.id !== loadingId),
+      releaseIds: [],
+    };
+  }
+  return {
+    photos: [ready],
+    releaseIds: current
+      .filter((photo) => photo.status === "ready" && photo.id !== ready.id)
+      .map((photo) => photo.id),
+  };
+}
+
 export function extensionForSpotPhotoType(type: AllowedSpotPhotoType): string {
   return EXT_BY_MIME[type];
 }

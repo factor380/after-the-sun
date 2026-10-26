@@ -40,25 +40,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!rateLimit(`spots:create:${user.id}`, CREATE_RATE_LIMIT, CREATE_RATE_WINDOW_MS)) {
-      return NextResponse.json(
-        { error: "Too many requests. Try again shortly." },
-        { status: 429 },
-      );
-    }
-
     const body = await request.json();
     const parsed = createSpotSchema.safeParse(body);
     if (!parsed.success) {
+      if (
+        !rateLimit(
+          `spots:create:${user.id}`,
+          CREATE_RATE_LIMIT,
+          CREATE_RATE_WINDOW_MS,
+        )
+      ) {
+        return NextResponse.json(
+          { error: "Too many requests. Try again shortly." },
+          { status: 429 },
+        );
+      }
       return NextResponse.json(
         { error: "Invalid spot data", details: parsed.error.flatten() },
         { status: 400 },
       );
     }
 
-    const spot = await createSpot(user.id, parsed.data);
-    revalidatePublishedSpots(spot.id);
-    return NextResponse.json(toPublicSpot(spot), { status: 201 });
+    const result = await createSpot(user.id, parsed.data, {
+      consumeRateLimit: () =>
+        rateLimit(
+          `spots:create:${user.id}`,
+          CREATE_RATE_LIMIT,
+          CREATE_RATE_WINDOW_MS,
+        ),
+    });
+    if (!result.ok) {
+      return NextResponse.json(
+        { error: "Too many requests. Try again shortly." },
+        { status: 429 },
+      );
+    }
+
+    revalidatePublishedSpots(result.spot.id);
+    return NextResponse.json(toPublicSpot(result.spot), {
+      status: result.created ? 201 : 200,
+    });
   } catch (error) {
     console.error("POST /api/spots", error);
     const message =

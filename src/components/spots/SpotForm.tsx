@@ -8,6 +8,11 @@ import {
   compressSpotPhoto,
   SpotPhotoTooLargeError,
 } from "@/lib/compress-spot-photo";
+import {
+  fetchWithNetworkRetry,
+  readResponseJson,
+  submitErrorText,
+} from "@/lib/fetch-with-network-retry";
 import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
   clearNewSpotDraft,
@@ -18,6 +23,7 @@ import {
   isAcceptableSpotPhotoFile,
   MAX_PHOTOS_ON_CREATE,
   MAX_SPOT_PHOTO_INPUT_BYTES,
+  replacePhotoWhenReady,
   SPOT_PHOTO_INPUT_ACCEPT,
   spotPhotoPickRoom,
 } from "@/lib/spot-photo";
@@ -33,6 +39,11 @@ type DraftPhoto =
       file: File;
       previewUrl: string;
     };
+
+function responseField(data: unknown, key: string): unknown {
+  if (!data || typeof data !== "object") return undefined;
+  return (data as Record<string, unknown>)[key];
+}
 
 export type SpotFormInitial = {
   id: string;
@@ -80,8 +91,14 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
   const [photosMissing, setPhotosMissing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [compressing, setCompressing] = useState(false);
+  const [photoNotice, setPhotoNotice] = useState<string | null>(null);
   const maxPhotos = isEdit ? 1 : MAX_PHOTOS_ON_CREATE;
   const photoLoading = photoFiles.some((photo) => photo.status === "loading");
+  const readyPhotoCount = photoFiles.filter(
+    (photo) => photo.status === "ready",
+  ).length;
+  const photoInputDisabled =
+    compressing || saving || (!isEdit && readyPhotoCount >= maxPhotos);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -155,8 +172,12 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
   }
 
   function clearPhoto() {
-    releasePhotos(photoFilesRef.current);
-    commitPhotos([]);
+    releasePhotos(
+      photoFilesRef.current.filter((photo) => photo.status === "ready"),
+    );
+    commitPhotos(
+      photoFilesRef.current.filter((photo) => photo.status === "loading"),
+    );
     setPhotoUrl("");
   }
 
@@ -172,11 +193,18 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
     const picked = Array.from(fileList ?? []);
     if (photoInputRef.current) photoInputRef.current.value = "";
     // A second change event can arrive while the first cloud photo is still
-    // downloading. Drop it instead of racing the in-flight read.
-    if (compressingRef.current || saving) return;
+    // downloading. The input is disabled, and this notice covers the event
+    // that was already in flight.
+    if (compressingRef.current || saving) {
+      if (picked.length > 0 && compressingRef.current) {
+        setPhotoNotice(t("photoPickBusy"));
+      }
+      return;
+    }
     if (picked.length === 0) return;
 
     setError(null);
+    setPhotoNotice(null);
     setPhotosMissing(false);
 
     const room = spotPhotoPickRoom(
@@ -208,12 +236,9 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
     compressingRef.current = true;
     setCompressing(true);
     try {
-      if (isEdit) {
-        releasePhotos(photoFilesRef.current);
-        commitPhotos(incoming);
-      } else {
-        commitPhotos([...photoFilesRef.current, ...incoming]);
-      }
+      // Keep photos that are already on the form. Edit mode swaps them out
+      // only after the new file is ready, so a timeout does not leave a blank.
+      commitPhotos([...photoFilesRef.current, ...incoming]);
 
       let anyReady = false;
       for (const [index, file] of picked.entries()) {
@@ -224,24 +249,41 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
           const compressed = await compressSpotPhoto(file);
           if (!mountedRef.current) return;
           if (!photoFilesRef.current.some((photo) => photo.id === id)) continue;
-          commitPhotos(
-            photoFilesRef.current.map((photo) =>
-              photo.id === id
-                ? {
-                    id,
-                    status: "ready",
-                    file: compressed,
-                    previewUrl: URL.createObjectURL(compressed),
-                  }
-                : photo,
-            ),
-          );
+          const ready: DraftPhoto = {
+            id,
+            status: "ready",
+            file: compressed,
+            previewUrl: URL.createObjectURL(compressed),
+          };
+          if (isEdit) {
+            const settled = replacePhotoWhenReady(
+              photoFilesRef.current,
+              id,
+              ready,
+            );
+            for (const releaseId of settled.releaseIds) {
+              const previous = photoFilesRef.current.find(
+                (photo) => photo.id === releaseId,
+              );
+              if (previous?.status === "ready") {
+                URL.revokeObjectURL(previous.previewUrl);
+              }
+            }
+            commitPhotos(settled.photos);
+          } else {
+            commitPhotos(
+              photoFilesRef.current.map((photo) =>
+                photo.id === id ? ready : photo,
+              ),
+            );
+          }
           anyReady = true;
         } catch (error) {
           if (!mountedRef.current) return;
           const stillThere = photoFilesRef.current.some((photo) => photo.id === id);
           if (!stillThere) continue;
-          commitPhotos(photoFilesRef.current.filter((photo) => photo.id !== id));
+          const settled = replacePhotoWhenReady(photoFilesRef.current, id, null);
+          commitPhotos(settled.photos);
           setError(
             error instanceof SpotPhotoTooLargeError
               ? t("photoTooLarge")
@@ -260,20 +302,27 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
     const body = new FormData();
     body.append("file", file);
 
-    const res = await fetch("/api/spots/upload", {
+    const res = await fetchWithNetworkRetry("/api/spots/upload", {
       method: "POST",
       body,
     });
-    const data = await res.json();
+    const data = await readResponseJson(res);
     if (!res.ok) {
       throw new Error(
-        t(messageKeyForRequestFailure(res.status, data.error, "photoUploadFailed")),
+        t(
+          messageKeyForRequestFailure(
+            res.status,
+            responseField(data, "error"),
+            "photoUploadFailed",
+          ),
+        ),
       );
     }
-    if (typeof data.photoUrl !== "string" || !data.photoUrl.startsWith("https://")) {
+    const photoUrl = responseField(data, "photoUrl");
+    if (typeof photoUrl !== "string" || !photoUrl.startsWith("https://")) {
       throw new Error(t("photoUploadFailed"));
     }
-    return data.photoUrl;
+    return photoUrl;
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -346,10 +395,16 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         lng: confirmedLng,
         photoUrl: resolvedPhotoUrl,
         ...(extraPhotoUrls.length > 0 ? { extraPhotoUrls } : {}),
-        ...(isEdit ? {} : { acceptedGuidelines: true as const }),
+        // One id per click. The fetch retry resends this same body.
+        ...(isEdit
+          ? {}
+          : {
+              acceptedGuidelines: true as const,
+              clientRequestId: crypto.randomUUID(),
+            }),
       };
 
-      const res = await fetch(
+      const res = await fetchWithNetworkRetry(
         isEdit ? `/api/spots/${initial!.id}` : "/api/spots",
         {
           method: isEdit ? "PATCH" : "POST",
@@ -358,18 +413,29 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         },
       );
 
-      const data = await res.json();
+      const data = await readResponseJson(res);
       if (!res.ok) {
         throw new Error(
-          t(messageKeyForRequestFailure(res.status, data.error, "saveFailed")),
+          t(
+            messageKeyForRequestFailure(
+              res.status,
+              responseField(data, "error"),
+              "saveFailed",
+            ),
+          ),
         );
       }
 
+      const id = responseField(data, "id");
+      if (typeof id !== "string" || !id) {
+        throw new Error(t("saveFailed"));
+      }
+
       if (!isEdit) await clearNewSpotDraft();
-      router.push(`/spots/${data.id}`);
+      router.push(`/spots/${id}`);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("saveFailed"));
+      setError(submitErrorText(err, t, "saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -438,8 +504,9 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
           onChange={(e) => {
             void onPhotoSelected(e.target.files);
           }}
-          disabled={compressing || saving || photoFiles.length >= maxPhotos}
-          className="block w-full text-sm text-[var(--sand-muted)] file:me-3 file:border-0 file:bg-[var(--ember)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-white file:transition hover:file:brightness-110 disabled:opacity-60"
+          disabled={photoInputDisabled}
+          title={compressing ? t("photoPickBusy") : undefined}
+          className="block w-full text-sm text-[var(--sand-muted)] file:me-3 file:border-0 file:bg-[var(--ember)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-white file:transition hover:file:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
         />
         <p className="mt-1 text-xs text-[var(--sand-muted)]">{t("photoHint")}</p>
         {!isEdit ? (
@@ -450,6 +517,11 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         <p className="mt-2 text-sm text-[var(--sand-muted)]">
           {t("photoLandscapeGuide")}
         </p>
+        {photoNotice ? (
+          <p className="mt-2 text-sm text-[var(--ember)]" role="status">
+            {photoNotice}
+          </p>
+        ) : null}
         {compressing && !photoLoading ? (
           <p className="mt-2 text-sm text-[var(--ember)]" role="status">
             {t("photoLoading")}
@@ -457,6 +529,27 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         ) : null}
         {photosMissing ? (
           <p className="mt-2 text-sm text-[var(--ember)]">{t("draftPhotosMissing")}</p>
+        ) : null}
+
+        {readyPhotoCount === 0 && pastedPhotoUrl ? (
+          <div className="relative mt-3 overflow-hidden rounded-sm border border-[var(--line)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={pastedPhotoUrl}
+              alt=""
+              className="max-h-48 w-full object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                clearPhoto();
+                if (photoInputRef.current) photoInputRef.current.value = "";
+              }}
+              className="absolute end-2 top-2 bg-[var(--dusk-deep)]/80 px-2 py-1 text-xs text-[var(--sand)]"
+            >
+              {t("photoRemove")}
+            </button>
+          </div>
         ) : null}
 
         {photoFiles.length > 0 ? (
@@ -517,25 +610,6 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
               </li>
             ))}
           </ul>
-        ) : pastedPhotoUrl ? (
-          <div className="relative mt-3 overflow-hidden rounded-sm border border-[var(--line)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={pastedPhotoUrl}
-              alt=""
-              className="max-h-48 w-full object-cover"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                clearPhoto();
-                if (photoInputRef.current) photoInputRef.current.value = "";
-              }}
-              className="absolute end-2 top-2 bg-[var(--dusk-deep)]/80 px-2 py-1 text-xs text-[var(--sand)]"
-            >
-              {t("photoRemove")}
-            </button>
-          </div>
         ) : null}
 
         {photoFiles.length === 0 ? (

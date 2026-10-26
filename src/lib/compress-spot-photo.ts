@@ -118,23 +118,44 @@ function namedPhotoFile(
 }
 
 /**
- * Read the whole file, then resize and recompress it to JPEG.
- * `arrayBuffer` is what actually downloads a Google Photos cloud item.
+ * Read the whole file, then resize and recompress it to JPEG when needed.
+ * `arrayBuffer` is what downloads a cloud photo, and it also copies a small
+ * file into a fresh handle. Mobile browsers can invalidate the original
+ * input file before upload.
  */
 async function readAndCompressSpotPhoto(file: File): Promise<File> {
-  const buffer = await file.arrayBuffer();
+  let buffer: ArrayBuffer;
+  try {
+    buffer = await file.arrayBuffer();
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Failed to read photo");
+  }
   if (buffer.byteLength > MAX_SPOT_PHOTO_INPUT_BYTES) {
     throw new SpotPhotoTooLargeError();
   }
 
   const declared = declaredSpotPhotoType(file.type);
   if (declared && buffer.byteLength <= TARGET_SPOT_PHOTO_BYTES) {
-    return namedPhotoFile(buffer, file.name, declared, file.lastModified);
+    return new File([buffer], file.name || "sunset.jpg", {
+      type: declared,
+      lastModified: file.lastModified,
+    });
   }
 
   const detected = detectSpotPhotoMime(new Uint8Array(buffer));
   if (detected && buffer.byteLength <= TARGET_SPOT_PHOTO_BYTES) {
     return namedPhotoFile(buffer, file.name, detected, file.lastModified);
+  }
+
+  if (buffer.byteLength <= TARGET_SPOT_PHOTO_BYTES) {
+    return new File([buffer], file.name || "sunset", {
+      type: file.type,
+      lastModified: file.lastModified,
+    });
+  }
+
+  if (typeof document === "undefined") {
+    return file;
   }
 
   const decodeType = detected ?? declared;
@@ -178,16 +199,12 @@ async function readAndCompressSpotPhoto(file: File): Promise<File> {
 
 /**
  * Resize + recompress a spot photo in the browser (JPEG) to keep Storage cheap.
- * Prefer this before uploading; fall back to the original bytes only if already small.
- * Reading and encoding give up after {@link SPOT_PHOTO_LOAD_TIMEOUT_MS}.
+ * Files already under the target size are still copied into memory. Reading
+ * and encoding give up after {@link SPOT_PHOTO_LOAD_TIMEOUT_MS}.
  */
 export async function compressSpotPhoto(
   file: File,
   timeoutMs = SPOT_PHOTO_LOAD_TIMEOUT_MS,
 ): Promise<File> {
-  if (typeof document === "undefined") {
-    return file;
-  }
-
   return withTimeout(readAndCompressSpotPhoto(file), timeoutMs);
 }
