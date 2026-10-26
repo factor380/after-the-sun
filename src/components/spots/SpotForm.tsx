@@ -317,7 +317,13 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         lng: confirmedLng,
         photoUrl: resolvedPhotoUrl,
         ...(extraPhotoUrls.length > 0 ? { extraPhotoUrls } : {}),
-        ...(isEdit ? {} : { acceptedGuidelines: true as const }),
+        // One id per click. The fetch retry resends this same body.
+        ...(isEdit
+          ? {}
+          : {
+              acceptedGuidelines: true as const,
+              clientRequestId: crypto.randomUUID(),
+            }),
       };
 
       const res = await fetchWithNetworkRetry(

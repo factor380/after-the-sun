@@ -37,17 +37,22 @@ const spotFields = z.object({
   acceptedGuidelines: z.literal(true),
 });
 
-export const createSpotSchema = spotFields.superRefine((data, ctx) => {
-  const cover = data.photoUrl ?? null;
-  const extras = data.extraPhotoUrls ?? [];
-  if (cover && extras.includes(cover)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["extraPhotoUrls"],
-      message: "Duplicate photo",
-    });
-  }
-});
+export const createSpotSchema = spotFields
+  .extend({
+    /** One id per submit click. Older clients omit it. */
+    clientRequestId: z.uuid().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const cover = data.photoUrl ?? null;
+    const extras = data.extraPhotoUrls ?? [];
+    if (cover && extras.includes(cover)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["extraPhotoUrls"],
+        message: "Duplicate photo",
+      });
+    }
+  });
 
 export const updateSpotSchema = spotFields
   .omit({ acceptedGuidelines: true, extraPhotoUrls: true })

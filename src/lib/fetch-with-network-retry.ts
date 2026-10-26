@@ -44,15 +44,11 @@ function delay(ms: number): Promise<void> {
 
 /**
  * Call fetch, and if it rejects with a network TypeError, wait and try once
- * more. A resolved response is never retried — including 4xx/5xx — so a
- * create that the server already answered is not sent again.
+ * more. A resolved response is never retried, including 4xx/5xx.
  *
  * `init` is reused for the second attempt. Pass a string or FormData body,
- * not a one-shot stream.
- *
- * If the server committed the first POST and the response was lost, the
- * retry can still create a duplicate. That is indistinguishable from a
- * failure before the request was sent.
+ * not a one-shot stream. Spot create puts `clientRequestId` in that body so
+ * the retry and the first attempt are the same submit.
  */
 export async function fetchWithNetworkRetry(
   input: RequestInfo | URL,
