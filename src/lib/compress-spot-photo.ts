@@ -1,8 +1,60 @@
 import {
+  declaredSpotPhotoType,
+  detectSpotPhotoMime,
+  extensionForSpotPhotoType,
   MAX_SPOT_PHOTO_BYTES,
   MAX_SPOT_PHOTO_EDGE,
+  MAX_SPOT_PHOTO_INPUT_BYTES,
   TARGET_SPOT_PHOTO_BYTES,
+  type AllowedSpotPhotoType,
 } from "@/lib/spot-photo";
+
+/** Budget for reading a picked photo (including a cloud download) and compressing it. */
+export const SPOT_PHOTO_LOAD_TIMEOUT_MS = 25_000;
+
+export class SpotPhotoLoadTimeoutError extends Error {
+  constructor() {
+    super("PHOTO_LOAD_TIMEOUT");
+    this.name = "SpotPhotoLoadTimeoutError";
+  }
+}
+
+export class SpotPhotoTooLargeError extends Error {
+  constructor() {
+    super("PHOTO_TOO_LARGE");
+    this.name = "SpotPhotoTooLargeError";
+  }
+}
+
+/**
+ * Resolve when `work` settles, or reject when `timeoutMs` elapses first.
+ * A late result from `work` is ignored so a cloud download cannot surface twice.
+ */
+export function withTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new SpotPhotoLoadTimeoutError());
+    }, timeoutMs);
+
+    work.then(
+      (value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 
 function canvasToBlob(
   canvas: HTMLCanvasElement,
@@ -52,42 +104,64 @@ function scaledSize(width: number, height: number, maxEdge: number) {
   };
 }
 
-/**
- * Copy a small photo into a fresh in-memory File.
- * Mobile browsers (Android Chrome cloud photos, iOS) can invalidate the
- * original input handle before upload, which surfaces as a failed fetch.
- * Reading here, at selection time, either captures the bytes or throws so
- * the form can show photoCompressFailed before submit.
- */
-async function copyFileIntoMemory(file: File): Promise<File> {
-  let bytes: ArrayBuffer;
-  try {
-    bytes = await file.arrayBuffer();
-  } catch (error) {
-    throw error instanceof Error ? error : new Error("Failed to read photo");
-  }
-
-  return new File([bytes], file.name, {
-    type: file.type,
-    lastModified: file.lastModified,
+function namedPhotoFile(
+  buffer: ArrayBuffer,
+  originalName: string,
+  type: AllowedSpotPhotoType,
+  lastModified: number,
+): File {
+  const baseName = originalName.replace(/\.[^.]+$/, "") || "sunset";
+  return new File([buffer], `${baseName}.${extensionForSpotPhotoType(type)}`, {
+    type,
+    lastModified,
   });
 }
 
 /**
- * Resize + recompress a spot photo in the browser (JPEG) to keep Storage cheap.
- * Files already under the target size are still copied into memory; only the
- * canvas path needs a document.
+ * Read the whole file, then resize and recompress it to JPEG when needed.
+ * `arrayBuffer` is what downloads a cloud photo, and it also copies a small
+ * file into a fresh handle. Mobile browsers can invalidate the original
+ * input file before upload.
  */
-export async function compressSpotPhoto(file: File): Promise<File> {
-  if (file.size <= TARGET_SPOT_PHOTO_BYTES) {
-    return copyFileIntoMemory(file);
+async function readAndCompressSpotPhoto(file: File): Promise<File> {
+  let buffer: ArrayBuffer;
+  try {
+    buffer = await file.arrayBuffer();
+  } catch (error) {
+    throw error instanceof Error ? error : new Error("Failed to read photo");
+  }
+  if (buffer.byteLength > MAX_SPOT_PHOTO_INPUT_BYTES) {
+    throw new SpotPhotoTooLargeError();
+  }
+
+  const declared = declaredSpotPhotoType(file.type);
+  if (declared && buffer.byteLength <= TARGET_SPOT_PHOTO_BYTES) {
+    return new File([buffer], file.name || "sunset.jpg", {
+      type: declared,
+      lastModified: file.lastModified,
+    });
+  }
+
+  const detected = detectSpotPhotoMime(new Uint8Array(buffer));
+  if (detected && buffer.byteLength <= TARGET_SPOT_PHOTO_BYTES) {
+    return namedPhotoFile(buffer, file.name, detected, file.lastModified);
+  }
+
+  if (buffer.byteLength <= TARGET_SPOT_PHOTO_BYTES) {
+    return new File([buffer], file.name || "sunset", {
+      type: file.type,
+      lastModified: file.lastModified,
+    });
   }
 
   if (typeof document === "undefined") {
     return file;
   }
 
-  const bitmap = await createImageBitmap(file);
+  const decodeType = detected ?? declared;
+  const bitmap = await createImageBitmap(
+    decodeType ? new Blob([buffer], { type: decodeType }) : new Blob([buffer]),
+  );
   try {
     const { width, height } = scaledSize(
       bitmap.width,
@@ -121,4 +195,16 @@ export async function compressSpotPhoto(file: File): Promise<File> {
   } finally {
     bitmap.close();
   }
+}
+
+/**
+ * Resize + recompress a spot photo in the browser (JPEG) to keep Storage cheap.
+ * Files already under the target size are still copied into memory. Reading
+ * and encoding give up after {@link SPOT_PHOTO_LOAD_TIMEOUT_MS}.
+ */
+export async function compressSpotPhoto(
+  file: File,
+  timeoutMs = SPOT_PHOTO_LOAD_TIMEOUT_MS,
+): Promise<File> {
+  return withTimeout(readAndCompressSpotPhoto(file), timeoutMs);
 }
