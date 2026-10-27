@@ -29,7 +29,7 @@ If the work touches routing, rendered text, photos, or metadata, check:
 - JSON-LD goes through `JsonLd` (`jsonLdString` escapes `<`). Do not dump unsanitized HTML.
 - Root `<html>` stays `lang="he"` `dir="rtl"`.
 - Public copy is Hebrew. Titles use the layout template (`%s | After the Sun`); do not append the brand twice.
-- OG images: default `src/app/opengraph-image.tsx`; spot pages use the cover photo when present.
+- OG images: default `src/app/opengraph-image.tsx` (`/opengraph-image`, 1200×630). Spot pages use the cover photo when it is a public https URL; otherwise they use that same default image. Do not generate a per-spot card. `twitter:card` stays `summary_large_image`, and `spotJsonLd` uses the same image URL.
 
 ## Page types
 

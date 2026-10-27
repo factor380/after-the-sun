@@ -6,6 +6,20 @@ export const SITE_TAGLINE = "נקודות שקיעה בישראל";
 export const SITE_DESCRIPTION =
   "מפה קהילתית של נקודות שקיעה בישראל. גלו תצפיות, חופים ומקומות מומלצים לראות בהם שקיעה, ושתפו את הנקודה שלכם.";
 
+/** Generated card at `src/app/opengraph-image.tsx`, served as `/opengraph-image`. */
+export const DEFAULT_OG_PATH = "/opengraph-image";
+export const DEFAULT_OG_SIZE = { width: 1200, height: 630 } as const;
+export const DEFAULT_OG_ALT = `${SITE_NAME} - sunset spots in Israel`;
+export const DEFAULT_OG_TYPE = "image/png";
+
+export type ShareImage = {
+  url: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  type?: string;
+};
+
 const FALLBACK_SITE_URL = "https://after-the-sun.vercel.app";
 
 function isLocalhost(url: string): boolean {
@@ -71,6 +85,75 @@ export const indexRobots: Metadata["robots"] = {
 
 export function spotPageTitle(name: string, region: string | null): string {
   return region ? `${name} — שקיעה ב${region}` : name;
+}
+
+/** Absolute URL of the home page Open Graph card. */
+export function defaultOgImage(): ShareImage {
+  return {
+    url: absoluteUrl(DEFAULT_OG_PATH),
+    alt: DEFAULT_OG_ALT,
+    width: DEFAULT_OG_SIZE.width,
+    height: DEFAULT_OG_SIZE.height,
+    type: DEFAULT_OG_TYPE,
+  };
+}
+
+function isLocalHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  return host === "localhost" || host === "127.0.0.1" || host === "::1";
+}
+
+/** Public https URL safe to put in meta tags and JSON-LD. */
+function publicHttpsUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed.toLowerCase().startsWith("https://")) return null;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "https:") return null;
+    if (url.username || url.password) return null;
+    if (!url.hostname || isLocalHostname(url.hostname)) return null;
+    return trimmed;
+  } catch {
+    return null;
+  }
+}
+
+/** Cover photo, then community photos, https only, de-duplicated, capped at 8. */
+function spotHttpsImageUrls(spot: {
+  photoUrl: string | null;
+  photos?: { url: string }[];
+}): string[] {
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  const candidates = [
+    spot.photoUrl,
+    ...(spot.photos ?? []).map((photo) => photo.url),
+  ];
+
+  for (const candidate of candidates) {
+    const url = publicHttpsUrl(candidate);
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    urls.push(url);
+    if (urls.length === 8) break;
+  }
+
+  return urls;
+}
+
+/**
+ * Image used for og:image and twitter:image.
+ * A real photo wins; otherwise the site default card.
+ */
+export function spotCoverImage(spot: {
+  name: string;
+  photoUrl: string | null;
+  photos?: { url: string }[];
+}): ShareImage {
+  const [cover] = spotHttpsImageUrls(spot);
+  if (cover) return { url: cover, alt: spot.name };
+  return defaultOgImage();
 }
 
 export function spotPageDescription(
@@ -217,10 +300,8 @@ export function spotJsonLd(spot: {
   photos?: { url: string }[];
 }) {
   const url = absoluteUrl(`/spots/${spot.id}`);
-  const images = [
-    ...(spot.photoUrl ? [spot.photoUrl] : []),
-    ...(spot.photos ?? []).map((photo) => photo.url),
-  ].slice(0, 8);
+  const photos = spotHttpsImageUrls(spot);
+  const image = photos.length > 0 ? photos : [defaultOgImage().url];
 
   return {
     "@context": "https://schema.org",
@@ -234,7 +315,7 @@ export function spotJsonLd(spot: {
         inLanguage: "he-IL",
         isAccessibleForFree: true,
         touristType: "Sunset viewing",
-        ...(images.length > 0 ? { image: images } : {}),
+        image,
         geo: {
           "@type": "GeoCoordinates",
           latitude: spot.lat,

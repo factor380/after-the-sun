@@ -15,6 +15,7 @@ import { matchingRegion, regionPath } from "@/lib/regions";
 import {
   SITE_NAME,
   noIndexRobots,
+  spotCoverImage,
   spotJsonLd,
   spotPageDescription,
   spotPageTitle,
@@ -39,11 +40,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "הנקודה לא נמצאה", robots: noIndexRobots };
   }
 
-  const coverPhoto = spot.photoUrl ?? spot.photos[0]?.url ?? null;
   const title = spotPageTitle(spot.name, spot.region);
   const description = spotPageDescription(spot.description, spot.region);
   const brandedTitle = `${title} | ${SITE_NAME}`;
   const path = `/spots/${spot.id}`;
+  const shareImage = spotCoverImage(spot);
 
   return {
     title,
@@ -58,15 +59,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "article",
       publishedTime: spot.createdAt.toISOString(),
       modifiedTime: spot.updatedAt.toISOString(),
-      ...(coverPhoto
-        ? { images: [{ url: coverPhoto, alt: spot.name }] }
-        : {}),
+      images: [shareImage],
     },
     twitter: {
-      card: coverPhoto ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: brandedTitle,
       description,
-      ...(coverPhoto ? { images: [coverPhoto] } : {}),
+      images: [shareImage],
     },
   };
 }
