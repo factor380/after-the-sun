@@ -1,9 +1,9 @@
 import { ImageResponse } from "next/og";
-import { SITE_NAME } from "@/lib/seo";
+import { DEFAULT_OG_ALT, DEFAULT_OG_SIZE, DEFAULT_OG_TYPE } from "@/lib/seo";
 
-export const alt = `${SITE_NAME} - sunset spots in Israel`;
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+export const alt = DEFAULT_OG_ALT;
+export const size = DEFAULT_OG_SIZE;
+export const contentType = DEFAULT_OG_TYPE;
 
 export default function OpenGraphImage() {
   return new ImageResponse(
