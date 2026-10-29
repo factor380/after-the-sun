@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 
 type PageProps = { params: Promise<{ id: string }> };
 
+/** Owner-only editor. Never cache. */
 export const dynamic = "force-dynamic";
 
 function isSupabaseConfigured() {

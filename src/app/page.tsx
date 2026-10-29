@@ -11,7 +11,8 @@ import { SpotsDrawer } from "@/components/home/SpotsDrawer";
 import { SpotSelectionProvider } from "@/components/home/SpotSelectionProvider";
 import { spotsItemListJsonLd, websiteJsonLd } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+/** Cached for 10 minutes; spot writes refresh it through `revalidatePublishedSpots`. */
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -28,7 +29,9 @@ async function loadSpots(): Promise<{
       spots: spots.map(toPublicSpot),
       setupNeeded: false,
     };
-  } catch {
+  } catch (error) {
+    // A failed production revalidation must not replace a good cached page with an empty map.
+    if (process.env.NODE_ENV === "production") throw error;
     return { spots: [], setupNeeded: true };
   }
 }

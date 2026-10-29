@@ -17,7 +17,8 @@ import { SITE_NAME, aboutPageJsonLd, indexRobots } from "@/lib/seo";
 import { listSpots } from "@/services/spots";
 import type { SpotSummary } from "@/types/spot";
 
-export const dynamic = "force-dynamic";
+/** Cached for 10 minutes; spot writes refresh it through `revalidatePublishedSpots`. */
+export const revalidate = 600;
 
 const PATH = "/about";
 
@@ -70,7 +71,8 @@ async function loadRecentSpots(): Promise<SpotSummary[]> {
   try {
     const spots = await listSpots();
     return spots.slice(0, RECENT_SPOT_LIMIT).map(toPublicSpot);
-  } catch {
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") throw error;
     return [];
   }
 }

@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import AddSpotPhoto from "@/components/spots/AddSpotPhoto";
-import NavigateToSpot from "@/components/spots/NavigateToSpot";
-import ReportSpot from "@/components/spots/ReportSpot";
+import SpotContributorTools from "@/components/spots/SpotContributorTools";
 import SpotGallery, {
   type GalleryPhoto,
 } from "@/components/spots/SpotGallery";
 import JsonLd from "@/components/seo/JsonLd";
 import { T } from "@/components/T";
 import { sunsetTime } from "@/lib/geo/sunset";
-import { MAX_PHOTOS_PER_SPOT } from "@/lib/spot-photo";
 import { matchingRegion, regionPath } from "@/lib/regions";
 import {
   SITE_NAME,
@@ -20,13 +17,16 @@ import {
   spotPageDescription,
   spotPageTitle,
 } from "@/lib/seo";
-import { createClient } from "@/lib/supabase/server";
 import { getSpotWithPhotos, listSpots } from "@/services/spots";
 
 type PageProps = { params: Promise<{ id: string }> };
 
-/** Always render from the database so a crawler sees edits without a new deploy. */
-export const dynamic = "force-dynamic";
+/**
+ * Cached for 10 minutes. Spot and photo writes call `revalidatePublishedSpots`
+ * so the next visit regenerates this page instead of waiting out the window.
+ * Auth controls render in the browser and are not part of the cache.
+ */
+export const revalidate = 600;
 
 export async function generateStaticParams() {
   const spots = await listSpots();
@@ -70,46 +70,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-function isSupabaseConfigured() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
-}
-
 export default async function SpotDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  let spot;
-  try {
-    spot = await getSpotWithPhotos(id);
-  } catch {
-    notFound();
-  }
-
+  const spot = await getSpotWithPhotos(id);
   if (!spot) notFound();
 
-  let userId: string | null = null;
-  if (isSupabaseConfigured()) {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    userId = user?.id ?? null;
-  }
-
-  const isAuthenticated = Boolean(userId);
-  const isOwner = userId === spot.createdById;
   const sunset = sunsetTime(spot.lat, spot.lng);
 
   const galleryPhotos: GalleryPhoto[] = [
     ...(spot.photoUrl
-      ? [{ id: null, url: spot.photoUrl, canDelete: false }]
+      ? [{ id: null, url: spot.photoUrl, uploadedById: null }]
       : []),
     ...spot.photos.map((photo) => ({
       id: photo.id,
       url: photo.url,
-      canDelete: isOwner || photo.uploadedById === userId,
+      uploadedById: photo.uploadedById,
     })),
   ];
 
@@ -119,6 +95,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
       <SpotGallery
         spotId={spot.id}
         spotName={spot.name}
+        createdById={spot.createdById}
         photos={galleryPhotos}
       />
 
@@ -165,32 +142,14 @@ export default async function SpotDetailPage({ params }: PageProps) {
           </div>
         </dl>
 
-        {isOwner ? (
-          <div className="mt-6 flex flex-wrap gap-3 text-sm">
-            <Link
-              href={`/spots/${spot.id}/edit`}
-              className="border border-[var(--line)] px-4 py-2 text-[var(--sand-muted)] transition hover:border-[var(--ember)] hover:text-[var(--sand)]"
-            >
-              <T k="editSpot" />
-            </Link>
-            <Link
-              href="/spots/mine"
-              className="border border-[var(--line)] px-4 py-2 text-[var(--sand-muted)] transition hover:border-[var(--ember)] hover:text-[var(--sand)]"
-            >
-              <T k="mySpotsTitle" />
-            </Link>
-          </div>
-        ) : null}
-
-        <NavigateToSpot lat={spot.lat} lng={spot.lng} name={spot.name} />
-
-        <AddSpotPhoto
+        <SpotContributorTools
           spotId={spot.id}
-          isAuthenticated={isAuthenticated}
-          isFull={spot.photos.length >= MAX_PHOTOS_PER_SPOT}
+          createdById={spot.createdById}
+          photoCount={spot.photos.length}
+          lat={spot.lat}
+          lng={spot.lng}
+          name={spot.name}
         />
-
-        <ReportSpot spotId={spot.id} isAuthenticated={isAuthenticated} />
       </div>
     </article>
   );

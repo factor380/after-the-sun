@@ -10,7 +10,8 @@ export const getCampaignSpotCount = cache(async (): Promise<number> => {
     const count = await countSpots();
     if (!Number.isFinite(count) || count < 0) return CAMPAIGN_FALLBACK_COUNT;
     return Math.floor(count);
-  } catch {
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") throw error;
     return CAMPAIGN_FALLBACK_COUNT;
   }
 });
