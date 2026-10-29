@@ -9,6 +9,8 @@ type Dict = {
   spotsEmpty: string;
   addSpot: string;
   campaignNav: string;
+  navMenu: string;
+  navMenuClose: string;
   signIn: string;
   signOut: string;
   setupNeeded: string;
@@ -175,6 +177,8 @@ export const dictionary: Dict = {
   spotsEmpty: "עדיין אין נקודות. היו הראשונים לשתף שקיעה.",
   addSpot: "הוספת נקודה",
   campaignNav: "איך מוסיפים",
+  navMenu: "תפריט",
+  navMenuClose: "סגירת תפריט",
   signIn: "התחברות",
   signOut: "התנתקות",
   setupNeeded:

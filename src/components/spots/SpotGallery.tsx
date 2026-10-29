@@ -107,7 +107,7 @@ export default function SpotGallery({
         type="button"
         onClick={() => open(0)}
         aria-label={t("photoOpenFull")}
-        className="group relative -mt-16 block aspect-[4/3] w-full cursor-zoom-in overflow-hidden sm:aspect-[16/9]"
+        className="group relative block aspect-[4/3] w-full cursor-zoom-in overflow-hidden sm:aspect-[16/9]"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
