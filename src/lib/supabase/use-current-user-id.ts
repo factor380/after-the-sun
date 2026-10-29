@@ -16,10 +16,16 @@ export function useCurrentUserId(): string | null {
     const supabase = createClient();
     let active = true;
 
-    supabase.auth.getUser().then(({ data }) => {
-      if (!active) return;
-      setUserId(data.user?.id ?? null);
-    });
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (!active) return;
+        setUserId(data.user?.id ?? null);
+      })
+      .catch(() => {
+        if (!active) return;
+        setUserId(null);
+      });
 
     const {
       data: { subscription },

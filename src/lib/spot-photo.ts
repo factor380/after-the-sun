@@ -84,6 +84,83 @@ export function isAllowedSpotPhotoType(
   return (ALLOWED_SPOT_PHOTO_TYPES as readonly string[]).includes(value);
 }
 
+/**
+ * `image/*` plus extensions. A MIME-only accept list sends Android Chrome
+ * straight to Google Photos; the extensions make it offer the system chooser
+ * (camera, files, gallery) instead.
+ */
+export const SPOT_PHOTO_INPUT_ACCEPT = "image/*,.jpg,.jpeg,.png,.webp";
+
+const SPOT_PHOTO_FILE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"] as const;
+
+export function declaredSpotPhotoType(type: string): AllowedSpotPhotoType | null {
+  const normalized = type.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+  return isAllowedSpotPhotoType(normalized) ? normalized : null;
+}
+
+function spotPhotoFileExtension(name: string): string {
+  const base = name.split(/[/\\]/).pop() ?? "";
+  const dot = base.lastIndexOf(".");
+  if (dot < 0 || dot === base.length - 1) return "";
+  return base.slice(dot).toLowerCase();
+}
+
+/**
+ * Known image MIME types are accepted as-is. An empty type (common for some
+ * Android providers) is accepted only when the name ends in jpg, png, or webp.
+ * HEIC and anything else keep the caller's existing invalid-type error.
+ */
+export function isAcceptableSpotPhotoFile(file: {
+  type: string;
+  name: string;
+}): boolean {
+  if (declaredSpotPhotoType(file.type)) return true;
+  const normalized = file.type.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+  if (normalized) return false;
+  return (SPOT_PHOTO_FILE_EXTENSIONS as readonly string[]).includes(
+    spotPhotoFileExtension(file.name),
+  );
+}
+
+/**
+ * How many files this pick may add. Edit mode replaces the current photo, so
+ * the room does not depend on photos already on the form. Compute this from
+ * the latest count before calling setState — not inside a state updater.
+ */
+export function spotPhotoPickRoom(
+  currentCount: number,
+  maxPhotos: number,
+  replaceExisting: boolean,
+): number {
+  if (replaceExisting) return maxPhotos;
+  return Math.max(0, maxPhotos - currentCount);
+}
+
+/**
+ * Edit mode swaps the previous photo only after the new one is ready.
+ * A failed load passes `ready: null` and drops just the placeholder.
+ */
+export function replacePhotoWhenReady<
+  T extends { id: string; status: "loading" | "ready" },
+>(
+  current: readonly T[],
+  loadingId: string,
+  ready: T | null,
+): { photos: T[]; releaseIds: string[] } {
+  if (!ready) {
+    return {
+      photos: current.filter((photo) => photo.id !== loadingId),
+      releaseIds: [],
+    };
+  }
+  return {
+    photos: [ready],
+    releaseIds: current
+      .filter((photo) => photo.status === "ready" && photo.id !== ready.id)
+      .map((photo) => photo.id),
+  };
+}
+
 export function extensionForSpotPhotoType(type: AllowedSpotPhotoType): string {
   return EXT_BY_MIME[type];
 }

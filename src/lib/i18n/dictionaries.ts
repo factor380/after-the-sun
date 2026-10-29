@@ -9,6 +9,8 @@ type Dict = {
   spotsEmpty: string;
   addSpot: string;
   campaignNav: string;
+  navMenu: string;
+  navMenuClose: string;
   signIn: string;
   signOut: string;
   setupNeeded: string;
@@ -33,6 +35,9 @@ type Dict = {
   photoTooLarge: string;
   photoCompressFailed: string;
   photoCompressing: string;
+  photoLoading: string;
+  photoLoadFailed: string;
+  photoPickBusy: string;
   photoInvalidType: string;
   photoUploadFailed: string;
   photoUrlOptional: string;
@@ -83,6 +88,7 @@ type Dict = {
   poweredByGeoapify: string;
   poweredByOsm: string;
   saveFailed: string;
+  networkInterrupted: string;
   saving: string;
   shareSpot: string;
   signInTitle: string;
@@ -171,6 +177,8 @@ export const dictionary: Dict = {
   spotsEmpty: "עדיין אין נקודות. היו הראשונים לשתף שקיעה.",
   addSpot: "הוספת נקודה",
   campaignNav: "איך מוסיפים",
+  navMenu: "תפריט",
+  navMenuClose: "סגירת תפריט",
   signIn: "התחברות",
   signOut: "התנתקות",
   setupNeeded:
@@ -199,6 +207,9 @@ export const dictionary: Dict = {
   photoTooLarge: "התמונה גדולה מדי — מקסימום 12MB לפני דחיסה.",
   photoCompressFailed: "דחיסת התמונה נכשלה. נסו תמונה אחרת או קטנה יותר.",
   photoCompressing: "דוחס תמונה…",
+  photoLoading: "טוען תמונה…",
+  photoLoadFailed: "התמונה לא נטענה. נסו שוב, או בחרו תמונה ששמורה בטלפון.",
+  photoPickBusy: "התמונה עדיין נטענת. אפשר לבחור שוב כשתסתיים.",
   photoInvalidType: "סוג קובץ לא נתמך. בחרו JPEG, PNG או WebP.",
   photoUploadFailed: "העלאת התמונה נכשלה",
   photoUrlOptional: "או הדביקו כתובת תמונה (HTTPS)",
@@ -253,6 +264,8 @@ export const dictionary: Dict = {
   poweredByGeoapify: "חיפוש מבוסס Geoapify",
   poweredByOsm: "חיפוש מבוסס OpenStreetMap",
   saveFailed: "שמירת הנקודה נכשלה",
+  networkInterrupted:
+    "החיבור נקטע בזמן השליחה. בדקו את החיבור ונסו שוב.",
   saving: "שומר…",
   shareSpot: "שיתוף נקודה",
   signInTitle: "התחברות",

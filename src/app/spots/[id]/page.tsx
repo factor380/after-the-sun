@@ -12,10 +12,10 @@ import { matchingRegion, regionPath } from "@/lib/regions";
 import {
   SITE_NAME,
   noIndexRobots,
+  spotCoverImage,
   spotJsonLd,
   spotPageDescription,
   spotPageTitle,
-  spotShareImage,
 } from "@/lib/seo";
 import { getSpotWithPhotos, listSpots } from "@/services/spots";
 
@@ -40,12 +40,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "הנקודה לא נמצאה", robots: noIndexRobots };
   }
 
-  const coverPhoto = spot.photoUrl ?? spot.photos[0]?.url ?? null;
-  const shareImage = spotShareImage(coverPhoto, spot.name);
   const title = spotPageTitle(spot.name, spot.region);
   const description = spotPageDescription(spot.description, spot.region);
   const brandedTitle = `${title} | ${SITE_NAME}`;
   const path = `/spots/${spot.id}`;
+  const shareImage = spotCoverImage(spot);
 
   return {
     title,
