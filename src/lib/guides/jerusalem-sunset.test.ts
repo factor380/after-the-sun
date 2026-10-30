@@ -5,7 +5,7 @@ import {
   JERUSALEM_SUNSET_PLACES,
   UNVERIFIED_MARK,
 } from "@/lib/guides/jerusalem-sunset";
-import { guideArticleJsonLd, jsonLdString } from "@/lib/seo";
+import { absoluteUrl, guideArticleJsonLd, jsonLdString } from "@/lib/seo";
 
 describe("jerusalem sunset guide", () => {
   it("keeps every unverified marker from the approved copy", () => {
@@ -31,6 +31,7 @@ describe("jerusalem sunset guide", () => {
       "@graph": {
         "@type": string;
         headline?: string;
+        image?: { "@type": string; url: string; width: number; height: number };
         mainEntity?: { name: string }[];
         numberOfItems?: number;
         itemListElement?: { url?: string; item?: { "@type": string; name: string; url: string } }[];
@@ -44,6 +45,14 @@ describe("jerusalem sunset guide", () => {
       "BreadcrumbList",
     ]);
     expect(data["@graph"][0]?.headline).toBe(JERUSALEM_SUNSET_GUIDE.title);
+    expect(data["@graph"][0]?.image).toEqual({
+      "@type": "ImageObject",
+      url: absoluteUrl(`${JERUSALEM_SUNSET_GUIDE.path}/opengraph-image`),
+      width: 1200,
+      height: 630,
+    });
+    expect(data["@graph"][0]?.image?.url).toContain("guides/jerusalem-sunset/opengraph-image");
+    expect(data["@graph"][0]?.image?.url).not.toContain("localhost");
     expect(data["@graph"][1]?.mainEntity?.map((item) => item.name)).toEqual(
       JERUSALEM_SUNSET_FAQS.map((faq) => faq.question),
     );

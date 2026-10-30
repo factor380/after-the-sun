@@ -16,7 +16,7 @@ export const revalidate = 600;
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
-  openGraph: { url: "/" },
+  openGraph: { url: "/", type: "website" },
 };
 
 async function loadSpots(): Promise<{

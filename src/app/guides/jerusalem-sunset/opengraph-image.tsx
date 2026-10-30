@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
-import { OG_CONTENT_TYPE, OG_SIZE } from "@/lib/og-card";
+import { OG_CONTENT_TYPE, OG_SIZE, OgRtlText } from "@/lib/og-card";
 
 /**
  * Share card for the Jerusalem sunset guide.
@@ -12,6 +12,7 @@ export const alt = `${JERUSALEM_SUNSET_GUIDE.title} — גן הקיפוד`;
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const runtime = "nodejs";
+export const revalidate = 600;
 
 export default async function JerusalemSunsetOpenGraphImage() {
   const [font, photo] = await Promise.all([
@@ -28,7 +29,6 @@ export default async function JerusalemSunsetOpenGraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          direction: "rtl",
           position: "relative",
           background: "#120c10",
           padding: 72,
@@ -70,40 +70,29 @@ export default async function JerusalemSunsetOpenGraphImage() {
           <div
             style={{
               display: "flex",
-              fontFamily: "Heebo",
-              fontSize: 28,
-              fontWeight: 700,
-              color: "#ff6b35",
-            }}
-          >
-            After the Sun
-          </div>
-          <div
-            style={{
-              display: "flex",
               width: "100%",
-              fontFamily: "Heebo",
-              fontSize: 52,
-              fontWeight: 700,
-              lineHeight: 1.2,
-              color: "#f3e4d4",
-              textAlign: "right",
+              justifyContent: "flex-end",
             }}
           >
-            {JERUSALEM_SUNSET_GUIDE.title}
+            <div
+              style={{
+                display: "flex",
+                fontFamily: "Heebo",
+                fontSize: 28,
+                fontWeight: 700,
+                color: "#ff6b35",
+              }}
+            >
+              After the Sun
+            </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              fontFamily: "Heebo",
-              fontSize: 32,
-              fontWeight: 700,
-              color: "#f3e4d4",
-              textAlign: "right",
-            }}
-          >
-            גן הקיפוד, ירושלים
-          </div>
+          <OgRtlText
+            text={JERUSALEM_SUNSET_GUIDE.title}
+            fontSize={52}
+            color="#f3e4d4"
+            lineHeight={1.2}
+          />
+          <OgRtlText text="גן הקיפוד, ירושלים" fontSize={32} color="#f3e4d4" />
         </div>
       </div>
     ),

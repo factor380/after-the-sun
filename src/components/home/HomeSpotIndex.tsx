@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
 import type { SpotSummary } from "@/types/spot";
@@ -16,6 +17,9 @@ export function HomeSpotIndex({ spots }: { spots: SpotSummary[] }) {
               <Link href={regionPath(region.slug)}>{region.title}</Link>
             </li>
           ))}
+          <li>
+            <Link href={JERUSALEM_SUNSET_GUIDE.path}>מדריך שקיעה בירושלים</Link>
+          </li>
         </ul>
       </nav>
       {spots.length > 0 ? (

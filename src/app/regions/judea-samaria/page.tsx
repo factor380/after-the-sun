@@ -2,13 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 import { T } from "@/components/T";
-import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { JUDEA_SAMARIA_HUB, SUNSET_REGIONS, regionPath } from "@/lib/regions";
 import { SITE_NAME, indexRobots, regionPageJsonLd, truncateMeta } from "@/lib/seo";
 
-const PATH = "/regions/judea-samaria";
-const TITLE = "נקודות שקיעה ביהודה ובשומרון";
-const DESCRIPTION =
-  "העמוד המשותף ליהודה ושומרון חולק לשתי רשימות: יהודה, ושומרון ובנימין. בחרו את האזור כדי לראות את נקודות השקיעה.";
+const PATH = JUDEA_SAMARIA_HUB.path;
+const TITLE = JUDEA_SAMARIA_HUB.title;
+const DESCRIPTION = JUDEA_SAMARIA_HUB.description;
 
 const SPLIT = [
   { slug: "judea", blurb: "גוש עציון, הר חברון, אפרת, תקוע ויישובים אחרים ביהודה." },

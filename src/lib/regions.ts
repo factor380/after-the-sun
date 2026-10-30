@@ -192,6 +192,43 @@ const SINGLE_WORD_PREVIOUS_BLOCK: Readonly<Record<string, ReadonlySet<string>>> 
   יהודה: new Set(["אבן", "מטה", "שפלת", "הרי"]),
 };
 
+/**
+ * Split hub. It is not one of `SUNSET_REGIONS`: spots stay on יהודה or שומרון.
+ * The sitemap and llms.txt both list it through `publicRegionPages()`.
+ */
+export const JUDEA_SAMARIA_HUB = {
+  path: "/regions/judea-samaria",
+  title: "נקודות שקיעה ביהודה ובשומרון",
+  description:
+    "העמוד המשותף ליהודה ושומרון חולק לשתי רשימות: יהודה, ושומרון ובנימין. בחרו את האזור כדי לראות את נקודות השקיעה.",
+} as const;
+
+export type PublicRegionPage = {
+  path: string;
+  /** Spot-matching region. Null for the Judea and Samaria hub. */
+  slug: string | null;
+  title: string;
+  description: string;
+};
+
+/** Every public region URL. Sitemap and llms.txt both use this list. */
+export function publicRegionPages(): PublicRegionPage[] {
+  return [
+    ...SUNSET_REGIONS.map((region) => ({
+      path: regionPath(region.slug),
+      slug: region.slug,
+      title: region.title,
+      description: region.intro,
+    })),
+    {
+      path: JUDEA_SAMARIA_HUB.path,
+      slug: null,
+      title: JUDEA_SAMARIA_HUB.title,
+      description: JUDEA_SAMARIA_HUB.description,
+    },
+  ];
+}
+
 export function regionPath(slug: string): string {
   return `/regions/${slug}`;
 }
