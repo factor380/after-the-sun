@@ -98,6 +98,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/llms.txt`,
+      lastModified: lastModified(aboutStamp),
+      changeFrequency: "daily",
+      priority: 0.4,
+    },
     ...regionEntries,
     {
       url: `${baseUrl}/regions/judea-samaria`,

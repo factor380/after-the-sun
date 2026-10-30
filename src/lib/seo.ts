@@ -309,6 +309,12 @@ export function guideArticleJsonLd(input: {
         "@id": `${url}#article`,
         headline: input.title,
         description: input.description,
+        image: {
+          "@type": "ImageObject",
+          url: absoluteUrl(`${input.path}/opengraph-image`),
+          width: DEFAULT_OG_SIZE.width,
+          height: DEFAULT_OG_SIZE.height,
+        },
         inLanguage: "he-IL",
         datePublished: input.datePublished,
         dateModified: input.dateModified,

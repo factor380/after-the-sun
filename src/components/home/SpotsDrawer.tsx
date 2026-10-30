@@ -13,6 +13,7 @@ import { SunsetChip } from "@/components/home/SunsetChip";
 import { useSunsetLabel } from "@/components/home/useSunsetLabel";
 import { useSpotSelection } from "@/components/home/SpotSelectionProvider";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
 
 type SpotsDrawerProps = {
@@ -243,6 +244,13 @@ export function SpotsDrawer({
         <h2 className="mb-3 hidden shrink-0 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--sand-muted)] lg:block">
           {heading}
         </h2>
+
+        <Link
+          href={JERUSALEM_SUNSET_GUIDE.path}
+          className="mb-3 block shrink-0 text-sm font-medium text-[var(--ember)] underline-offset-4 hover:underline"
+        >
+          מדריך שקיעה בירושלים
+        </Link>
 
         <nav
           aria-label="נקודות שקיעה לפי אזור"

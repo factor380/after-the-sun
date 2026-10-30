@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
 
 /**
@@ -15,11 +16,13 @@ function revalidatePageAndSocialImages(path: string) {
   revalidatePath(`${base}/twitter-image`);
 }
 
-/** Drop cached public HTML, social images, and the sitemap after a spot or its photos change. */
+/** Drop cached public HTML, social images, the sitemap, and llms.txt after a spot or its photos change. */
 export function revalidatePublishedSpots(spotId?: string) {
   revalidatePageAndSocialImages("/");
   revalidatePageAndSocialImages("/about");
   revalidatePath("/sitemap.xml");
+  revalidatePath("/llms.txt");
+  revalidatePath(JERUSALEM_SUNSET_GUIDE.path);
   for (const region of SUNSET_REGIONS) {
     revalidatePageAndSocialImages(regionPath(region.slug));
   }

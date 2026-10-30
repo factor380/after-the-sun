@@ -34,8 +34,13 @@ const PUBLISHED = `${JERUSALEM_SUNSET_GUIDE.datePublished}T00:00:00.000Z`;
 const textLink =
   "text-[var(--sand)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--ember)]";
 
-/** Photos come from the database, so a new cover shows up without a redeploy. */
-export const dynamic = "force-dynamic";
+/**
+ * Cached for 10 minutes, same window as the other public pages.
+ * Spot writes refresh it through `revalidatePublishedSpots`, so a new cover
+ * does not wait out the window. `force-dynamic` made this response
+ * `private, no-store` and every request missed the cache.
+ */
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -86,7 +91,9 @@ async function loadGuideCovers(): Promise<Map<string, string>> {
       if (cover) covers.set(spot.id, cover);
     }
     return covers;
-  } catch {
+  } catch (error) {
+    // A failed production revalidation must not replace a cached guide with missing photos.
+    if (process.env.NODE_ENV === "production") throw error;
     return new Map();
   }
 }
