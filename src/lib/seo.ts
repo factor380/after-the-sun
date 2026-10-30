@@ -289,6 +289,105 @@ export function spotsItemListJsonLd(spots: SpotSummary[]) {
   };
 }
 
+export function guideArticleJsonLd(input: {
+  title: string;
+  description: string;
+  path: string;
+  datePublished: string;
+  dateModified: string;
+  regionName: string;
+  regionPath: string;
+  places: readonly { name: string; path: string; image?: string | null }[];
+  faqs: readonly { question: string; answer: string }[];
+}) {
+  const url = absoluteUrl(input.path);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        "@id": `${url}#article`,
+        headline: input.title,
+        description: input.description,
+        inLanguage: "he-IL",
+        datePublished: input.datePublished,
+        dateModified: input.dateModified,
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        url,
+        author: {
+          "@type": "Organization",
+          name: SITE_NAME,
+          url: getSiteUrl(),
+        },
+        publisher: {
+          "@type": "Organization",
+          name: SITE_NAME,
+          url: getSiteUrl(),
+        },
+        isPartOf: {
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: getSiteUrl(),
+        },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${url}#faq`,
+        url,
+        inLanguage: "he-IL",
+        mainEntity: input.faqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer,
+          },
+        })),
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${url}#places`,
+        name: input.title,
+        numberOfItems: input.places.length,
+        itemListElement: input.places.map((place, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          url: absoluteUrl(place.path),
+          item: {
+            "@type": "Place",
+            name: place.name,
+            url: absoluteUrl(place.path),
+            ...(place.image ? { image: place.image } : {}),
+          },
+        })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: SITE_NAME,
+            item: getSiteUrl(),
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: input.regionName,
+            item: absoluteUrl(input.regionPath),
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: input.title,
+            item: url,
+          },
+        ],
+      },
+    ],
+  };
+}
+
 export function spotJsonLd(spot: {
   id: string;
   name: string;

@@ -38,6 +38,7 @@ If the work touches routing, rendered text, photos, or metadata, check:
 | `/` | yes | canonical `/`, `websiteJsonLd` + `spotsItemListJsonLd`, crawlable spot links, `h1` |
 | `/about` | yes | unique title + description, canonical `/about`, `h1`, `aboutPageJsonLd`. `/50` 308s here and stays out of the sitemap |
 | `/regions/[slug]` | yes | unique title + description from `SUNSET_REGIONS`, canonical `/regions/{slug}`, `h1`, visible spot links, `regionPageJsonLd` (ItemList + BreadcrumbList). Unknown slugs 404 |
+| `/guides/jerusalem-sunset` | yes | unique title + description, canonical `/guides/jerusalem-sunset`, `h1`, `guideArticleJsonLd` (Article + FAQPage + Place ItemList). File-based OG and Twitter image |
 | `/spots/[id]` | yes | `generateMetadata` via `spotPageTitle` / `spotPageDescription`, canonical `/spots/{id}`, `spotJsonLd` |
 | login, new, mine, edit, auth, api | no | `noIndexRobots`; listed in `robots.ts` `disallow` |
 

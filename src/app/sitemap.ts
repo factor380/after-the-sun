@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { SUNSET_REGIONS, regionPath, spotMatchesRegion } from "@/lib/regions";
 import { getSiteUrl } from "@/lib/seo";
 import { listSpots } from "@/services/spots";
@@ -88,6 +89,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: lastModified(aboutStamp),
       changeFrequency: "weekly",
       priority: 0.9,
+    },
+    {
+      url: `${baseUrl}${JERUSALEM_SUNSET_GUIDE.path}`,
+      lastModified: lastModified(
+        new Date(`${JERUSALEM_SUNSET_GUIDE.datePublished}T00:00:00.000Z`),
+      ),
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
     ...regionEntries,
     {
