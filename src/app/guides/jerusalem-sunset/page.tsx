@@ -22,9 +22,9 @@ import {
   WINTER_ROWS,
   WINTER_SOURCE,
 } from "@/lib/guides/jerusalem-sunset";
+import { loadGuideCoverMap } from "@/lib/guides/guide-covers";
 import { SITE_NAME, guideArticleJsonLd, indexRobots } from "@/lib/seo";
-import { canOptimizeSpotPhoto, spotCoverUrl } from "@/lib/spot-cover";
-import { listSpots } from "@/services/spots";
+import { canOptimizeSpotPhoto } from "@/lib/spot-cover";
 
 const PATH = JERUSALEM_SUNSET_GUIDE.path;
 const TITLE = JERUSALEM_SUNSET_GUIDE.title;
@@ -37,7 +37,8 @@ const textLink =
 /**
  * Cached for 10 minutes, same window as the other public pages.
  * Spot writes refresh it through `revalidatePublishedSpots`, so a new cover
- * does not wait out the window. `force-dynamic` made this response
+ * does not wait out the window. A missing database at build time still
+ * renders the guide without photos. `force-dynamic` made this response
  * `private, no-store` and every request missed the cache.
  */
 export const revalidate = 600;
@@ -82,22 +83,6 @@ function spotIdFromPath(path: string): string {
   return path.startsWith("/spots/") ? path.slice("/spots/".length) : path;
 }
 
-async function loadGuideCovers(): Promise<Map<string, string>> {
-  try {
-    const spots = await listSpots();
-    const covers = new Map<string, string>();
-    for (const spot of spots) {
-      const cover = spotCoverUrl(spot);
-      if (cover) covers.set(spot.id, cover);
-    }
-    return covers;
-  } catch (error) {
-    // A failed production revalidation must not replace a cached guide with missing photos.
-    if (process.env.NODE_ENV === "production") throw error;
-    return new Map();
-  }
-}
-
 function GuideSpotPhoto({ name, href, url }: { name: string; href: string; url: string }) {
   const alt = `שקיעה מ${name}`;
   return (
@@ -121,7 +106,7 @@ function GuideSpotPhoto({ name, href, url }: { name: string; href: string; url: 
 }
 
 export default async function JerusalemSunsetGuidePage() {
-  const covers = await loadGuideCovers();
+  const covers = await loadGuideCoverMap();
   const places = JERUSALEM_SUNSET_PLACES.map((place) => ({
     ...place,
     image: covers.get(spotIdFromPath(place.path)) ?? null,

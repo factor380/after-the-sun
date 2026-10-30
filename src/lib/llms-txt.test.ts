@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import robots from "@/app/robots";
+import sitemap from "@/app/sitemap";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
-import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { SUNSET_REGIONS, publicRegionPages, regionPath } from "@/lib/regions";
 import { SITE_DESCRIPTION, SITE_NAME, getSiteUrl } from "@/lib/seo";
 import { LLMS_TXT_SUMMARY, buildLlmsTxt, type LlmsSpot } from "@/lib/llms-txt";
 
@@ -63,20 +64,36 @@ describe("buildLlmsTxt", () => {
     const pages = pageSection(text);
     const lines = linkLines(pages);
 
-    expect(lines).toHaveLength(2 + SUNSET_REGIONS.length + 2);
+    expect(lines).toHaveLength(2 + publicRegionPages().length + 2);
     expect(SUNSET_REGIONS).toHaveLength(7);
+    expect(publicRegionPages()).toHaveLength(SUNSET_REGIONS.length + 1);
     expect(lines.every((line) => LINK_LINE.test(line))).toBe(true);
 
     expect(pages).toContain(`](${origin}):`);
     expect(pages).toContain(`](${origin}/about):`);
-    for (const region of SUNSET_REGIONS) {
-      expect(pages).toContain(`](${origin}${regionPath(region.slug)}):`);
+    for (const page of publicRegionPages()) {
+      expect(pages).toContain(`](${origin}${page.path}):`);
     }
+    expect(pages).toContain(`](${origin}${regionPath("judea-samaria")}):`);
+    expect(pages).toContain("העמוד המשותף ליהודה ושומרון חולק לשתי רשימות: יהודה, ושומרון ובנימין.");
     expect(pages).toContain(`](${origin}${JERUSALEM_SUNSET_GUIDE.path}):`);
     expect(pages).toContain(`](${origin}/sitemap.xml):`);
     expect(pages).toContain("המפה הקהילתית של נקודות השקיעה בישראל.");
     expect(pages).toContain("אלה נקודות השקיעה שסומנו בתל אביב–יפו על המפה.");
     expect(pages).toContain("מדריך לתצפיות שקיעה בירושלים שפונות מערבה, עם קישור לעמוד של כל נקודה.");
+  });
+
+  it("lists every region URL the sitemap lists", async () => {
+    vi.mocked(listSpots).mockRejectedValue(new Error("database unavailable"));
+    const entries = await sitemap();
+    const urls = new Set(entries.map((entry) => entry.url));
+    const origin = getSiteUrl();
+
+    for (const page of publicRegionPages()) {
+      const url = `${origin}${page.path}`;
+      expect(urls.has(url), page.path).toBe(true);
+      expect(pageSection(text)).toContain(`](${url}):`);
+    }
   });
 
   it("does not state a fixed spot count or link private pages", () => {

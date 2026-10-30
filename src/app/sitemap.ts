@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
-import { SUNSET_REGIONS, regionPath, spotMatchesRegion } from "@/lib/regions";
+import { getRegionBySlug, publicRegionPages, spotMatchesRegion } from "@/lib/regions";
 import { getSiteUrl } from "@/lib/seo";
 import { listSpots } from "@/services/spots";
 
@@ -57,9 +57,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const aboutStamp =
     newest && newest > REGION_PAGES_PUBLISHED ? newest : REGION_PAGES_PUBLISHED;
 
-  const regionEntries: MetadataRoute.Sitemap = SUNSET_REGIONS.map((region) => {
+  const regionEntries: MetadataRoute.Sitemap = publicRegionPages().map((page) => {
+    if (!page.slug) {
+      return {
+        url: `${baseUrl}${page.path}`,
+        lastModified: lastModified(REGION_PAGES_PUBLISHED),
+        changeFrequency: "monthly" as const,
+        priority: 0.4,
+      };
+    }
+
+    const region = getRegionBySlug(page.slug);
     const newestInRegion = spots.reduce<Date | null>((latest, spot) => {
-      if (!spotMatchesRegion(spot.region, region)) return latest;
+      if (!region || !spotMatchesRegion(spot.region, region)) return latest;
       const updatedAt = spot.updatedAt ?? spot.createdAt;
       if (!latest || updatedAt > latest) return updatedAt;
       return latest;
@@ -70,7 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         : REGION_PAGES_PUBLISHED;
 
     return {
-      url: `${baseUrl}${regionPath(region.slug)}`,
+      url: `${baseUrl}${page.path}`,
       lastModified: lastModified(stamp),
       changeFrequency: "weekly" as const,
       priority: 0.8,
@@ -105,12 +115,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.4,
     },
     ...regionEntries,
-    {
-      url: `${baseUrl}/regions/judea-samaria`,
-      lastModified: lastModified(REGION_PAGES_PUBLISHED),
-      changeFrequency: "monthly" as const,
-      priority: 0.4,
-    },
     ...spotEntries,
   ];
 }

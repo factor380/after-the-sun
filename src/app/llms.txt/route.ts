@@ -1,5 +1,5 @@
-import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import { buildLlmsTxt, type LlmsSpot } from "@/lib/llms-txt";
+import { allowStaticDataFallback } from "@/lib/static-data-fallback";
 
 /**
  * Cached for 10 minutes, same window as the public pages.
@@ -11,13 +11,6 @@ export const dynamic = "force-static";
 export const revalidate = 600;
 
 const CONTENT_TYPE = "text/plain; charset=utf-8";
-
-function staticSpotFallback(): boolean {
-  return (
-    process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD ||
-    process.env.NODE_ENV !== "production"
-  );
-}
 
 /**
  * Published spots are every row `listSpots()` returns. There is no draft flag.
@@ -35,7 +28,7 @@ async function loadPublishedSpots(): Promise<LlmsSpot[]> {
       region: spot.region,
     }));
   } catch (error) {
-    if (!staticSpotFallback()) throw error;
+    if (!allowStaticDataFallback()) throw error;
     return [];
   }
 }

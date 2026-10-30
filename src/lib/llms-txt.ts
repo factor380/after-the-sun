@@ -1,5 +1,5 @@
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
-import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { publicRegionPages } from "@/lib/regions";
 import { SITE_DESCRIPTION, SITE_NAME, absoluteUrl, truncateMeta } from "@/lib/seo";
 
 /**
@@ -59,10 +59,10 @@ function pageLinks(): PageLink[] {
       path: "/about",
       note: "על המיזם ואיך משתפים נקודת שקיעה.",
     },
-    ...SUNSET_REGIONS.map((region) => ({
-      label: region.title,
-      path: regionPath(region.slug),
-      note: firstSentence(region.intro),
+    ...publicRegionPages().map((page) => ({
+      label: page.title,
+      path: page.path,
+      note: firstSentence(page.description),
     })),
     {
       label: "איפה רואים שקיעה בירושלים?",
