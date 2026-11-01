@@ -5,6 +5,7 @@ import { HomeSpotIndex } from "@/components/home/HomeSpotIndex";
 import { SpotList } from "@/components/spots/SpotList";
 import JsonLd from "@/components/seo/JsonLd";
 import { toPublicSpot } from "@/lib/public-spot";
+import { allowStaticDataFallback } from "@/lib/static-data-fallback";
 import { listSpots } from "@/services/spots";
 import type { SpotSummary } from "@/types/spot";
 import { SpotsDrawer } from "@/components/home/SpotsDrawer";
@@ -31,7 +32,8 @@ async function loadSpots(): Promise<{
     };
   } catch (error) {
     // A failed production revalidation must not replace a good cached page with an empty map.
-    if (process.env.NODE_ENV === "production") throw error;
+    // `next build` without a database still prerenders the empty map.
+    if (!allowStaticDataFallback()) throw error;
     return { spots: [], setupNeeded: true };
   }
 }

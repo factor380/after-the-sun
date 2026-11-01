@@ -21,6 +21,7 @@ import {
   regionPageJsonLd,
   truncateMeta,
 } from "@/lib/seo";
+import { allowStaticDataFallback } from "@/lib/static-data-fallback";
 import { listSpots } from "@/services/spots";
 import type { SpotSummary } from "@/types/spot";
 
@@ -206,7 +207,7 @@ async function loadRegionSpots(
       spots: filterSpotsForRegion(spots.map(toPublicSpot), region),
     };
   } catch (error) {
-    if (process.env.NODE_ENV === "production") throw error;
+    if (!allowStaticDataFallback()) throw error;
     return { ok: false };
   }
 }

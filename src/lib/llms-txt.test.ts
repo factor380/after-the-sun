@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
@@ -214,6 +214,67 @@ describe("GET /llms.txt", () => {
     vi.mocked(listSpots).mockRejectedValue(new Error("database unavailable"));
 
     await expect(GET()).rejects.toThrow("database unavailable");
+  });
+});
+
+describe("canonical domain", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("points sitemap, robots, and llms.txt at after-the-sun.com", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "after-the-sun.vercel.app");
+    vi.stubEnv("VERCEL_URL", "after-the-sun-abc123-factor380.vercel.app");
+    vi.mocked(listSpots).mockResolvedValue([]);
+
+    const origin = "https://after-the-sun.com";
+    expect(getSiteUrl()).toBe(origin);
+
+    const robotsResult = robots();
+    expect(robotsResult.sitemap).toBe(`${origin}/sitemap.xml`);
+    expect(robotsResult.host).toBe(origin);
+
+    const entries = await sitemap();
+    expect(entries.length).toBeGreaterThan(0);
+    for (const entry of entries) {
+      expect(entry.url.startsWith(`${origin}/`) || entry.url === origin, entry.url).toBe(
+        true,
+      );
+      expect(entry.url).not.toContain("vercel.app");
+      expect(entry.url).not.toContain("localhost");
+    }
+    expect(entries.map((entry) => entry.url)).toEqual(
+      expect.arrayContaining([
+        origin,
+        `${origin}/about`,
+        `${origin}/llms.txt`,
+        `${origin}${JERUSALEM_SUNSET_GUIDE.path}`,
+      ]),
+    );
+
+    const body = buildLlmsTxt([
+      {
+        id: "spot-1",
+        name: "חוף אמת המים",
+        description: "קשתות רומיות פוגשות את הים.",
+        region: "קיסריה",
+      },
+    ]);
+    const urls = [...body.matchAll(/\]\((https:\/\/[^)\s]+)\)/g)].map((match) => match[1]);
+    expect(urls.length).toBeGreaterThan(0);
+    for (const url of urls) {
+      expect(url === origin || url.startsWith(`${origin}/`), url).toBe(true);
+      expect(url).not.toContain("vercel.app");
+    }
+    expect(urls).toEqual(
+      expect.arrayContaining([
+        origin,
+        `${origin}/about`,
+        `${origin}/sitemap.xml`,
+        `${origin}/spots/spot-1`,
+      ]),
+    );
   });
 });
 

@@ -14,6 +14,7 @@ import { toPublicSpot } from "@/lib/public-spot";
 import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { SITE_NAME, aboutPageJsonLd, indexRobots } from "@/lib/seo";
+import { allowStaticDataFallback } from "@/lib/static-data-fallback";
 import { listSpots } from "@/services/spots";
 import type { SpotSummary } from "@/types/spot";
 
@@ -72,7 +73,7 @@ async function loadRecentSpots(): Promise<SpotSummary[]> {
     const spots = await listSpots();
     return spots.slice(0, RECENT_SPOT_LIMIT).map(toPublicSpot);
   } catch (error) {
-    if (process.env.NODE_ENV === "production") throw error;
+    if (!allowStaticDataFallback()) throw error;
     return [];
   }
 }
