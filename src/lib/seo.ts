@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import type { SpotSummary } from "@/types/spot";
+import { absoluteUrl, getSiteUrl } from "@/lib/site-url";
+
+export { absoluteUrl, getSiteUrl };
 
 export const SITE_NAME = "After the Sun";
 export const SITE_TAGLINE = "נקודות שקיעה בישראל";
@@ -19,36 +22,6 @@ export type ShareImage = {
   height?: number;
   type?: string;
 };
-
-const FALLBACK_SITE_URL = "https://after-the-sun.vercel.app";
-
-function isLocalhost(url: string): boolean {
-  try {
-    const { hostname } = new URL(url.includes("://") ? url : `https://${url}`);
-    return hostname === "localhost" || hostname === "127.0.0.1";
-  } catch {
-    return false;
-  }
-}
-
-/** Public origin for canonical URLs, sitemap, and Open Graph. Never localhost. */
-export function getSiteUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  if (explicit && !isLocalhost(explicit)) {
-    return explicit.includes("://") ? explicit : `https://${explicit}`;
-  }
-  const vercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim().replace(/\/$/, "");
-  if (vercelProd && !isLocalhost(vercelProd)) {
-    return vercelProd.includes("://") ? vercelProd : `https://${vercelProd}`;
-  }
-  return FALLBACK_SITE_URL;
-}
-
-export function absoluteUrl(path = "/"): string {
-  const base = getSiteUrl();
-  if (!path || path === "/") return base;
-  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
-}
 
 export function truncateMeta(text: string, max = 160): string {
   const collapsed = text.replace(/\s+/g, " ").trim();

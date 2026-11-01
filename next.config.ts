@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { legacyProductionRedirects } from "./src/lib/site-url";
 
 // Static CSP must allow 'unsafe-inline' scripts - Next.js bootstrap sets self.__next_r inline.
 const isDev = process.env.NODE_ENV === "development";
@@ -48,6 +49,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Exact host only. Preview URLs and localhost do not match.
+      // Next forwards the query string.
+      ...legacyProductionRedirects(),
       {
         source: "/50",
         destination: "/about",

@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { allowStaticDataFallback } from "@/lib/static-data-fallback";
 import { countSpots } from "@/services/spots";
 
 export const CAMPAIGN_GOAL = 50;
@@ -11,7 +12,7 @@ export const getCampaignSpotCount = cache(async (): Promise<number> => {
     if (!Number.isFinite(count) || count < 0) return CAMPAIGN_FALLBACK_COUNT;
     return Math.floor(count);
   } catch (error) {
-    if (process.env.NODE_ENV === "production") throw error;
+    if (!allowStaticDataFallback()) throw error;
     return CAMPAIGN_FALLBACK_COUNT;
   }
 });

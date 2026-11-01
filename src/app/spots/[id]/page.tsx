@@ -8,6 +8,7 @@ import SpotGallery, {
 import JsonLd from "@/components/seo/JsonLd";
 import { T } from "@/components/T";
 import { sunsetTime } from "@/lib/geo/sunset";
+import { allowStaticDataFallback } from "@/lib/static-data-fallback";
 import { matchingRegion, regionPath } from "@/lib/regions";
 import {
   SITE_NAME,
@@ -29,8 +30,13 @@ type PageProps = { params: Promise<{ id: string }> };
 export const revalidate = 600;
 
 export async function generateStaticParams() {
-  const spots = await listSpots();
-  return spots.map((spot) => ({ id: spot.id }));
+  try {
+    const spots = await listSpots();
+    return spots.map((spot) => ({ id: spot.id }));
+  } catch (error) {
+    if (!allowStaticDataFallback()) throw error;
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

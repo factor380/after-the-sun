@@ -3,6 +3,7 @@ import {
   ISRAEL_CENTER,
   ISRAEL_MAX_BOUNDS,
 } from "@/lib/geo/israel";
+import { getSiteUrl } from "@/lib/site-url";
 
 export type GeocodeResult = {
   label: string;
@@ -34,8 +35,9 @@ const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
 const PHOTON_SEARCH_URL = "https://photon.komoot.io/api/";
 
 /** Identifies this app to public geocoders. Do not include secrets. */
-const PUBLIC_GEOCODER_USER_AGENT =
-  "AfterTheSun/1.0 (https://after-the-sun.vercel.app; sunset place search)";
+function publicGeocoderUserAgent(): string {
+  return `AfterTheSun/1.0 (${getSiteUrl()}; sunset place search)`;
+}
 
 /** Max results returned to the client. */
 export const GEOCODE_RESULT_LIMIT = 6;
@@ -224,7 +226,7 @@ async function fetchJson(url: URL, signal?: AbortSignal): Promise<unknown> {
     headers: {
       Accept: "application/json",
       "Accept-Language": "he",
-      "User-Agent": PUBLIC_GEOCODER_USER_AGENT,
+      "User-Agent": publicGeocoderUserAgent(),
     },
   });
   if (!res.ok) throw new PlaceSearchError(res.status);

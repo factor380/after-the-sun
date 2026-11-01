@@ -4,7 +4,7 @@
 
 **A community map of the best sunset spots in Israel.** Find a spot near you, see today's sunset time there, browse photos from other visitors, and add the places you love.
 
-**Live:** [after-the-sun.vercel.app](https://after-the-sun.vercel.app/) · Hebrew, RTL · Beta (MVP)
+**Live:** [after-the-sun.com](https://after-the-sun.com/) · Hebrew, RTL · Beta (MVP)
 
 ---
 
@@ -80,11 +80,12 @@ prisma/           Schema and seed data
    - `NEXT_PUBLIC_SITE_URL` (`http://localhost:3004` locally)
    - `GEOAPIFY_API_KEY` (optional. When set, place search uses Geoapify. Without it, search uses OpenStreetMap)
 3. In Supabase, go to Auth → URL Configuration:
-   - **Site URL**: your production URL (e.g. `https://after-the-sun.vercel.app`)
+   - **Site URL**: `https://after-the-sun.com`
    - **Redirect URLs**: include both production *and* local, or Google login from localhost will bounce to the live site:
      - `http://localhost:3004/auth/callback`
      - `http://localhost:3004/**`
-     - `https://your-domain/auth/callback`
+     - `https://after-the-sun.com/auth/callback`
+     - `https://after-the-sun.com/**`
 4. Enable **Google** sign-in:
    - Supabase Dashboard → Authentication → Providers → Google → Enable
    - In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an **OAuth 2.0 Client ID** (Web application)

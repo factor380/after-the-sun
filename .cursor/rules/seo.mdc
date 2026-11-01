@@ -17,7 +17,7 @@ Public routes need unique title, description, and a **per-page** canonical. Neve
 
 ```tsx
 // ❌ BAD - inherited by every route
-export const metadata = { alternates: { canonical: "https://after-the-sun.vercel.app" } };
+export const metadata = { alternates: { canonical: "https://after-the-sun.com" } };
 
 // ✅ GOOD - homepage only
 export const metadata = { alternates: { canonical: "/" } };

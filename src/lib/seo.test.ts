@@ -1,13 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_OG_ALT,
+  aboutPageJsonLd,
   absoluteUrl,
   defaultOgImage,
   getSiteUrl,
+  guideArticleJsonLd,
   jsonLdString,
+  regionPageJsonLd,
   spotCoverImage,
   spotJsonLd,
+  websiteJsonLd,
 } from "@/lib/seo";
+import { DEFAULT_SITE_URL } from "@/lib/site-url";
 
 const PHOTO = "https://cdn.example.com/sunset.jpg";
 const SECOND = "https://cdn.example.com/dunes.jpg";
@@ -120,5 +125,101 @@ describe("spotJsonLd images", () => {
       PHOTO,
       ...photos.slice(0, 7).map((photo) => photo.url),
     ]);
+  });
+});
+
+describe("getSiteUrl", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("defaults to the production domain and ignores other host env vars", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "after-the-sun.vercel.app");
+    vi.stubEnv("VERCEL_URL", "after-the-sun-git-preview-factor380.vercel.app");
+
+    expect(DEFAULT_SITE_URL).toBe("https://after-the-sun.com");
+    expect(getSiteUrl()).toBe("https://after-the-sun.com");
+    expect(absoluteUrl("/")).toBe("https://after-the-sun.com");
+    expect(absoluteUrl("/about")).toBe("https://after-the-sun.com/about");
+    expect(absoluteUrl("spots/spot-1")).toBe("https://after-the-sun.com/spots/spot-1");
+  });
+
+  it("reads NEXT_PUBLIC_SITE_URL and strips a trailing slash", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://staging.example.com/");
+
+    expect(getSiteUrl()).toBe("https://staging.example.com");
+    expect(absoluteUrl("/regions/tel-aviv")).toBe(
+      "https://staging.example.com/regions/tel-aviv",
+    );
+  });
+
+  it("adds https when the env var is a bare host", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "after-the-sun.com");
+
+    expect(getSiteUrl()).toBe("https://after-the-sun.com");
+  });
+
+  it("ignores localhost so canonicals stay on the production domain", () => {
+    for (const value of [
+      "http://localhost:3004",
+      "http://127.0.0.1:3004",
+      "localhost:3004",
+    ]) {
+      vi.stubEnv("NEXT_PUBLIC_SITE_URL", value);
+      expect(getSiteUrl(), value).toBe("https://after-the-sun.com");
+    }
+  });
+
+  it("uses the production origin in WebSite, Organization, Article, and Place JSON-LD", () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "after-the-sun.vercel.app");
+
+    const website = websiteJsonLd() as { "@type": string; url: string };
+    expect(website["@type"]).toBe("WebSite");
+    expect(website.url).toBe("https://after-the-sun.com");
+
+    const about = jsonLdString(
+      aboutPageJsonLd({ title: "אודות", description: "על המיזם." }),
+    );
+    expect(about).toContain("https://after-the-sun.com/about");
+    expect(about).not.toContain("vercel.app");
+    expect(about).not.toContain("localhost");
+
+    const spot = jsonLdString(spotJsonLd(place()));
+    expect(spot).toContain("https://after-the-sun.com/spots/spot-1");
+    expect(spot).not.toContain("vercel.app");
+
+    const region = jsonLdString(
+      regionPageJsonLd({
+        title: "תל אביב",
+        description: "נקודות שקיעה.",
+        path: "/regions/tel-aviv",
+        spots: [],
+      }),
+    );
+    expect(region).toContain("https://after-the-sun.com/regions/tel-aviv");
+    expect(region).not.toContain("vercel.app");
+
+    const article = jsonLdString(
+      guideArticleJsonLd({
+        title: "מדריך",
+        description: "תיאור",
+        path: "/guides/jerusalem-sunset",
+        datePublished: "2026-10-01",
+        dateModified: "2026-10-02",
+        regionName: "ירושלים",
+        regionPath: "/regions/jerusalem",
+        places: [{ name: "גן", path: "/spots/spot-1" }],
+        faqs: [{ question: "שאלה", answer: "תשובה" }],
+      }),
+    );
+    expect(article).toContain('"@type":"Article"');
+    expect(article).toContain('"@type":"Organization"');
+    expect(article).toContain('"@type":"Place"');
+    expect(article).toContain("https://after-the-sun.com/guides/jerusalem-sunset");
+    expect(article).toContain("https://after-the-sun.com/spots/spot-1");
+    expect(article).not.toContain("vercel.app");
+    expect(article).not.toContain("localhost");
   });
 });
