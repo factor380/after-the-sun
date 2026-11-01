@@ -126,7 +126,7 @@ export default function SpotGallery({
           className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"
         />
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--dusk-deep)] to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent"
           aria-hidden
         />
         {count > 1 ? (
