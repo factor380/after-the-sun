@@ -11,7 +11,7 @@ import {
   getCampaignSpotCount,
 } from "@/lib/campaign";
 import { toPublicSpot } from "@/lib/public-spot";
-import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { REGIONS_INDEX, SUNSET_REGIONS, regionPath } from "@/lib/regions";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { SITE_NAME, aboutPageJsonLd, indexRobots } from "@/lib/seo";
 import { allowStaticDataFallback } from "@/lib/static-data-fallback";
@@ -144,7 +144,13 @@ export default async function AboutPage() {
           לפי אזור
         </h2>
         <p className="mt-4 leading-relaxed text-[var(--sand-muted)]">
-          עמודים לפי אזור, עם הנקודות שסומנו שם.
+          עמודים לפי אזור, עם הנקודות שסומנו שם.{" "}
+          <Link
+            href={REGIONS_INDEX.path}
+            className="text-[var(--sand)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--ember)]"
+          >
+            כל האזורים
+          </Link>
         </p>
         <ul className="mt-4 space-y-3">
           {SUNSET_REGIONS.map((region) => (

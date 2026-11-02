@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 import { T } from "@/components/T";
-import { JUDEA_SAMARIA_HUB, SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { JUDEA_SAMARIA_HUB, REGIONS_INDEX, SUNSET_REGIONS, regionPath } from "@/lib/regions";
 import { SITE_NAME, indexRobots, regionPageJsonLd, truncateMeta } from "@/lib/seo";
 
 const PATH = JUDEA_SAMARIA_HUB.path;
@@ -90,6 +90,14 @@ export default function JudeaSamariaHubPage() {
           אזורים נוספים
         </h2>
         <ul className="mt-4 space-y-3">
+          <li>
+            <Link
+              href={REGIONS_INDEX.path}
+              className="text-[var(--sand)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--ember)]"
+            >
+              כל האזורים
+            </Link>
+          </li>
           {SUNSET_REGIONS.filter((region) => region.slug !== "judea" && region.slug !== "samaria").map(
             (region) => (
               <li key={region.slug}>

@@ -8,6 +8,7 @@ import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { toPublicSpot } from "@/lib/public-spot";
 import {
+  REGIONS_INDEX,
   SUNSET_REGIONS,
   filterSpotsForRegion,
   getRegionBySlug,
@@ -181,6 +182,14 @@ export default async function RegionPage({ params }: PageProps) {
           אזורים נוספים
         </h2>
         <ul className="mt-4 space-y-3">
+          <li>
+            <Link
+              href={REGIONS_INDEX.path}
+              className="text-[var(--sand)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--ember)]"
+            >
+              כל האזורים
+            </Link>
+          </li>
           {otherRegions.map((item) => (
             <li key={item.slug}>
               <Link

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { dictionary } from "@/lib/i18n/dictionaries";
-import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { REGIONS_INDEX, SUNSET_REGIONS, regionPath } from "@/lib/regions";
 import type { SpotSummary } from "@/types/spot";
 
 /** Crawlable heading and links - the map list is virtualized in the client. */
@@ -12,6 +12,9 @@ export function HomeSpotIndex({ spots }: { spots: SpotSummary[] }) {
       <p>{dictionary.homeSeoLead}</p>
       <nav aria-label="נקודות שקיעה לפי אזור">
         <ul>
+          <li>
+            <Link href={REGIONS_INDEX.path}>{REGIONS_INDEX.title}</Link>
+          </li>
           {SUNSET_REGIONS.map((region) => (
             <li key={region.slug}>
               <Link href={regionPath(region.slug)}>{region.title}</Link>

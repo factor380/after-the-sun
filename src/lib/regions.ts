@@ -203,17 +203,36 @@ export const JUDEA_SAMARIA_HUB = {
     "העמוד המשותף ליהודה ושומרון חולק לשתי רשימות: יהודה, ושומרון ובנימין. בחרו את האזור כדי לראות את נקודות השקיעה.",
 } as const;
 
+/**
+ * Index of every sunset region. Not a spot-matching page: it links to each
+ * `/regions/<slug>` entry in `SUNSET_REGIONS`.
+ */
+export const REGIONS_INDEX = {
+  path: "/regions",
+  title: "איפה רואים שקיעה בישראל לפי אזור",
+  description:
+    "שקיעה בישראל לפי אזור: תל אביב–יפו, ירושלים, חיפה והצפון, השרון, יהודה, שומרון והדרום. לכל אזור עמוד עם הנקודות שסומנו על המפה.",
+  intro:
+    "כדי לראות שקיעה בישראל, בחרו אזור. כל עמוד מרכז את נקודות השקיעה שסומנו שם על המפה: חוף בתל אביב–יפו, תצפיות בירושלים, חיפה והצפון, השרון והחוף, יהודה, שומרון ובנימין, והדרום והשפלה.",
+} as const;
+
 export type PublicRegionPage = {
   path: string;
-  /** Spot-matching region. Null for the Judea and Samaria hub. */
+  /** Spot-matching region. Null for the index and the Judea and Samaria hub. */
   slug: string | null;
   title: string;
   description: string;
 };
 
-/** Every public region URL. Sitemap and llms.txt both use this list. */
+/** Every public region URL, including the index. Sitemap and llms.txt both use this list. */
 export function publicRegionPages(): PublicRegionPage[] {
   return [
+    {
+      path: REGIONS_INDEX.path,
+      slug: null,
+      title: REGIONS_INDEX.title,
+      description: REGIONS_INDEX.description,
+    },
     ...SUNSET_REGIONS.map((region) => ({
       path: regionPath(region.slug),
       slug: region.slug,
@@ -231,6 +250,14 @@ export function publicRegionPages(): PublicRegionPage[] {
 
 export function regionPath(slug: string): string {
   return `/regions/${slug}`;
+}
+
+/** Hebrew spot count for the regions index. */
+export function regionSpotCountLabel(count: number): string {
+  if (count <= 0) return "אין נקודות עדיין";
+  if (count === 1) return "נקודה אחת";
+  if (count === 2) return "שתי נקודות";
+  return `${count} נקודות`;
 }
 
 export function getRegionBySlug(slug: string): SunsetRegion | undefined {

@@ -8,6 +8,7 @@ import {
   guideArticleJsonLd,
   jsonLdString,
   regionPageJsonLd,
+  regionsIndexJsonLd,
   spotCoverImage,
   spotJsonLd,
   websiteJsonLd,
@@ -200,6 +201,21 @@ describe("getSiteUrl", () => {
     );
     expect(region).toContain("https://after-the-sun.com/regions/tel-aviv");
     expect(region).not.toContain("vercel.app");
+
+    const regionsIndex = jsonLdString(
+      regionsIndexJsonLd({
+        title: "איפה רואים שקיעה בישראל לפי אזור",
+        description: "שקיעה בישראל לפי אזור.",
+        regions: [{ name: "תל אביב <script>", path: "/regions/tel-aviv" }],
+      }),
+    );
+    expect(regionsIndex).toContain('"@type":"CollectionPage"');
+    expect(regionsIndex).toContain('"@type":"ItemList"');
+    expect(regionsIndex).toContain("https://after-the-sun.com/regions");
+    expect(regionsIndex).toContain("\\u003c");
+    expect(regionsIndex).not.toContain("<");
+    expect(regionsIndex).not.toContain("vercel.app");
+    expect(regionsIndex).not.toContain("localhost");
 
     const article = jsonLdString(
       guideArticleJsonLd({

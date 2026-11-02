@@ -37,6 +37,7 @@ If the work touches routing, rendered text, photos, or metadata, check:
 |---|---|---|
 | `/` | yes | canonical `/`, `websiteJsonLd` + `spotsItemListJsonLd`, crawlable spot links, `h1` |
 | `/about` | yes | unique title + description, canonical `/about`, `h1`, `aboutPageJsonLd`. `/50` 308s here and stays out of the sitemap |
+| `/regions` | yes | unique title + description from `REGIONS_INDEX`, canonical `/regions` via `getSiteUrl()` / `absoluteUrl()`, `h1`, a link to every `/regions/{slug}`, spot counts when the database answers, `regionsIndexJsonLd` (CollectionPage + ItemList) |
 | `/regions/[slug]` | yes | unique title + description from `SUNSET_REGIONS`, canonical `/regions/{slug}`, `h1`, visible spot links, `regionPageJsonLd` (ItemList + BreadcrumbList). Unknown slugs 404 |
 | `/guides/jerusalem-sunset` | yes | unique title + description, canonical `/guides/jerusalem-sunset`, `h1`, `guideArticleJsonLd` (Article image is the Gan HaKipod share card, plus FAQPage + Place ItemList). ISR `revalidate` 600. File-based OG and Twitter image |
 | `/llms.txt` | text file | `text/plain; charset=utf-8`. Allowed in `robots.ts` for `*` and AI crawlers. Lists public pages and published spots. No fixed spot count. Not an HTML page, so no title or canonical |

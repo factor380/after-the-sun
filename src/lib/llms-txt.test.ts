@@ -66,7 +66,9 @@ describe("buildLlmsTxt", () => {
 
     expect(lines).toHaveLength(2 + publicRegionPages().length + 2);
     expect(SUNSET_REGIONS).toHaveLength(7);
-    expect(publicRegionPages()).toHaveLength(SUNSET_REGIONS.length + 1);
+    expect(publicRegionPages()).toHaveLength(SUNSET_REGIONS.length + 2);
+    expect(pages).toContain(`](${origin}/regions):`);
+    expect(pages).toContain("שקיעה בישראל לפי אזור:");
     expect(lines.every((line) => LINK_LINE.test(line))).toBe(true);
 
     expect(pages).toContain(`](${origin}):`);
@@ -94,6 +96,11 @@ describe("buildLlmsTxt", () => {
       expect(urls.has(url), page.path).toBe(true);
       expect(pageSection(text)).toContain(`](${url}):`);
     }
+
+    const index = entries.find((entry) => entry.url === `${origin}/regions`);
+    expect(index).toMatchObject({ changeFrequency: "weekly", priority: 0.85 });
+    const hub = entries.find((entry) => entry.url === `${origin}${regionPath("judea-samaria")}`);
+    expect(hub).toMatchObject({ changeFrequency: "monthly", priority: 0.4 });
   });
 
   it("does not state a fixed spot count or link private pages", () => {
@@ -248,6 +255,7 @@ describe("canonical domain", () => {
       expect.arrayContaining([
         origin,
         `${origin}/about`,
+        `${origin}/regions`,
         `${origin}/llms.txt`,
         `${origin}${JERUSALEM_SUNSET_GUIDE.path}`,
       ]),
@@ -271,6 +279,7 @@ describe("canonical domain", () => {
       expect.arrayContaining([
         origin,
         `${origin}/about`,
+        `${origin}/regions`,
         `${origin}/sitemap.xml`,
         `${origin}/spots/spot-1`,
       ]),

@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
-import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { REGIONS_INDEX, SUNSET_REGIONS, regionPath } from "@/lib/regions";
 
 /**
  * Public HTML is cached for this many seconds (`export const revalidate = 600`
@@ -20,6 +20,7 @@ function revalidatePageAndSocialImages(path: string) {
 export function revalidatePublishedSpots(spotId?: string) {
   revalidatePageAndSocialImages("/");
   revalidatePageAndSocialImages("/about");
+  revalidatePageAndSocialImages(REGIONS_INDEX.path);
   revalidatePath("/sitemap.xml");
   revalidatePath("/llms.txt");
   revalidatePath(JERUSALEM_SUNSET_GUIDE.path);

@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { jsonLdString, regionPageJsonLd } from "@/lib/seo";
+import { getSiteUrl, jsonLdString, regionPageJsonLd, regionsIndexJsonLd } from "@/lib/seo";
 import {
+  REGIONS_INDEX,
   SUNSET_REGIONS,
   filterSpotsForRegion,
   getRegionBySlug,
   matchingRegion,
+  publicRegionPages,
   regionPath,
+  regionSpotCountLabel,
 } from "@/lib/regions";
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -319,5 +322,49 @@ describe("sunset regions", () => {
     }) as unknown as { "@graph": { "@type": string }[] };
 
     expect(data["@graph"].map((node) => node["@type"])).toEqual(["BreadcrumbList"]);
+  });
+
+  it("labels a region's spot count in Hebrew", () => {
+    expect(regionSpotCountLabel(0)).toBe("אין נקודות עדיין");
+    expect(regionSpotCountLabel(1)).toBe("נקודה אחת");
+    expect(regionSpotCountLabel(2)).toBe("שתי נקודות");
+    expect(regionSpotCountLabel(8)).toBe("8 נקודות");
+  });
+
+  it("builds CollectionPage and ItemList JSON-LD for the regions index", () => {
+    const data = regionsIndexJsonLd({
+      title: REGIONS_INDEX.title,
+      description: REGIONS_INDEX.description,
+      regions: SUNSET_REGIONS.map((region) => ({
+        name: region.title,
+        path: regionPath(region.slug),
+      })),
+    }) as unknown as {
+      "@graph": {
+        "@type": string;
+        url?: string;
+        numberOfItems?: number;
+        itemListElement?: { url?: string; name?: string; position?: number }[];
+      }[];
+    };
+
+    expect(data["@graph"].map((node) => node["@type"])).toEqual([
+      "CollectionPage",
+      "ItemList",
+      "BreadcrumbList",
+    ]);
+    const list = data["@graph"][1];
+    expect(list.numberOfItems).toBe(SUNSET_REGIONS.length);
+    expect(list.itemListElement?.[0]?.url).toBe(`${getSiteUrl()}${regionPath(SUNSET_REGIONS[0].slug)}`);
+    expect(list.itemListElement?.map((item) => item.name)).toEqual(
+      SUNSET_REGIONS.map((region) => region.title),
+    );
+    expect(data["@graph"][0]?.url).toBe(`${getSiteUrl()}${REGIONS_INDEX.path}`);
+    expect(publicRegionPages()[0]?.path).toBe(REGIONS_INDEX.path);
+
+    const serialized = jsonLdString(data);
+    expect(serialized).not.toContain("<");
+    expect(serialized).not.toContain("localhost");
+    expect(serialized).toContain(`${getSiteUrl()}/regions/tel-aviv`);
   });
 });

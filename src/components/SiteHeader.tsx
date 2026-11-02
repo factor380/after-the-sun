@@ -101,6 +101,13 @@ export default function SiteHeader() {
           </Link>
         ) : null}
         <Link
+          href="/regions"
+          aria-current={pathname === "/regions" ? "page" : undefined}
+          className={`${item} ${pathname === "/regions" || pathname.startsWith("/regions/") ? active : ""}`}
+        >
+          {t("regionsNav")}
+        </Link>
+        <Link
           href="/about"
           aria-current={pathname === "/about" ? "page" : undefined}
           className={`${item} ${pathname === "/about" ? active : ""}`}
