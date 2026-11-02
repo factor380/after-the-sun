@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SpotAmenityIcons } from "@/components/spots/SpotAmenities";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
@@ -29,6 +30,10 @@ export function HomeSpotIndex({ spots }: { spots: SpotSummary[] }) {
               <li key={spot.id}>
                 <Link href={`/spots/${spot.id}`}>
                   {spot.region ? `${spot.name} - ${spot.region}` : spot.name}
+                  <SpotAmenityIcons
+                    parking={spot.parking}
+                    accessibility={spot.accessibility}
+                  />
                 </Link>
               </li>
             ))}

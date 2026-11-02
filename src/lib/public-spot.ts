@@ -1,3 +1,8 @@
+import {
+  normalizeAccessibility,
+  normalizeParking,
+  readAmenityNote,
+} from "@/lib/spot-amenities";
 import type { SpotPhotoItem, SpotSummary } from "@/types/spot";
 
 type SpotPhotoRecord = {
@@ -17,6 +22,11 @@ type SpotRecord = {
   photoUrl: string | null;
   createdById: string;
   createdAt: Date;
+  /** Absent on records loaded before these columns existed. */
+  parking?: string | null;
+  parkingNote?: string | null;
+  accessibility?: string | null;
+  accessibilityNote?: string | null;
   photos?: SpotPhotoRecord[];
   _count?: { photos: number };
 };
@@ -39,6 +49,10 @@ export function toPublicSpot(spot: SpotRecord): SpotSummary {
     photoUrl: spot.photoUrl ?? communityPhotos[0]?.url ?? null,
     photoCount: communityCount + (spot.photoUrl ? 1 : 0),
     createdAt: toIso(spot.createdAt),
+    parking: normalizeParking(spot.parking),
+    parkingNote: readAmenityNote(spot.parkingNote),
+    accessibility: normalizeAccessibility(spot.accessibility),
+    accessibilityNote: readAmenityNote(spot.accessibilityNote),
   };
 }
 

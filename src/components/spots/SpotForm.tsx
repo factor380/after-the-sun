@@ -3,7 +3,9 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import LocationPickerClient from "@/components/map/LocationPickerClient";
+import SpotAmenityFields from "@/components/spots/SpotAmenityFields";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { cleanAmenityNote } from "@/lib/spot-amenities";
 import {
   compressSpotPhoto,
   SpotPhotoTooLargeError,
@@ -27,6 +29,7 @@ import {
   SPOT_PHOTO_INPUT_ACCEPT,
   spotPhotoPickRoom,
 } from "@/lib/spot-photo";
+import { AMENITY_NOTE_MAX, type Accessibility, type Parking } from "@/types/spot";
 
 type DraftPhoto =
   | {
@@ -45,6 +48,11 @@ function responseField(data: unknown, key: string): unknown {
   return (data as Record<string, unknown>)[key];
 }
 
+function noteOrNull(value: string): string | null {
+  const cleaned = cleanAmenityNote(value).slice(0, AMENITY_NOTE_MAX);
+  return cleaned.length > 0 ? cleaned : null;
+}
+
 export type SpotFormInitial = {
   id: string;
   name: string;
@@ -53,6 +61,10 @@ export type SpotFormInitial = {
   lat: number;
   lng: number;
   photoUrl: string | null;
+  parking?: Parking | null;
+  parkingNote?: string | null;
+  accessibility?: Accessibility | null;
+  accessibilityNote?: string | null;
 };
 
 type SpotFormProps = {
@@ -81,6 +93,14 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
     initial?.lng ?? null,
   );
   const [photoUrl, setPhotoUrl] = useState(initial?.photoUrl ?? "");
+  const [parking, setParking] = useState<Parking | null>(initial?.parking ?? null);
+  const [parkingNote, setParkingNote] = useState(initial?.parkingNote ?? "");
+  const [accessibility, setAccessibility] = useState<Accessibility | null>(
+    initial?.accessibility ?? null,
+  );
+  const [accessibilityNote, setAccessibilityNote] = useState(
+    initial?.accessibilityNote ?? "",
+  );
   const [photoFiles, setPhotoFiles] = useState<DraftPhoto[]>([]);
   const photoFilesRef = useRef<DraftPhoto[]>([]);
   const compressingRef = useRef(false);
@@ -125,6 +145,10 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
       setConfirmedLat(fields.confirmedLat);
       setConfirmedLng(fields.confirmedLng);
       setPhotoUrl(fields.photoUrl);
+      setParking(fields.parking);
+      setParkingNote(fields.parkingNote);
+      setAccessibility(fields.accessibility);
+      setAccessibilityNote(fields.accessibilityNote);
       setAcceptedGuidelines(fields.acceptedGuidelines);
       if (photos.length > 0) {
         const restoredPhotos: DraftPhoto[] = photos.map((file) => ({
@@ -358,6 +382,10 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
           confirmedLng,
           photoUrl,
           acceptedGuidelines,
+          parking,
+          parkingNote,
+          accessibility,
+          accessibilityNote,
           photos: readyFiles(photoFiles),
         });
         if (!saved.stored) {
@@ -394,6 +422,10 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         lat: confirmedLat,
         lng: confirmedLng,
         photoUrl: resolvedPhotoUrl,
+        parking,
+        parkingNote: noteOrNull(parkingNote),
+        accessibility,
+        accessibilityNote: noteOrNull(accessibilityNote),
         ...(extraPhotoUrls.length > 0 ? { extraPhotoUrls } : {}),
         // One id per click. The fetch retry resends this same body.
         ...(isEdit
@@ -487,6 +519,17 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
           placeholder={t("regionPlaceholder")}
         />
       </div>
+
+      <SpotAmenityFields
+        parking={parking}
+        parkingNote={parkingNote}
+        accessibility={accessibility}
+        accessibilityNote={accessibilityNote}
+        onParking={setParking}
+        onParkingNote={setParkingNote}
+        onAccessibility={setAccessibility}
+        onAccessibilityNote={setAccessibilityNote}
+      />
 
       <div aria-busy={compressing}>
         <label

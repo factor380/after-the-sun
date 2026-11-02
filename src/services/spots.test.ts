@@ -147,6 +147,10 @@ describe("createSpot idempotent replay", () => {
         data: expect.objectContaining({
           createdById: USER_ID,
           clientRequestId: REQUEST_ID,
+          parking: null,
+          parkingNote: null,
+          accessibility: null,
+          accessibilityNote: null,
         }),
       }),
     );
@@ -172,6 +176,35 @@ describe("createSpot idempotent replay", () => {
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ clientRequestId: null }),
+      }),
+    );
+  });
+
+  it("stores parking and accessibility on a new spot", async () => {
+    const spot = storedSpot();
+    findUnique.mockResolvedValue(null);
+    create.mockResolvedValue(spot);
+
+    await createSpot(
+      USER_ID,
+      {
+        ...input,
+        parking: "paid",
+        parkingNote: "חניון",
+        accessibility: "partial",
+        accessibilityNote: null,
+      },
+      { consumeRateLimit: () => true },
+    );
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          parking: "paid",
+          parkingNote: "חניון",
+          accessibility: "partial",
+          accessibilityNote: null,
+        }),
       }),
     );
   });

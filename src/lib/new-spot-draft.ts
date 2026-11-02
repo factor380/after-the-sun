@@ -1,8 +1,16 @@
+import { cleanAmenityNote } from "@/lib/spot-amenities";
 import {
   ALLOWED_SPOT_PHOTO_TYPES,
   MAX_PHOTOS_ON_CREATE,
   MAX_SPOT_PHOTO_BYTES,
 } from "@/lib/spot-photo";
+import {
+  ACCESSIBILITY_VALUES,
+  AMENITY_NOTE_MAX,
+  PARKING_VALUES,
+  type Accessibility,
+  type Parking,
+} from "@/types/spot";
 
 /**
  * Anonymous add-spot drafts survive the Google OAuth redirect.
@@ -34,6 +42,10 @@ export type NewSpotDraftFields = {
   photoUrl: string;
   acceptedGuidelines: boolean;
   expectedPhotoCount: number;
+  parking: Parking | null;
+  parkingNote: string;
+  accessibility: Accessibility | null;
+  accessibilityNote: string;
   savedAt: number;
 };
 
@@ -47,6 +59,10 @@ export type SaveNewSpotDraftInput = {
   confirmedLng: number | null;
   photoUrl: string;
   acceptedGuidelines: boolean;
+  parking: Parking | null;
+  parkingNote: string;
+  accessibility: Accessibility | null;
+  accessibilityNote: string;
   photos: File[];
 };
 
@@ -86,6 +102,20 @@ function httpsPhotoUrl(value: unknown): string | null {
   }
 }
 
+function choice<T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+): T | null {
+  if (typeof value !== "string") return null;
+  return (allowed as readonly string[]).includes(value) ? (value as T) : null;
+}
+
+function draftNote(value: unknown): string | null {
+  if (value === undefined || value === null) return "";
+  if (typeof value !== "string") return null;
+  return cleanAmenityNote(value).slice(0, AMENITY_NOTE_MAX);
+}
+
 function hasContent(fields: NewSpotDraftFields): boolean {
   return Boolean(
     fields.name ||
@@ -94,7 +124,11 @@ function hasContent(fields: NewSpotDraftFields): boolean {
       fields.photoUrl ||
       fields.lat !== null ||
       fields.lng !== null ||
-      fields.expectedPhotoCount > 0,
+      fields.expectedPhotoCount > 0 ||
+      fields.parking !== null ||
+      fields.accessibility !== null ||
+      fields.parkingNote ||
+      fields.accessibilityNote,
   );
 }
 
@@ -130,6 +164,10 @@ export function parseNewSpotDraft(raw: string, now = Date.now()): NewSpotDraftFi
     return null;
   }
 
+  const parkingNote = draftNote(record.parkingNote);
+  const accessibilityNote = draftNote(record.accessibilityNote);
+  if (parkingNote === null || accessibilityNote === null) return null;
+
   const savedAt = record.savedAt;
   if (typeof savedAt !== "number" || !Number.isFinite(savedAt)) return null;
   if (savedAt > now + 60_000) return null;
@@ -156,6 +194,10 @@ export function parseNewSpotDraft(raw: string, now = Date.now()): NewSpotDraftFi
     photoUrl,
     acceptedGuidelines: record.acceptedGuidelines === true,
     expectedPhotoCount,
+    parking: choice(record.parking, PARKING_VALUES),
+    parkingNote,
+    accessibility: choice(record.accessibility, ACCESSIBILITY_VALUES),
+    accessibilityNote,
     savedAt,
   };
   if (!hasContent(fields)) return null;
@@ -269,6 +311,13 @@ export async function saveNewSpotDraft(
     photoUrl: httpsPhotoUrl(input.photoUrl) ?? "",
     acceptedGuidelines: input.acceptedGuidelines,
     expectedPhotoCount: Math.min(input.photos.length, MAX_PHOTOS_ON_CREATE),
+    parking: choice(input.parking, PARKING_VALUES),
+    parkingNote: cleanAmenityNote(input.parkingNote).slice(0, AMENITY_NOTE_MAX),
+    accessibility: choice(input.accessibility, ACCESSIBILITY_VALUES),
+    accessibilityNote: cleanAmenityNote(input.accessibilityNote).slice(
+      0,
+      AMENITY_NOTE_MAX,
+    ),
     savedAt: Date.now(),
   };
 

@@ -26,6 +26,18 @@ type Dict = {
   name: string;
   description: string;
   regionOptional: string;
+  parkingQuestion: string;
+  parkingYes: string;
+  parkingPaid: string;
+  parkingNo: string;
+  parkingNoteLabel: string;
+  parkingNotePlaceholder: string;
+  accessibilityQuestion: string;
+  accessibilityYes: string;
+  accessibilityPartial: string;
+  accessibilityNo: string;
+  accessibilityNoteLabel: string;
+  accessibilityNotePlaceholder: string;
   photoOptional: string;
   photoOptionalCreate: string;
   photoCreateHint: string;
@@ -198,6 +210,18 @@ export const dictionary: Dict = {
   name: "שם",
   description: "תיאור",
   regionOptional: "אזור (אופציונלי)",
+  parkingQuestion: "יש חניה?",
+  parkingYes: "כן",
+  parkingPaid: "בתשלום",
+  parkingNo: "לא",
+  parkingNoteLabel: "הערה על החניה (אופציונלי)",
+  parkingNotePlaceholder: "למשל: חניון קטן ליד הכניסה",
+  accessibilityQuestion: "נגיש לכיסא גלגלים?",
+  accessibilityYes: "כן",
+  accessibilityPartial: "חלקית",
+  accessibilityNo: "לא",
+  accessibilityNoteLabel: "הערה על הנגישות (אופציונלי)",
+  accessibilityNotePlaceholder: "למשל: שביל סלול עד התצפית",
   photoOptional: "תמונת שקיעה (אופציונלי)",
   photoOptionalCreate: "תמונות שקיעה (עד 2, אופציונלי)",
   photoCreateHint: "אפשר לבחור שתי תמונות יחד, או להוסיף את השנייה אחר כך.",

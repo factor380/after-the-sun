@@ -65,6 +65,8 @@ export default async function MySpotsPage() {
             photoUrl: summary.photoUrl,
             photoCount: summary.photoCount,
             createdAt: summary.createdAt,
+            parking: summary.parking,
+            accessibility: summary.accessibility,
           };
         })}
       />

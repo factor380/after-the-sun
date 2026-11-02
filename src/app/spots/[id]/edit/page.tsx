@@ -4,6 +4,11 @@ import { notFound, redirect } from "next/navigation";
 import SpotForm from "@/components/spots/SpotForm";
 import { T } from "@/components/T";
 import { dictionary } from "@/lib/i18n/dictionaries";
+import {
+  normalizeAccessibility,
+  normalizeParking,
+  readAmenityNote,
+} from "@/lib/spot-amenities";
 import { noIndexRobots } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { getSpotById } from "@/services/spots";
@@ -77,6 +82,10 @@ export default async function EditSpotPage({ params }: PageProps) {
           lat: spot.lat,
           lng: spot.lng,
           photoUrl: spot.photoUrl,
+          parking: normalizeParking(spot.parking),
+          parkingNote: readAmenityNote(spot.parkingNote),
+          accessibility: normalizeAccessibility(spot.accessibility),
+          accessibilityNote: readAmenityNote(spot.accessibilityNote),
         }}
       />
     </div>

@@ -27,6 +27,34 @@ describe("parseNewSpotDraft", () => {
     expect(draft?.photoUrl).toBe("https://example.com/sunset.jpg");
     expect(draft?.acceptedGuidelines).toBe(true);
     expect(draft?.expectedPhotoCount).toBe(1);
+    expect(draft?.parking).toBeNull();
+    expect(draft?.parkingNote).toBe("");
+    expect(draft?.accessibility).toBeNull();
+    expect(draft?.accessibilityNote).toBe("");
+  });
+
+  it("restores amenity answers and ignores unknown choices", () => {
+    const draft = parseNewSpotDraft(
+      payload({
+        parking: "paid",
+        parkingNote: "  חניון  ",
+        accessibility: "partial",
+        accessibilityNote: "שביל",
+      }),
+      NOW,
+    );
+    expect(draft?.parking).toBe("paid");
+    expect(draft?.parkingNote).toBe("חניון");
+    expect(draft?.accessibility).toBe("partial");
+    expect(draft?.accessibilityNote).toBe("שביל");
+
+    const unknown = parseNewSpotDraft(
+      payload({ parking: "free", accessibility: "soon" }),
+      NOW,
+    );
+    expect(unknown?.name).toBe("חוף");
+    expect(unknown?.parking).toBeNull();
+    expect(unknown?.accessibility).toBeNull();
   });
 
   it("drops stale, future, empty, and non-https values", () => {

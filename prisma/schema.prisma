@@ -25,6 +25,12 @@ model Spot {
   lng         Float
   region      String?
   photoUrl        String?
+  /// yes | paid | no. Null when the contributor skipped the question.
+  parking             String?
+  parkingNote         String?  @map("parking_note")
+  /// yes | partial | no. Null when the contributor skipped the question.
+  accessibility       String?
+  accessibilityNote   String?  @map("accessibility_note")
   createdById     String   @db.Uuid
   /// One create-submit attempt. Null on spots saved before idempotency keys.
   clientRequestId String?  @map("client_request_id")

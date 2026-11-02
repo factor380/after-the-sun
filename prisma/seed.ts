@@ -101,6 +101,10 @@ async function main() {
     await prisma.spot.createMany({
       data: spots.map((spot) => ({
         ...spot,
+        parking: null,
+        parkingNote: null,
+        accessibility: null,
+        accessibilityNote: null,
         createdById: SEED_USER_ID,
       })),
     });

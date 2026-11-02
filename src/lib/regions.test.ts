@@ -293,6 +293,10 @@ describe("sunset regions", () => {
           photoUrl: null,
           photoCount: 0,
           createdAt: "2026-10-01T00:00:00.000Z",
+          parking: null,
+          parkingNote: null,
+          accessibility: null,
+          accessibilityNote: null,
         },
       ],
     }) as unknown as {
