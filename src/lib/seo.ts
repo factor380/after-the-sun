@@ -235,6 +235,66 @@ export function regionPageJsonLd(input: {
   };
 }
 
+/** Collection page that lists each region landing page. */
+export function regionsIndexJsonLd(input: {
+  title: string;
+  description: string;
+  regions: readonly { name: string; path: string }[];
+}) {
+  const url = absoluteUrl("/regions");
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${url}#webpage`,
+        name: input.title,
+        description: input.description,
+        url,
+        inLanguage: "he-IL",
+        isPartOf: {
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: getSiteUrl(),
+        },
+        mainEntity: { "@id": `${url}#regions` },
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${url}#regions`,
+        name: input.title,
+        description: input.description,
+        url,
+        inLanguage: "he-IL",
+        numberOfItems: input.regions.length,
+        itemListElement: input.regions.map((region, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          url: absoluteUrl(region.path),
+          name: region.name,
+        })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: SITE_NAME,
+            item: getSiteUrl(),
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: input.title,
+            item: url,
+          },
+        ],
+      },
+    ],
+  };
+}
+
 export function websiteJsonLd() {
   const url = getSiteUrl();
   return {

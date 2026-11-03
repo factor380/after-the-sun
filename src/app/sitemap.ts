@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
-import { getRegionBySlug, publicRegionPages, spotMatchesRegion } from "@/lib/regions";
+import { REGIONS_INDEX, getRegionBySlug, publicRegionPages, spotMatchesRegion } from "@/lib/regions";
 import { getSiteUrl } from "@/lib/seo";
 import { listSpots } from "@/services/spots";
 
@@ -58,6 +58,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     newest && newest > REGION_PAGES_PUBLISHED ? newest : REGION_PAGES_PUBLISHED;
 
   const regionEntries: MetadataRoute.Sitemap = publicRegionPages().map((page) => {
+    if (page.path === REGIONS_INDEX.path) {
+      return {
+        url: `${baseUrl}${page.path}`,
+        lastModified: lastModified(aboutStamp),
+        changeFrequency: "weekly" as const,
+        priority: 0.85,
+      };
+    }
+
     if (!page.slug) {
       return {
         url: `${baseUrl}${page.path}`,

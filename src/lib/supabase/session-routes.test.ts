@@ -9,6 +9,7 @@ describe("routeRefreshesAuthSession", () => {
     for (const path of [
       "/",
       "/about",
+      "/regions",
       "/regions/tel-aviv",
       "/regions/judea-samaria",
       "/spots/cmrw0xspi0000v3w0xcs3qn42",
