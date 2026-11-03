@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
+import { SpotAmenityIcons } from "@/components/spots/SpotAmenities";
 import {
   PhotoCountBadge,
   SpotThumbnail,
 } from "@/components/spots/SpotThumbnail";
+import type { Accessibility, Parking } from "@/types/spot";
 
 export type MySpotItem = {
   id: string;
@@ -17,6 +19,8 @@ export type MySpotItem = {
   photoUrl: string | null;
   photoCount: number;
   createdAt: string;
+  parking: Parking | null;
+  accessibility: Accessibility | null;
 };
 
 type MySpotsListProps = {
@@ -101,9 +105,13 @@ export default function MySpotsList({ spots }: MySpotsListProps) {
               <div className="min-w-0">
                 <Link
                   href={`/spots/${spot.id}`}
-                  className="font-[family-name:var(--font-display)] font-medium text-[var(--sand)] transition hover:text-[var(--ember)]"
+                  className="inline-flex max-w-full items-center gap-1.5 font-[family-name:var(--font-display)] font-medium text-[var(--sand)] transition hover:text-[var(--ember)]"
                 >
-                  {spot.name}
+                  <span className="truncate">{spot.name}</span>
+                  <SpotAmenityIcons
+                    parking={spot.parking}
+                    accessibility={spot.accessibility}
+                  />
                 </Link>
                 {spot.region ? (
                   <p className="mt-1 text-sm text-[var(--ember)]">

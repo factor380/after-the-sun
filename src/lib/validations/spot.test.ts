@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createReportSchema } from "./report";
-import { assertIsraelCoordinates, createSpotSchema } from "./spot";
+import { assertIsraelCoordinates, createSpotSchema, updateSpotSchema } from "./spot";
 
 const spot = {
   name: "חוף הילטון",
@@ -52,6 +52,58 @@ describe("createSpotSchema", () => {
       createSpotSchema.safeParse({ ...spot, clientRequestId: "submit-1" })
         .success,
     ).toBe(false);
+  });
+
+  it("accepts optional parking and accessibility answers", () => {
+    const parsed = createSpotSchema.safeParse({
+      ...spot,
+      parking: "paid",
+      parkingNote: "  חניון בתשלום  ",
+      accessibility: "partial",
+      accessibilityNote: "",
+    });
+
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.parking).toBe("paid");
+    expect(parsed.data.parkingNote).toBe("חניון בתשלום");
+    expect(parsed.data.accessibility).toBe("partial");
+    expect(parsed.data.accessibilityNote).toBeNull();
+  });
+
+  it("treats a missing amenity answer as omitted and rejects unknown values", () => {
+    const parsed = createSpotSchema.safeParse(spot);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.parking).toBeUndefined();
+    expect(parsed.data.accessibility).toBeUndefined();
+
+    expect(createSpotSchema.safeParse({ ...spot, parking: "free" }).success).toBe(
+      false,
+    );
+    expect(
+      createSpotSchema.safeParse({ ...spot, accessibility: "soon" }).success,
+    ).toBe(false);
+    expect(
+      createSpotSchema.safeParse({
+        ...spot,
+        parkingNote: "א".repeat(201),
+      }).success,
+    ).toBe(false);
+  });
+
+  it("lets an edit change only the amenity fields", () => {
+    const parsed = updateSpotSchema.safeParse({
+      parking: null,
+      accessibility: "yes",
+      accessibilityNote: "שביל סלול",
+    });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.parking).toBeNull();
+    expect(parsed.data.accessibility).toBe("yes");
+    expect(parsed.data.accessibilityNote).toBe("שביל סלול");
+    expect(parsed.data.name).toBeUndefined();
   });
 });
 

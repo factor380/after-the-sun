@@ -9,6 +9,7 @@ import {
   sortSpotsByDistance,
 } from "@/lib/geo/distance";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { SpotAmenityIcons } from "@/components/spots/SpotAmenities";
 import type { SpotSummary } from "@/types/spot";
 
 type GeoStatus =
@@ -37,8 +38,12 @@ function SpotCardBody({
   return (
     <div className="min-w-0 flex-1">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="truncate font-[family-name:var(--font-display)] text-lg text-[var(--sand)]">
-          {spot.name}
+        <p className="flex min-w-0 items-center gap-1.5 font-[family-name:var(--font-display)] text-lg text-[var(--sand)]">
+          <span className="truncate">{spot.name}</span>
+          <SpotAmenityIcons
+            parking={spot.parking}
+            accessibility={spot.accessibility}
+          />
         </p>
         {distanceMeters != null ? (
           <span className="shrink-0 text-xs tabular-nums text-[var(--ember)]">

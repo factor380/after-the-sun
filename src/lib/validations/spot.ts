@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { isWithinIsraelBounds } from "@/lib/geo/israel";
+import { cleanAmenityNote } from "@/lib/spot-amenities";
 import { isSpotPhotoStorageUrl, MAX_PHOTOS_ON_CREATE } from "@/lib/spot-photo";
+import {
+  ACCESSIBILITY_VALUES,
+  AMENITY_NOTE_MAX,
+  PARKING_VALUES,
+} from "@/types/spot";
 
 const httpsUrl = z
   .string()
@@ -21,6 +27,21 @@ const uploadedPhotoUrl = z
   .max(2048)
   .refine(isSpotPhotoStorageUrl, "Photo must be uploaded through this site");
 
+const optionalChoice = <T extends readonly [string, ...string[]]>(values: T) =>
+  z.preprocess(
+    (value) => (value === "" ? null : value),
+    z.enum(values).nullable().optional(),
+  );
+
+/** Blank notes are stored as null. Control characters are collapsed first. */
+const optionalAmenityNote = z.preprocess((value) => {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value !== "string") return value;
+  const cleaned = cleanAmenityNote(value);
+  return cleaned.length === 0 ? null : cleaned;
+}, z.string().max(AMENITY_NOTE_MAX).nullable().optional());
+
 const spotFields = z.object({
   name: z.string().trim().min(2).max(80),
   description: z.string().trim().min(10).max(1000),
@@ -28,6 +49,10 @@ const spotFields = z.object({
   lng: z.number().min(-180).max(180),
   region: z.string().trim().max(80).optional().nullable(),
   photoUrl: httpsUrl.optional().nullable(),
+  parking: optionalChoice(PARKING_VALUES),
+  parkingNote: optionalAmenityNote,
+  accessibility: optionalChoice(ACCESSIBILITY_VALUES),
+  accessibilityNote: optionalAmenityNote,
   /** Gallery photos beyond the cover. Only objects uploaded through this site. */
   extraPhotoUrls: z
     .array(uploadedPhotoUrl)

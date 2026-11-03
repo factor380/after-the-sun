@@ -13,6 +13,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import Link from "next/link";
+import { SpotAmenityIcons } from "@/components/spots/SpotAmenities";
 import {
   PhotoCountBadge,
   SpotThumbnail,
@@ -242,8 +243,12 @@ export default function SpotMap({ spots }: SpotMapProps) {
                   </Link>
                 ) : null}
                 <div className="space-y-1 px-3 py-2.5">
-                  <p className="font-[family-name:var(--font-display)] text-sm font-medium text-[var(--sand)]">
-                    {spot.name}
+                  <p className="flex items-center gap-1.5 font-[family-name:var(--font-display)] text-sm font-medium text-[var(--sand)]">
+                    <span className="min-w-0 flex-1">{spot.name}</span>
+                    <SpotAmenityIcons
+                      parking={spot.parking}
+                      accessibility={spot.accessibility}
+                    />
                   </p>
                   {spot.region ? (
                     <p className="text-xs text-[var(--sand-muted)]">

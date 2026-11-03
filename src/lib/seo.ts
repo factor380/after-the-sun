@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { spotAmenityFeatures } from "@/lib/spot-amenities";
 import type { SpotSummary } from "@/types/spot";
 import { absoluteUrl, getSiteUrl } from "@/lib/site-url";
 
@@ -376,10 +377,15 @@ export function spotJsonLd(spot: {
   lng: number;
   photoUrl: string | null;
   photos?: { url: string }[];
+  parking?: string | null;
+  parkingNote?: string | null;
+  accessibility?: string | null;
+  accessibilityNote?: string | null;
 }) {
   const url = absoluteUrl(`/spots/${spot.id}`);
   const photos = spotHttpsImageUrls(spot);
   const image = photos.length > 0 ? photos : [defaultOgImage().url];
+  const amenityFeature = spotAmenityFeatures(spot);
 
   return {
     "@context": "https://schema.org",
@@ -391,7 +397,9 @@ export function spotJsonLd(spot: {
         description: spot.description,
         url,
         inLanguage: "he-IL",
+        // Visiting the spot is free. Paid parking is an amenityFeature, not a fee.
         isAccessibleForFree: true,
+        ...(amenityFeature.length > 0 ? { amenityFeature } : {}),
         touristType: "Sunset viewing",
         image,
         geo: {

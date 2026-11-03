@@ -152,6 +152,10 @@ export async function createSpot(
         lng: input.lng,
         region: input.region ?? null,
         photoUrl: input.photoUrl ?? null,
+        parking: input.parking ?? null,
+        parkingNote: input.parkingNote ?? null,
+        accessibility: input.accessibility ?? null,
+        accessibilityNote: input.accessibilityNote ?? null,
         createdById: userId,
         clientRequestId: input.clientRequestId ?? null,
         ...(extraPhotoUrls.length > 0
@@ -206,6 +210,16 @@ export async function updateSpot(
       ...(input.lng !== undefined ? { lng: input.lng } : {}),
       ...(input.region !== undefined ? { region: input.region } : {}),
       ...(input.photoUrl !== undefined ? { photoUrl: input.photoUrl } : {}),
+      ...(input.parking !== undefined ? { parking: input.parking } : {}),
+      ...(input.parkingNote !== undefined
+        ? { parkingNote: input.parkingNote }
+        : {}),
+      ...(input.accessibility !== undefined
+        ? { accessibility: input.accessibility }
+        : {}),
+      ...(input.accessibilityNote !== undefined
+        ? { accessibilityNote: input.accessibilityNote }
+        : {}),
     },
   });
 }

@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import SpotContributorTools from "@/components/spots/SpotContributorTools";
+import {
+  SpotAmenityIcons,
+  SpotAmenityNotes,
+} from "@/components/spots/SpotAmenities";
 import SpotGallery, {
   type GalleryPhoto,
 } from "@/components/spots/SpotGallery";
@@ -116,8 +120,14 @@ export default async function SpotDetailPage({ params }: PageProps) {
           <T k="backToMap" />
         </Link>
 
-        <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl leading-tight text-[var(--sand)] md:text-5xl">
-          {spot.name}
+        <h1 className="mt-4 flex flex-wrap items-center gap-2 font-[family-name:var(--font-display)] text-4xl leading-tight text-[var(--sand)] md:text-5xl">
+          <span>{spot.name}</span>
+          <SpotAmenityIcons
+            parking={spot.parking}
+            accessibility={spot.accessibility}
+            labelled={false}
+            className="text-[0.65em]"
+          />
         </h1>
         {spot.region ? <SpotRegionLabel region={spot.region} /> : null}
         {sunset ? (
@@ -132,6 +142,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
         <p className="mt-6 text-lg leading-relaxed text-[var(--sand-muted)]">
           {spot.description}
         </p>
+        <SpotAmenityNotes spot={spot} />
 
         <dl className="mt-8 grid grid-cols-2 gap-4 border-t border-[var(--line)] pt-6 text-sm">
           <div>

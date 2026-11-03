@@ -21,6 +21,10 @@ function place(overrides?: {
   photoUrl?: string | null;
   photos?: { url: string }[];
   name?: string;
+  parking?: string | null;
+  parkingNote?: string | null;
+  accessibility?: string | null;
+  accessibilityNote?: string | null;
 }) {
   return {
     id: "spot-1",
@@ -31,6 +35,10 @@ function place(overrides?: {
     lng: 34.8925,
     photoUrl: overrides?.photoUrl ?? null,
     photos: overrides?.photos,
+    parking: overrides?.parking,
+    parkingNote: overrides?.parkingNote,
+    accessibility: overrides?.accessibility,
+    accessibilityNote: overrides?.accessibilityNote,
   };
 }
 
@@ -107,7 +115,44 @@ describe("spotJsonLd images", () => {
 
     expect(attraction["@type"]).toBe("TouristAttraction");
     expect(attraction.image).toEqual([defaultOgImage().url]);
+    expect(attraction).not.toHaveProperty("amenityFeature");
     expect(jsonLdString(data)).not.toContain("localhost");
+  });
+
+  it("adds parking and wheelchair features without changing isAccessibleForFree", () => {
+    const data = spotJsonLd(
+      place({
+        parking: "paid",
+        parkingNote: "חניון <script>",
+        accessibility: "yes",
+      }),
+    ) as {
+      "@graph": {
+        isAccessibleForFree?: boolean;
+        amenityFeature?: { name: string; value: boolean | string; description?: string }[];
+      }[];
+    };
+    const attraction = data["@graph"][0];
+
+    expect(attraction?.isAccessibleForFree).toBe(true);
+    expect(attraction?.amenityFeature).toEqual([
+      {
+        "@type": "LocationFeatureSpecification",
+        name: "Parking",
+        value: "Paid",
+        description: "חניון <script>",
+      },
+      {
+        "@type": "LocationFeatureSpecification",
+        name: "Wheelchair accessible",
+        value: true,
+      },
+    ]);
+
+    const serialized = jsonLdString(data);
+    expect(serialized).not.toContain("<");
+    expect(serialized).toContain("\\u003c");
+    expect(serialized).toContain('"isAccessibleForFree":true');
   });
 
   it("keeps https photos and drops unsafe or duplicate urls", () => {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SpotAmenityIcons } from "@/components/spots/SpotAmenities";
 import { SpotThumbnail } from "@/components/spots/SpotThumbnail";
 import type { SpotSummary } from "@/types/spot";
 
@@ -35,8 +36,12 @@ export function SpotLinkList({ spots }: { spots: SpotSummary[] }) {
                 </span>
               ) : null}
               <span className="min-w-0">
-                <span className="block truncate font-[family-name:var(--font-display)] text-lg text-[var(--sand)]">
-                  {spot.name}
+                <span className="flex min-w-0 items-center gap-1.5 font-[family-name:var(--font-display)] text-lg text-[var(--sand)]">
+                  <span className="truncate">{spot.name}</span>
+                  <SpotAmenityIcons
+                    parking={spot.parking}
+                    accessibility={spot.accessibility}
+                  />
                 </span>
                 {spot.region ? (
                   <span className="mt-1 block truncate text-sm text-[var(--ember)]">
