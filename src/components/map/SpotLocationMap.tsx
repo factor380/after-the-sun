@@ -48,12 +48,26 @@ function PageScrollGestures() {
       }
     };
 
+    const onTouchEnd = (event: TouchEvent) => {
+      // Fingers still down: keep one-finger drags off. All fingers up: mouse
+      // dragging works again on a touchscreen laptop.
+      if (event.touches.length === 0) {
+        map.dragging.enable();
+      } else if (event.touches.length < 2) {
+        map.dragging.disable();
+      }
+    };
+
     container.addEventListener("touchstart", onTouchStart, {
       capture: true,
       passive: true,
     });
+    container.addEventListener("touchend", onTouchEnd);
+    container.addEventListener("touchcancel", onTouchEnd);
     return () => {
       container.removeEventListener("touchstart", onTouchStart, { capture: true });
+      container.removeEventListener("touchend", onTouchEnd);
+      container.removeEventListener("touchcancel", onTouchEnd);
     };
   }, [map]);
 

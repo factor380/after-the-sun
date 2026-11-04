@@ -71,7 +71,7 @@ export default function SpotLocationMapClient({
           <MapLoading />
         )}
       </div>
-      <figcaption className="mt-2 text-xs leading-relaxed text-[var(--sand-muted)]">
+      <figcaption className="spot-map-gesture-hint mt-2 text-xs leading-relaxed text-[var(--sand-muted)]">
         {t("mapGestureHint")}
       </figcaption>
     </figure>

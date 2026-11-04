@@ -60,6 +60,18 @@ body {
   touch-action: pan-y pinch-zoom !important;
 }
 
+/* Gesture hint is for touch. Fine pointers with hover (desktop, including
+   touchscreen laptops) already drag with the mouse. */
+.spot-map-gesture-hint {
+  display: none;
+}
+
+@media (pointer: coarse), (hover: none) {
+  .spot-map-gesture-hint {
+    display: block;
+  }
+}
+
 /* Dark basemap without a paid tile key: invert OSM tiles, leave markers/popups alone. */
 html.dark .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.65);
