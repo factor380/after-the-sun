@@ -118,6 +118,8 @@ type Dict = {
   backToMap: string;
   latitude: string;
   longitude: string;
+  spotMapLabel: string;
+  mapGestureHint: string;
   sunsetToday: string;
   navigateToSpot: string;
   themeToggle: string;
@@ -308,6 +310,8 @@ export const dictionary: Dict = {
   backToMap: "חזרה למפה",
   latitude: "קו רוחב",
   longitude: "קו אורך",
+  spotMapLabel: "מפת מיקום",
+  mapGestureHint: "אצבע אחת גוללת את העמוד. שתי אצבעות מזיזות את המפה.",
   sunsetToday: "שקיעה היום",
   navigateToSpot: "ניווט לנקודה",
   themeToggle: "החלפת מצב תצוגה",
