@@ -1,7 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { isE2ETestHarnessEnabled } from "@/lib/e2e/guard";
+import type { ServerSupabase } from "@/lib/e2e/server-supabase";
 
-export async function createClient() {
+export async function createClient(): Promise<ServerSupabase> {
+  if (isE2ETestHarnessEnabled()) {
+    const { createHarnessSupabase } = await import("@/lib/e2e/harness-supabase");
+    return createHarnessSupabase();
+  }
+
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -23,5 +30,5 @@ export async function createClient() {
         },
       },
     },
-  );
+  ) as unknown as ServerSupabase;
 }

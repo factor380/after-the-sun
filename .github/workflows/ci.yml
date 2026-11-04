@@ -13,11 +13,11 @@ permissions:
 
 jobs:
   verify:
-    name: Lint, typecheck, and test
+    name: Lint, typecheck, and build
     runs-on: ubuntu-latest
     env:
-      # prisma generate runs on npm ci (postinstall) and only checks that these
-      # exist. This job does not connect to a database or call Supabase.
+      # prisma generate runs on npm ci and only checks that these exist.
+      # This job does not connect to a database or call Supabase.
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
       DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
     steps:
@@ -41,3 +41,49 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Build
+        run: npm run build
+
+  e2e:
+    name: Integration and e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: after_the_sun
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d after_the_sun"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/after_the_sun?schema=public
+      DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/after_the_sun?schema=public
+      E2E_TEST_AUTH: "1"
+      E2E_BASE_URL: http://localhost:3004
+      CI: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Migrate, seed, build, and test
+        run: bash scripts/e2e-gate.sh
