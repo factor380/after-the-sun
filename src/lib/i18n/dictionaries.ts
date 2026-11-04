@@ -1,3 +1,5 @@
+import { PHOTO_HINT } from "@/lib/i18n/photo-hint";
+
 export type Locale = "he";
 
 export const locales: Locale[] = ["he"];
@@ -230,7 +232,7 @@ export const dictionary: Dict = {
   photoOptionalCreate: "תמונות שקיעה (עד 2, אופציונלי)",
   photoCreateHint: "אפשר לבחור שתי תמונות יחד, או להוסיף את השנייה אחר כך.",
   photoCreateLimit: "אפשר להוסיף עד שתי תמונות.",
-  photoHint: "JPEG, PNG או WebP · עד ~12MB לפני דחיסה אוטומטית",
+  photoHint: PHOTO_HINT,
   photoRemove: "הסרה",
   photoTooLarge: "התמונה גדולה מדי — מקסימום 12MB לפני דחיסה.",
   photoCompressFailed: "דחיסת התמונה נכשלה. נסו תמונה אחרת או קטנה יותר.",

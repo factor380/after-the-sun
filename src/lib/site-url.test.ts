@@ -7,6 +7,7 @@ import {
 } from "next/dist/shared/lib/router/utils/prepare-destination";
 import { getRedirectStatus, modifyRouteRegex } from "next/dist/lib/redirect-status";
 import nextConfig from "../../next.config";
+import { LEGACY_JUDEA_SAMARIA_PATH } from "@/lib/regions";
 import {
   DEFAULT_SITE_URL,
   LEGACY_PRODUCTION_HOST,
@@ -59,9 +60,14 @@ describe("legacy production host redirect", () => {
           destination: "/about",
           permanent: true,
         }),
+        expect.objectContaining({
+          source: LEGACY_JUDEA_SAMARIA_PATH,
+          destination: "/regions",
+          permanent: true,
+        }),
       ]),
     );
-    for (const rule of rules) {
+    for (const rule of [...rules, ...redirects.slice(2)]) {
       expect(getRedirectStatus(rule)).toBe(308);
     }
   });

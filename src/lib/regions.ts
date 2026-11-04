@@ -193,15 +193,10 @@ const SINGLE_WORD_PREVIOUS_BLOCK: Readonly<Record<string, ReadonlySet<string>>> 
 };
 
 /**
- * Split hub. It is not one of `SUNSET_REGIONS`: spots stay on יהודה or שומרון.
- * The sitemap and llms.txt both list it through `publicRegionPages()`.
+ * Former combined hub. Spots stay on יהודה or שומרון.
+ * `next.config.ts` redirects this path to `/regions`. It is not a public page.
  */
-export const JUDEA_SAMARIA_HUB = {
-  path: "/regions/judea-samaria",
-  title: "נקודות שקיעה ביהודה ובשומרון",
-  description:
-    "העמוד המשותף ליהודה ושומרון חולק לשתי רשימות: יהודה, ושומרון ובנימין. בחרו את האזור כדי לראות את נקודות השקיעה.",
-} as const;
+export const LEGACY_JUDEA_SAMARIA_PATH = "/regions/judea-samaria";
 
 /**
  * Index of every sunset region. Not a spot-matching page: it links to each
@@ -218,7 +213,7 @@ export const REGIONS_INDEX = {
 
 export type PublicRegionPage = {
   path: string;
-  /** Spot-matching region. Null for the index and the Judea and Samaria hub. */
+  /** Spot-matching region. Null for the index. */
   slug: string | null;
   title: string;
   description: string;
@@ -239,12 +234,6 @@ export function publicRegionPages(): PublicRegionPage[] {
       title: region.title,
       description: region.intro,
     })),
-    {
-      path: JUDEA_SAMARIA_HUB.path,
-      slug: null,
-      title: JUDEA_SAMARIA_HUB.title,
-      description: JUDEA_SAMARIA_HUB.description,
-    },
   ];
 }
 

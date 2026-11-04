@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { LEGACY_JUDEA_SAMARIA_PATH } from "./src/lib/regions";
 import { legacyProductionRedirects } from "./src/lib/site-url";
 
 // Static CSP must allow 'unsafe-inline' scripts - Next.js bootstrap sets self.__next_r inline.
@@ -55,6 +56,11 @@ const nextConfig: NextConfig = {
       {
         source: "/50",
         destination: "/about",
+        permanent: true,
+      },
+      {
+        source: LEGACY_JUDEA_SAMARIA_PATH,
+        destination: "/regions",
         permanent: true,
       },
     ];

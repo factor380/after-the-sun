@@ -194,6 +194,9 @@ describe("sunset regions", () => {
     expect(matchingRegion("תל אביב הרצליה")?.slug).toBe("tel-aviv");
     expect(matchingRegion("שומרון נתניה")?.slug).toBe("samaria");
     expect(getRegionBySlug("judea-samaria")).toBeUndefined();
+    expect(publicRegionPages().some((page) => page.path === "/regions/judea-samaria")).toBe(
+      false,
+    );
     expect(matchingRegion(null)).toBeUndefined();
     expect(matchingRegion("   ")).toBeUndefined();
     expect(getRegionBySlug("nope")).toBeUndefined();

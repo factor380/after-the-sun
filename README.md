@@ -17,7 +17,7 @@
 - **Add and edit spots**: drop a pin or search for a place, fill a short form, and upload photos (up to 2 when creating a spot). Owners can edit their own spots from **My spots**.
 - **Community photos**: any signed-in user can add photos to any spot. The uploader or the spot owner can remove them (max 24 per spot, 5 per user per spot).
 - **Reporting**: users can flag a spot for moderation. Reports are reviewed in Prisma Studio for now.
-- **Campaign page** (`/about`): a public push toward 50 sunset spots.
+- **Campaign page** (`/about`): a public push toward 75 sunset spots by the end of 2026.
 - **SEO**: per-page metadata, JSON-LD structured data, dynamic sitemap, robots, and generated Open Graph images. Public routes are `/`, `/about`, and `/spots/[id]`.
 - **Light and dark theme**.
 
@@ -57,7 +57,7 @@ erDiagram
 src/
   app/            Pages and API route handlers (App Router)
     api/          spots, photos, reports, upload, geocode
-    about/        Campaign page (goal: 50 spots)
+    about/        Campaign page (goal: 75 spots by the end of 2026)
     spots/        Detail, create, edit, and "my spots"
   components/     UI: map, spot list and forms, gallery, header
   lib/

@@ -1,4 +1,4 @@
-import { CAMPAIGN_GOAL, campaignTitle, getCampaignSpotCount } from "@/lib/campaign";
+import { campaignShareSubtitle, campaignTitle, getCampaignSpotCount } from "@/lib/campaign";
 import { OG_CONTENT_TYPE, OG_SIZE, renderOgCard } from "@/lib/og-card";
 
 export const alt = "נקודות שקיעה בישראל";
@@ -11,6 +11,6 @@ export default async function AboutOpenGraphImage() {
   const count = await getCampaignSpotCount();
   return renderOgCard({
     title: campaignTitle(count),
-    subtitle: `${count} מתוך ${CAMPAIGN_GOAL}`,
+    subtitle: campaignShareSubtitle(count),
   });
 }

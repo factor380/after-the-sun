@@ -3,7 +3,7 @@ import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
-import { SUNSET_REGIONS, publicRegionPages, regionPath } from "@/lib/regions";
+import { SUNSET_REGIONS, publicRegionPages } from "@/lib/regions";
 import { SITE_DESCRIPTION, SITE_NAME, getSiteUrl } from "@/lib/seo";
 import { LLMS_TXT_SUMMARY, buildLlmsTxt, type LlmsSpot } from "@/lib/llms-txt";
 
@@ -66,7 +66,7 @@ describe("buildLlmsTxt", () => {
 
     expect(lines).toHaveLength(2 + publicRegionPages().length + 2);
     expect(SUNSET_REGIONS).toHaveLength(7);
-    expect(publicRegionPages()).toHaveLength(SUNSET_REGIONS.length + 2);
+    expect(publicRegionPages()).toHaveLength(SUNSET_REGIONS.length + 1);
     expect(pages).toContain(`](${origin}/regions):`);
     expect(pages).toContain("שקיעה בישראל לפי אזור:");
     expect(lines.every((line) => LINK_LINE.test(line))).toBe(true);
@@ -76,8 +76,7 @@ describe("buildLlmsTxt", () => {
     for (const page of publicRegionPages()) {
       expect(pages).toContain(`](${origin}${page.path}):`);
     }
-    expect(pages).toContain(`](${origin}${regionPath("judea-samaria")}):`);
-    expect(pages).toContain("העמוד המשותף ליהודה ושומרון חולק לשתי רשימות: יהודה, ושומרון ובנימין.");
+    expect(pages).not.toContain("/regions/judea-samaria");
     expect(pages).toContain(`](${origin}${JERUSALEM_SUNSET_GUIDE.path}):`);
     expect(pages).toContain(`](${origin}/sitemap.xml):`);
     expect(pages).toContain("המפה הקהילתית של נקודות השקיעה בישראל.");
@@ -99,8 +98,9 @@ describe("buildLlmsTxt", () => {
 
     const index = entries.find((entry) => entry.url === `${origin}/regions`);
     expect(index).toMatchObject({ changeFrequency: "weekly", priority: 0.85 });
-    const hub = entries.find((entry) => entry.url === `${origin}${regionPath("judea-samaria")}`);
-    expect(hub).toMatchObject({ changeFrequency: "monthly", priority: 0.4 });
+    expect(entries.some((entry) => entry.url === `${origin}/regions/judea-samaria`)).toBe(
+      false,
+    );
   });
 
   it("does not state a fixed spot count or link private pages", () => {

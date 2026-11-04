@@ -3,6 +3,7 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 import { SpotLinkList } from "@/components/spots/SpotLinkList";
 import {
+  CAMPAIGN_DEADLINE_LABEL,
   CAMPAIGN_GOAL,
   campaignDescription,
   campaignLead,
@@ -91,7 +92,7 @@ export default async function AboutPage() {
     <article className="mx-auto w-full max-w-2xl px-5 pb-20 pt-6 md:pt-10">
       <JsonLd data={aboutPageJsonLd({ title, description })} />
 
-      <p className="text-sm font-medium text-[var(--ember)]">עד סוף אוקטובר 2026</p>
+      <p className="text-sm font-medium text-[var(--ember)]">{CAMPAIGN_DEADLINE_LABEL}</p>
       <h1 className="mt-3 text-balance font-[family-name:var(--font-display)] text-4xl leading-tight text-[var(--sand)] md:text-5xl">
         {title}
       </h1>
