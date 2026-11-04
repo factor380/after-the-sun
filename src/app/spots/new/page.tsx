@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: dictionary.shareSpotTitle,
+  description: dictionary.shareSpotSubtitle,
+  alternates: { canonical: "/spots/new" },
   robots: noIndexRobots,
 };
 
