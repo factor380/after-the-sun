@@ -66,6 +66,8 @@ export function OgRtlText({
 export async function renderOgCard(input: {
   title: string;
   subtitle: string;
+  /** Defaults to 36. Smaller when the subtitle is a long region list. */
+  subtitleFontSize?: number;
 }): Promise<ImageResponse> {
   const font = await loadHeeboBold();
 
@@ -132,7 +134,12 @@ export async function renderOgCard(input: {
             </div>
           </div>
           <OgRtlText text={input.title} fontSize={60} color="#f3e4d4" />
-          <OgRtlText text={input.subtitle} fontSize={36} color="#f3e4d4" lineHeight={1.2} />
+          <OgRtlText
+            text={input.subtitle}
+            fontSize={input.subtitleFontSize ?? 36}
+            color="#f3e4d4"
+            lineHeight={1.2}
+          />
         </div>
       </div>
     ),

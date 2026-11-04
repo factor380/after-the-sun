@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import SpotLocationMapClient from "@/components/map/SpotLocationMapClient";
 import SpotContributorTools from "@/components/spots/SpotContributorTools";
 import {
   SpotAmenityIcons,
@@ -144,20 +145,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
         </p>
         <SpotAmenityNotes spot={spot} />
 
-        <dl className="mt-8 grid grid-cols-2 gap-4 border-t border-[var(--line)] pt-6 text-sm">
-          <div>
-            <dt className="text-[var(--sand-muted)]">
-              <T k="latitude" />
-            </dt>
-            <dd className="text-[var(--sand)]">{spot.lat.toFixed(5)}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--sand-muted)]">
-              <T k="longitude" />
-            </dt>
-            <dd className="text-[var(--sand)]">{spot.lng.toFixed(5)}</dd>
-          </div>
-        </dl>
+        <SpotLocationMapClient lat={spot.lat} lng={spot.lng} name={spot.name} />
 
         <SpotContributorTools
           spotId={spot.id}

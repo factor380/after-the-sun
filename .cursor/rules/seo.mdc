@@ -14,6 +14,7 @@ Public routes need unique title, description, and a **per-page** canonical. Neve
 - Map lists that are virtualized in the client still need server-rendered links (`HomeSpotIndex`).
 - Spot pages keep an `h1` and `spotJsonLd`. JSON-LD only through `JsonLd`.
 - Spot `og:image` / `twitter:image` use the cover photo when it is public https. Spots without one use the home page card at `/opengraph-image` (1200×630), not a generated per-spot image. Twitter card is `summary_large_image`.
+- `/regions` needs its own `opengraph-image.tsx` and `twitter-image.tsx`. A page-level `openGraph` object does not inherit the root card.
 
 ```tsx
 // ❌ BAD - inherited by every route

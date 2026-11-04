@@ -29,7 +29,7 @@ If the work touches routing, rendered text, photos, or metadata, check:
 - JSON-LD goes through `JsonLd` (`jsonLdString` escapes `<`). Do not dump unsanitized HTML.
 - Root `<html>` stays `lang="he"` `dir="rtl"`.
 - Public copy is Hebrew. Titles use the layout template (`%s | After the Sun`); do not append the brand twice.
-- OG images: default `src/app/opengraph-image.tsx` (`/opengraph-image`, 1200×630). Spot pages use the cover photo when it is a public https URL; otherwise they use that same default image. Do not generate a per-spot card. `twitter:card` stays `summary_large_image`, and `spotJsonLd` uses the same image URL.
+- OG images: default `src/app/opengraph-image.tsx` (`/opengraph-image`, 1200×630). Spot pages use the cover photo when it is a public https URL; otherwise they use that same default image. Do not generate a per-spot card. `twitter:card` stays `summary_large_image`, and `spotJsonLd` uses the same image URL. `/regions` has its own `opengraph-image.tsx` and `twitter-image.tsx`; a page `openGraph` block without those files drops the root card.
 
 ## Page types
 
@@ -37,7 +37,7 @@ If the work touches routing, rendered text, photos, or metadata, check:
 |---|---|---|
 | `/` | yes | canonical `/`, `websiteJsonLd` + `spotsItemListJsonLd`, crawlable spot links, `h1` |
 | `/about` | yes | unique title + description, canonical `/about`, `h1`, `aboutPageJsonLd`. `/50` 308s here and stays out of the sitemap |
-| `/regions` | yes | unique title + description from `REGIONS_INDEX`, canonical `/regions` via `getSiteUrl()` / `absoluteUrl()`, `h1`, a link to every `/regions/{slug}`, spot counts when the database answers, `regionsIndexJsonLd` (CollectionPage + ItemList) |
+| `/regions` | yes | unique title + description from `REGIONS_INDEX`, canonical `/regions` via `getSiteUrl()` / `absoluteUrl()`, `h1`, a link to every `/regions/{slug}`, spot counts when the database answers, `regionsIndexJsonLd` (CollectionPage + ItemList), file-based `opengraph-image` and `twitter-image` (the page `openGraph` block does not inherit the root card) |
 | `/regions/[slug]` | yes | unique title + description from `SUNSET_REGIONS`, canonical `/regions/{slug}`, `h1`, visible spot links, `regionPageJsonLd` (ItemList + BreadcrumbList). Unknown slugs 404 |
 | `/guides/jerusalem-sunset` | yes | unique title + description, canonical `/guides/jerusalem-sunset`, `h1`, `guideArticleJsonLd` (Article image is the Gan HaKipod share card, plus FAQPage + Place ItemList). ISR `revalidate` 600. File-based OG and Twitter image |
 | `/llms.txt` | text file | `text/plain; charset=utf-8`. Allowed in `robots.ts` for `*` and AI crawlers. Lists public pages and published spots. No fixed spot count. Not an HTML page, so no title or canonical |

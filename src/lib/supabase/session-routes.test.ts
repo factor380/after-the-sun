@@ -15,6 +15,8 @@ describe("routeRefreshesAuthSession", () => {
       "/spots/cmrw0xspi0000v3w0xcs3qn42",
       "/opengraph-image",
       "/about/opengraph-image",
+      "/regions/opengraph-image",
+      "/regions/twitter-image",
       "/llms.txt",
     ]) {
       expect(routeRefreshesAuthSession(path), path).toBe(false);
