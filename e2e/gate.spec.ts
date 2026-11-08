@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { JERUSALEM_SUNSET_PLACES } from "../src/lib/guides/jerusalem-sunset";
+import { NORTH_GOLAN_SUNSET_PLACES } from "../src/lib/guides/north-golan-sunset";
 import { E2E_TEST_USER_HEADER } from "../src/lib/e2e/guard";
 import { E2E_SEED_SPOTS } from "../src/lib/e2e/seed-spots";
 import { e2eUploadRoot, resolveE2EUploadPath } from "../src/lib/e2e/upload-path";
@@ -28,7 +29,10 @@ const AI_BOTS = [
   "OAI-SearchBot",
 ];
 
-const GUIDE_SPOT_PATHS = new Set(JERUSALEM_SUNSET_PLACES.map((place) => place.path));
+const GUIDE_SPOT_PATHS = new Set([
+  ...JERUSALEM_SUNSET_PLACES.map((place) => place.path),
+  ...NORTH_GOLAN_SUNSET_PLACES.map((place) => place.path),
+]);
 
 const TINY_JPEG = Buffer.from([
   0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01,

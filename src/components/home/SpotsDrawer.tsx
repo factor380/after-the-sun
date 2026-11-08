@@ -14,6 +14,7 @@ import { useSunsetLabel } from "@/components/home/useSunsetLabel";
 import { useSpotSelection } from "@/components/home/SpotSelectionProvider";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
+import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
 import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
 
 type SpotsDrawerProps = {
@@ -245,12 +246,20 @@ export function SpotsDrawer({
           {heading}
         </h2>
 
-        <Link
-          href={JERUSALEM_SUNSET_GUIDE.path}
-          className="mb-3 block shrink-0 text-sm font-medium text-[var(--ember)] underline-offset-4 hover:underline"
-        >
-          מדריך שקיעה בירושלים
-        </Link>
+        <div className="mb-3 flex shrink-0 flex-col gap-2">
+          <Link
+            href={JERUSALEM_SUNSET_GUIDE.path}
+            className="block text-sm font-medium text-[var(--ember)] underline-offset-4 hover:underline"
+          >
+            מדריך שקיעה בירושלים
+          </Link>
+          <Link
+            href={NORTH_GOLAN_SUNSET_GUIDE.path}
+            className="block text-sm font-medium text-[var(--ember)] underline-offset-4 hover:underline"
+          >
+            מדריך שקיעה בצפון ובגולן
+          </Link>
+        </div>
 
         <nav
           aria-label="נקודות שקיעה לפי אזור"

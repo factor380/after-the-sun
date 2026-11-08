@@ -5,6 +5,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import { SpotLinkList } from "@/components/spots/SpotLinkList";
 import { T } from "@/components/T";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
+import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { toPublicSpot } from "@/lib/public-spot";
 import {
@@ -128,17 +129,19 @@ export default async function RegionPage({ params }: PageProps) {
       <p className="mt-5 text-lg leading-relaxed text-[var(--sand-muted)]">
         {region.intro}
       </p>
-      {region.slug === JERUSALEM_SUNSET_GUIDE.regionSlug ? (
-        <p className="mt-4 text-lg leading-relaxed text-[var(--sand-muted)]">
-          מדריך מומלץ:{" "}
-          <Link
-            href={JERUSALEM_SUNSET_GUIDE.path}
-            className="text-[var(--sand)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--ember)]"
-          >
-            {JERUSALEM_SUNSET_GUIDE.title}
-          </Link>
-        </p>
-      ) : null}
+      {[JERUSALEM_SUNSET_GUIDE, NORTH_GOLAN_SUNSET_GUIDE]
+        .filter((guide) => guide.regionSlug === region.slug)
+        .map((guide) => (
+          <p key={guide.path} className="mt-4 text-lg leading-relaxed text-[var(--sand-muted)]">
+            מדריך מומלץ:{" "}
+            <Link
+              href={guide.path}
+              className="text-[var(--sand)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--ember)]"
+            >
+              {guide.title}
+            </Link>
+          </p>
+        ))}
 
       <section className="mt-10" aria-label={region.title}>
         {loaded.ok ? (

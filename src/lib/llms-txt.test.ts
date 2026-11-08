@@ -3,6 +3,7 @@ import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
+import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
 import { SUNSET_REGIONS, publicRegionPages } from "@/lib/regions";
 import { SITE_DESCRIPTION, SITE_NAME, getSiteUrl } from "@/lib/seo";
 import { LLMS_TXT_SUMMARY, buildLlmsTxt, type LlmsSpot } from "@/lib/llms-txt";
@@ -59,12 +60,12 @@ describe("buildLlmsTxt", () => {
     expect(text.indexOf("\n## ")).toBeGreaterThan(text.indexOf(SITE_DESCRIPTION));
   });
 
-  it("links the public pages, all region pages, the Jerusalem guide, and the sitemap", () => {
+  it("links the public pages, all region pages, the guides, and the sitemap", () => {
     const origin = getSiteUrl();
     const pages = pageSection(text);
     const lines = linkLines(pages);
 
-    expect(lines).toHaveLength(2 + publicRegionPages().length + 2);
+    expect(lines).toHaveLength(2 + publicRegionPages().length + 3);
     expect(SUNSET_REGIONS).toHaveLength(7);
     expect(publicRegionPages()).toHaveLength(SUNSET_REGIONS.length + 1);
     expect(pages).toContain(`](${origin}/regions):`);
@@ -78,6 +79,9 @@ describe("buildLlmsTxt", () => {
     }
     expect(pages).not.toContain("/regions/judea-samaria");
     expect(pages).toContain(`](${origin}${JERUSALEM_SUNSET_GUIDE.path}):`);
+    expect(pages).toContain(`](${origin}${NORTH_GOLAN_SUNSET_GUIDE.path}):`);
+    expect(pages).toContain(NORTH_GOLAN_SUNSET_GUIDE.title);
+    expect(pages).toContain(NORTH_GOLAN_SUNSET_GUIDE.description);
     expect(pages).toContain(`](${origin}/sitemap.xml):`);
     expect(pages).toContain("המפה הקהילתית של נקודות השקיעה בישראל.");
     expect(pages).toContain("אלה נקודות השקיעה שסומנו בתל אביב–יפו על המפה.");
@@ -258,6 +262,7 @@ describe("canonical domain", () => {
         `${origin}/regions`,
         `${origin}/llms.txt`,
         `${origin}${JERUSALEM_SUNSET_GUIDE.path}`,
+        `${origin}${NORTH_GOLAN_SUNSET_GUIDE.path}`,
       ]),
     );
 
