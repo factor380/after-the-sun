@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { contentSecurityPolicy } from "./src/lib/content-security-policy";
 import { LEGACY_JUDEA_SAMARIA_PATH } from "./src/lib/regions";
 import { legacyProductionRedirects } from "./src/lib/site-url";
 
@@ -19,19 +20,7 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https:",
-      "font-src 'self'",
-      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.tile.openstreetmap.org${isDev ? " ws: wss:" : ""}`,
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "object-src 'none'",
-      "upgrade-insecure-requests",
-    ].join("; "),
+    value: contentSecurityPolicy(isDev),
   },
 ];
 

@@ -26,6 +26,7 @@ describe("routeRefreshesAuthSession", () => {
       "/login",
       "/login/",
       "/auth/callback",
+      "/auth/complete",
       "/api/spots",
       "/api/spots/abc",
       "/spots/new",
