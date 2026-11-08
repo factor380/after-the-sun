@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { profileDisplayName } from "@/lib/profile-name";
 import { safeRedirectPath } from "@/lib/safe-redirect";
+import { createClient } from "@/lib/supabase/server";
 import { ensureProfile } from "@/services/spots";
 
 export async function GET(request: Request) {
@@ -15,9 +16,7 @@ export async function GET(request: Request) {
       error,
     } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && user) {
-      const displayName =
-        user.user_metadata?.full_name ?? user.user_metadata?.name ?? null;
-      await ensureProfile(user.id, displayName);
+      await ensureProfile(user.id, profileDisplayName(user.user_metadata));
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

@@ -13,7 +13,7 @@
 - **Interactive map** of sunset spots across Israel (Leaflet + OpenStreetMap), with photo previews in marker popups and a searchable, virtualized spot list.
 - **Today's sunset time** for every spot, calculated in the browser from the spot's coordinates, with no API call. Times are shown in `Asia/Jerusalem`.
 - **Spot pages** with a community photo gallery and a full-screen lightbox, plus one-tap navigation to the spot.
-- **Google sign-in** through Supabase Auth.
+- **Google sign-in** on this site (Google Identity Services ID token sent to Supabase). If the Google client id is unset, sign-in falls back to the Supabase OAuth redirect.
 - **Add and edit spots**: drop a pin or search for a place, fill a short form, and upload photos (up to 2 when creating a spot). Owners can edit their own spots from **My spots**.
 - **Community photos**: any signed-in user can add photos to any spot. The uploader or the spot owner can remove them (max 24 per spot, 5 per user per spot).
 - **Reporting**: users can flag a spot for moderation. Reports are reviewed in Prisma Studio for now.
@@ -37,7 +37,7 @@
 | Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
 | Maps | Leaflet, React Leaflet, OpenStreetMap, Geoapify (place search) |
 | Backend | Next.js Route Handlers, Zod, Prisma ORM |
-| Data and auth | Supabase (PostgreSQL, Google OAuth, Storage) |
+| Data and auth | Supabase (PostgreSQL, Google sign-in, Storage) |
 | Hosting | Vercel, Vercel Analytics |
 
 ## Data model
@@ -86,11 +86,14 @@ prisma/           Schema and seed data
      - `http://localhost:3004/**`
      - `https://after-the-sun.com/auth/callback`
      - `https://after-the-sun.com/**`
-4. Enable **Google** sign-in:
+4. Enable **Google** sign-in. With `NEXT_PUBLIC_GOOGLE_CLIENT_ID` set, the account chooser shows this site. Without it, Supabase's OAuth redirect is used and the chooser shows `<project>.supabase.co`.
    - Supabase Dashboard → Authentication → Providers → Google → Enable
-   - In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an **OAuth 2.0 Client ID** (Web application)
-   - Authorized redirect URI: copy it from Supabase (e.g. `https://<project-ref>.supabase.co/auth/v1/callback`)
-   - Paste the Client ID and Client Secret into Supabase
+   - In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), use a **Web application** OAuth client
+   - Authorized redirect URI (OAuth fallback): copy it from Supabase (e.g. `https://<project-ref>.supabase.co/auth/v1/callback`)
+   - Authorized JavaScript origins: `https://after-the-sun.com`, `https://www.after-the-sun.com`, and `http://localhost:3004`
+   - OAuth consent screen: app name **After the Sun**, a logo, and authorized domain `after-the-sun.com`
+   - Paste the Client ID and Client Secret into Supabase, and add the same Client ID under **Authorized Client IDs**. Leave **Skip nonce check** off
+   - Set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to that client id. It is read at build time, so redeploy after changing it
 5. Create a **public** Storage bucket named `spot-photos`, then run this in the SQL Editor:
 
 ```sql
