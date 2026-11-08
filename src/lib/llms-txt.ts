@@ -1,4 +1,5 @@
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
+import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
 import { publicRegionPages } from "@/lib/regions";
 import { SITE_DESCRIPTION, SITE_NAME, absoluteUrl, truncateMeta } from "@/lib/seo";
 
@@ -68,6 +69,11 @@ function pageLinks(): PageLink[] {
       label: "איפה רואים שקיעה בירושלים?",
       path: JERUSALEM_SUNSET_GUIDE.path,
       note: "מדריך לתצפיות שקיעה בירושלים שפונות מערבה, עם קישור לעמוד של כל נקודה.",
+    },
+    {
+      label: NORTH_GOLAN_SUNSET_GUIDE.title,
+      path: NORTH_GOLAN_SUNSET_GUIDE.path,
+      note: NORTH_GOLAN_SUNSET_GUIDE.description,
     },
     {
       label: "Sitemap",
