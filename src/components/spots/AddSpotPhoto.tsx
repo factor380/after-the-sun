@@ -7,8 +7,10 @@ import { compressSpotPhoto } from "@/lib/compress-spot-photo";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
-  ALLOWED_SPOT_PHOTO_TYPES,
+  isAcceptableSpotPhotoFile,
+  isHeicSpotPhoto,
   MAX_SPOT_PHOTO_INPUT_BYTES,
+  SPOT_PHOTO_INPUT_ACCEPT,
 } from "@/lib/spot-photo";
 
 type AddSpotPhotoProps = {
@@ -71,10 +73,12 @@ export default function AddSpotPhoto({
       return;
     }
 
-    if (
-      picked.type &&
-      !(ALLOWED_SPOT_PHOTO_TYPES as readonly string[]).includes(picked.type)
-    ) {
+    if (isHeicSpotPhoto(picked)) {
+      setError(t("photoHeicUnsupported"));
+      reset();
+      return;
+    }
+    if (picked.type && !isAcceptableSpotPhotoFile(picked)) {
       setError(t("photoInvalidType"));
       reset();
       return;
@@ -206,7 +210,7 @@ export default function AddSpotPhoto({
             id={inputId}
             ref={fileInputRef}
             type="file"
-            accept={ALLOWED_SPOT_PHOTO_TYPES.join(",")}
+            accept={SPOT_PHOTO_INPUT_ACCEPT}
             disabled={busy}
             onChange={(e) => {
               void onFileSelected(e.target.files);

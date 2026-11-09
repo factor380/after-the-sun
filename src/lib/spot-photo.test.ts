@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import {
   isAcceptableSpotPhotoFile,
+  isHeicSpotPhoto,
   replacePhotoWhenReady,
   SPOT_PHOTO_INPUT_ACCEPT,
   spotPhotoPickRoom,
@@ -9,7 +10,10 @@ import {
 
 describe("spot photo picks", () => {
   it("includes extensions so Android Chrome can show its system chooser", () => {
-    expect(SPOT_PHOTO_INPUT_ACCEPT).toBe("image/*,.jpg,.jpeg,.png,.webp");
+    expect(SPOT_PHOTO_INPUT_ACCEPT).toBe(
+      "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp",
+    );
+    expect(SPOT_PHOTO_INPUT_ACCEPT).not.toContain("image/*");
   });
 
   it("accepts jpeg, png, and webp MIME types", () => {
@@ -52,9 +56,13 @@ describe("spot photo picks", () => {
       false,
     );
     expect(isAcceptableSpotPhotoFile({ type: "", name: "a" })).toBe(false);
+    expect(isHeicSpotPhoto({ type: "image/heic", name: "a.jpg" })).toBe(true);
+    expect(isHeicSpotPhoto({ type: "", name: "a.HEIC" })).toBe(true);
+    expect(isHeicSpotPhoto({ type: "image/jpeg", name: "a.jpg" })).toBe(false);
     expect(dictionary.photoInvalidType).toBe(
       "סוג קובץ לא נתמך. בחרו JPEG, PNG או WebP.",
     );
+    expect(dictionary.photoHeicUnsupported).toContain("HEIC");
   });
 
   it("counts room from the current photos before a new pick is stored", () => {
