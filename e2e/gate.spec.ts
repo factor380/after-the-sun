@@ -207,6 +207,38 @@ test("new spot form works signed out and Enter in place search does not submit",
   await expect(name).toHaveValue("תצפית בדיקה");
 });
 
+test("quick add form restores a draft after refresh and the Google login link", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("ats-welcome-v2", "1");
+  });
+  await page.goto("/spots/new", { waitUntil: "domcontentloaded" });
+
+  await page.getByPlaceholder("תצפית נמל יפו").fill("תצפית הטיוטה");
+  await page.getByLabel("השם שלכם (אופציונלי)").fill("דנה כהן");
+  await page.getByText("פרטים נוספים (אפשר להשלים אחר כך)").click();
+  await page.getByPlaceholder("למה זו נקודת שקיעה מעולה?").fill("תיאור שנשמר בטיוטה אחרי רענון.");
+  await page.getByPlaceholder("תל אביב").fill("יפו");
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByText("הטופס שוחזר. אפשר לשלוח עכשיו.")).toBeVisible();
+  await expect(page.getByPlaceholder("תצפית נמל יפו")).toHaveValue("תצפית הטיוטה");
+  await expect(page.getByLabel("השם שלכם (אופציונלי)")).toHaveValue("דנה כהן");
+  await page.getByText("פרטים נוספים (אפשר להשלים אחר כך)").click();
+  await expect(page.getByPlaceholder("למה זו נקודת שקיעה מעולה?")).toHaveValue(
+    "תיאור שנשמר בטיוטה אחרי רענון.",
+  );
+  await expect(page.getByPlaceholder("תל אביב")).toHaveValue("יפו");
+
+  await page.getByRole("link", { name: "המשך עם Google" }).click();
+  await expect(page).toHaveURL(/\/login\?next=(?:\/|%2F)spots(?:\/|%2F)new/);
+  await page.goto("/spots/new", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("הטופס שוחזר. אפשר לשלוח עכשיו.")).toBeVisible();
+  await expect(page.getByPlaceholder("תצפית נמל יפו")).toHaveValue("תצפית הטיוטה");
+  await expect(page.getByLabel("השם שלכם (אופציונלי)")).toHaveValue("דנה כהן");
+});
+
 test("parking and accessibility reject unknown values and notes over 200 characters", async ({
   request,
   baseURL,

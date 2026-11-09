@@ -19,6 +19,13 @@ import {
 import { isWithinIsraelBounds } from "@/lib/geo/israel";
 import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
+  clearNewSpotDraft,
+  loadNewSpotDraft,
+  saveNewSpotDraft,
+  writeNewSpotDraftText,
+  type SaveNewSpotDraftInput,
+} from "@/lib/new-spot-draft";
+import {
   isAcceptableSpotPhotoFile,
   MAX_SPOT_PHOTO_INPUT_BYTES,
   SPOT_PHOTO_INPUT_ACCEPT,
@@ -50,6 +57,10 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
   const photoInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
   const previewRef = useRef<string | null>(null);
+  const touchedRef = useRef(false);
+  const keepDraftRef = useRef(true);
+  const draftReadyRef = useRef(false);
+  const draftRef = useRef<SaveNewSpotDraftInput | null>(null);
 
   const [name, setName] = useState("");
   const [contributorName, setContributorName] = useState("");
@@ -68,6 +79,32 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thanks, setThanks] = useState<{ photoSkipped: boolean } | null>(null);
+  const [draftReady, setDraftReady] = useState(false);
+  const [restored, setRestored] = useState(false);
+  const [photosMissing, setPhotosMissing] = useState(false);
+
+  function touch() {
+    touchedRef.current = true;
+  }
+
+  const draftInput: SaveNewSpotDraftInput = {
+    name,
+    description,
+    region,
+    lat,
+    lng,
+    confirmedLat: lat,
+    confirmedLng: lng,
+    photoUrl: "",
+    acceptedGuidelines: false,
+    parking,
+    parkingNote,
+    accessibility,
+    accessibilityNote,
+    contributorName,
+    photos: photo ? [photo.file] : [],
+  };
+  draftRef.current = draftInput;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -77,6 +114,70 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const restoredDraft = await loadNewSpotDraft();
+      if (cancelled) return;
+      if (restoredDraft && !touchedRef.current) {
+        const { fields, photos } = restoredDraft;
+        setName(fields.name);
+        setDescription(fields.description);
+        setRegion(fields.region);
+        setLat(fields.lat ?? fields.confirmedLat);
+        setLng(fields.lng ?? fields.confirmedLng);
+        setParking(fields.parking);
+        setParkingNote(fields.parkingNote);
+        setAccessibility(fields.accessibility);
+        setAccessibilityNote(fields.accessibilityNote);
+        setContributorName(fields.contributorName);
+        const file = photos[0];
+        if (file) {
+          setReadyPhoto({ file, previewUrl: URL.createObjectURL(file) });
+        }
+        setPhotosMissing(restoredDraft.photosMissing);
+        setRestored(true);
+      }
+      draftReadyRef.current = true;
+      if (!cancelled) setDraftReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    const timer = window.setTimeout(() => {
+      if (!keepDraftRef.current || !draftRef.current) return;
+      void saveNewSpotDraft(draftRef.current);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [
+    draftReady,
+    name,
+    description,
+    region,
+    lat,
+    lng,
+    parking,
+    parkingNote,
+    accessibility,
+    accessibilityNote,
+    contributorName,
+    photo,
+  ]);
+
+  useEffect(() => {
+    function flush() {
+      if (!keepDraftRef.current || !draftRef.current) return;
+      if (!draftReadyRef.current && !touchedRef.current) return;
+      writeNewSpotDraftText(draftRef.current);
+    }
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
+  }, []);
+
   function setReadyPhoto(next: ReadyPhoto | null) {
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     previewRef.current = next?.previewUrl ?? null;
@@ -84,6 +185,7 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
   }
 
   function chooseLocation(nextLat: number, nextLng: number) {
+    touch();
     if (!isWithinIsraelBounds(nextLat, nextLng)) {
       setError(t("locationOutsideIsrael"));
       return;
@@ -116,6 +218,7 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
   }
 
   async function onPhotoSelected(fileList: FileList | null) {
+    touch();
     const file = fileList?.[0];
     if (photoInputRef.current) photoInputRef.current.value = "";
     if (!file || compressing || saving) return;
@@ -228,6 +331,9 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
         );
       }
 
+      keepDraftRef.current = false;
+      await clearNewSpotDraft();
+
       if (signedIn) {
         const id = responseField(data, "id");
         if (typeof id !== "string" || !id) throw new Error(t("saveFailed"));
@@ -294,7 +400,10 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
           id="spot-name"
           required
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => {
+            touch();
+            setName(event.target.value);
+          }}
           autoComplete="off"
           enterKeyHint="next"
           className="min-h-12 w-full border border-[var(--line)] bg-[var(--surface)] px-3 text-base text-[var(--sand)] outline-none focus:border-[var(--ember)]"
@@ -352,13 +461,19 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
             {t("photoLoading")}
           </p>
         ) : null}
+        {photosMissing ? (
+          <p className="mt-2 text-sm text-[var(--ember)]">{t("draftPhotosMissing")}</p>
+        ) : null}
         {photo ? (
           <div className="relative mt-3 overflow-hidden rounded-sm border border-[var(--line)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={photo.previewUrl} alt="" className="max-h-48 w-full object-cover" />
             <button
               type="button"
-              onClick={() => setReadyPhoto(null)}
+              onClick={() => {
+                touch();
+                setReadyPhoto(null);
+              }}
               className="absolute end-2 top-2 min-h-10 bg-[var(--dusk-deep)]/80 px-3 text-sm text-[var(--sand)]"
             >
               {t("photoRemove")}
@@ -381,7 +496,22 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
         <div>
           <p className="text-sm leading-relaxed text-[var(--sand-muted)]">
             {t("suggestionCreditNote")}{" "}
-            <Link href="/login?next=/spots/new" className="text-[var(--ember)] underline">
+            <Link
+              href="/login?next=/spots/new"
+              className="text-[var(--ember)] underline"
+              onClick={(event) => {
+                event.preventDefault();
+                void (async () => {
+                  touch();
+                  const saved = await saveNewSpotDraft(draftRef.current ?? draftInput);
+                  if (!saved.stored) {
+                    setError(t("draftSaveFailed"));
+                    return;
+                  }
+                  router.push("/login?next=/spots/new");
+                })();
+              }}
+            >
               {t("signInWithGoogle")}
             </Link>
           </p>
@@ -394,7 +524,10 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
           <input
             id="contributor-name"
             value={contributorName}
-            onChange={(event) => setContributorName(event.target.value)}
+            onChange={(event) => {
+              touch();
+              setContributorName(event.target.value);
+            }}
             maxLength={80}
             autoComplete="name"
             className="min-h-12 w-full border border-[var(--line)] bg-[var(--surface)] px-3 text-base text-[var(--sand)] outline-none focus:border-[var(--ember)]"
@@ -415,7 +548,10 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
               id="spot-description"
               rows={3}
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={(event) => {
+                touch();
+                setDescription(event.target.value);
+              }}
               className="w-full border border-[var(--line)] bg-[var(--dusk-deep)] px-3 py-2 text-base text-[var(--sand)] outline-none focus:border-[var(--ember)]"
               placeholder={t("descriptionPlaceholder")}
             />
@@ -427,7 +563,10 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
             <input
               id="spot-region"
               value={region}
-              onChange={(event) => setRegion(event.target.value)}
+              onChange={(event) => {
+                touch();
+                setRegion(event.target.value);
+              }}
               className="min-h-12 w-full border border-[var(--line)] bg-[var(--dusk-deep)] px-3 text-base text-[var(--sand)] outline-none focus:border-[var(--ember)]"
               placeholder={t("regionPlaceholder")}
             />
@@ -437,15 +576,30 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
             parkingNote={parkingNote}
             accessibility={accessibility}
             accessibilityNote={accessibilityNote}
-            onParking={setParking}
-            onParkingNote={setParkingNote}
-            onAccessibility={setAccessibility}
-            onAccessibilityNote={setAccessibilityNote}
+            onParking={(value) => {
+              touch();
+              setParking(value);
+            }}
+            onParkingNote={(value) => {
+              touch();
+              setParkingNote(value);
+            }}
+            onAccessibility={(value) => {
+              touch();
+              setAccessibility(value);
+            }}
+            onAccessibilityNote={(value) => {
+              touch();
+              setAccessibilityNote(value);
+            }}
           />
         </div>
       </details>
 
       <p className="text-sm leading-relaxed text-[var(--sand-muted)]">{t("submitNotice")}</p>
+      {restored ? (
+        <p className="text-sm text-[var(--ember)]">{t("draftRestored")}</p>
+      ) : null}
 
       {error ? (
         <p className="text-sm text-red-600" role="alert">

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseNewSpotDraft } from "@/lib/new-spot-draft";
+import { buildNewSpotDraftFields, parseNewSpotDraft } from "@/lib/new-spot-draft";
 
 const NOW = Date.parse("2026-10-18T12:00:00.000Z");
 
@@ -31,6 +31,60 @@ describe("parseNewSpotDraft", () => {
     expect(draft?.parkingNote).toBe("");
     expect(draft?.accessibility).toBeNull();
     expect(draft?.accessibilityNote).toBe("");
+    expect(draft?.contributorName).toBe("");
+  });
+
+  it("keeps a contributor name and a chosen location", () => {
+    const fields = buildNewSpotDraftFields(
+      {
+        name: "תצפית הטיוטה",
+        description: "תיאור שנשמר אחרי התחברות.",
+        region: "יפו",
+        lat: 32.08,
+        lng: 34.78,
+        confirmedLat: 32.08,
+        confirmedLng: 34.78,
+        photoUrl: "",
+        acceptedGuidelines: false,
+        parking: "yes",
+        parkingNote: "",
+        accessibility: null,
+        accessibilityNote: "",
+        contributorName: "  דנה כהן",
+        photos: [],
+      },
+      NOW - 1000,
+    );
+
+    const draft = parseNewSpotDraft(JSON.stringify(fields), NOW);
+    expect(draft?.name).toBe("תצפית הטיוטה");
+    expect(draft?.description).toBe("תיאור שנשמר אחרי התחברות.");
+    expect(draft?.region).toBe("יפו");
+    expect(draft?.lat).toBe(32.08);
+    expect(draft?.lng).toBe(34.78);
+    expect(draft?.confirmedLat).toBe(32.08);
+    expect(draft?.confirmedLng).toBe(34.78);
+    expect(draft?.contributorName).toBe("  דנה כהן");
+    expect(draft?.parking).toBe("yes");
+  });
+
+  it("keeps a draft that only has a contributor name", () => {
+    const draft = parseNewSpotDraft(
+      payload({
+        name: "",
+        description: "",
+        region: "",
+        lat: null,
+        lng: null,
+        confirmedLat: null,
+        confirmedLng: null,
+        photoUrl: "",
+        expectedPhotoCount: 0,
+        contributorName: "נועה",
+      }),
+      NOW,
+    );
+    expect(draft?.contributorName).toBe("נועה");
   });
 
   it("restores amenity answers and ignores unknown choices", () => {
