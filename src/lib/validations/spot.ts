@@ -5,11 +5,13 @@ import {
   isSpotPhotoStorageUrl,
   isSuggestionPhotoUrl,
   MAX_PHOTOS_ON_CREATE,
+  MAX_PHOTOS_PER_SPOT,
 } from "@/lib/spot-photo";
 import {
   ACCESSIBILITY_VALUES,
   AMENITY_NOTE_MAX,
   PARKING_VALUES,
+  SPOT_STATUS_VALUES,
 } from "@/types/spot";
 
 const httpsUrl = z
@@ -104,6 +106,44 @@ const optionalPhoto = z.preprocess(
   z.string().trim().max(2048).nullable().optional(),
 );
 
+const nullableHttpsPhoto = z.preprocess(
+  (value) => (value == null || value === "" ? null : value),
+  httpsUrl.nullable(),
+);
+
+const adminRegion = z.preprocess((value) => {
+  if (value == null || value === "") return null;
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}, z.string().max(80).nullable());
+
+/**
+ * Full admin save. Field limits match spot creation (and the suggestion
+ * credit line). Status is admin-only. Unknown keys are stripped.
+ */
+export const adminUpdateSpotSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  description: z.preprocess(
+    (value) => (value == null ? "" : value),
+    z.string().trim().max(1000),
+  ),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  region: adminRegion,
+  photoUrl: nullableHttpsPhoto,
+  parking: optionalChoice(PARKING_VALUES),
+  parkingNote: optionalAmenityNote,
+  accessibility: optionalChoice(ACCESSIBILITY_VALUES),
+  accessibilityNote: optionalAmenityNote,
+  contributorName: optionalCredit,
+  status: z.enum(SPOT_STATUS_VALUES),
+  removePhotoIds: z
+    .array(z.string().trim().min(1).max(64))
+    .max(MAX_PHOTOS_PER_SPOT)
+    .optional(),
+});
+
 /**
  * Anonymous suggestion. Description, photo, and credit are optional.
  * `website` is a honeypot and is not stored.
@@ -137,6 +177,7 @@ export const suggestSpotSchema = z
 export type CreateSpotInput = z.infer<typeof createSpotSchema>;
 export type UpdateSpotInput = z.infer<typeof updateSpotSchema>;
 export type SuggestSpotInput = z.infer<typeof suggestSpotSchema>;
+export type AdminUpdateSpotInput = z.infer<typeof adminUpdateSpotSchema>;
 
 export function assertIsraelCoordinates(lat: number, lng: number) {
   if (!isWithinIsraelBounds(lat, lng)) {

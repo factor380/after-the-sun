@@ -4,6 +4,14 @@ export type Parking = (typeof PARKING_VALUES)[number];
 export const ACCESSIBILITY_VALUES = ["yes", "partial", "no"] as const;
 export type Accessibility = (typeof ACCESSIBILITY_VALUES)[number];
 
+/** pending is hidden, approved is public, rejected stays hidden. */
+export const SPOT_STATUS_VALUES = ["pending", "approved", "rejected"] as const;
+export type SpotStatus = (typeof SPOT_STATUS_VALUES)[number];
+
+export function isSpotStatus(value: string): value is SpotStatus {
+  return (SPOT_STATUS_VALUES as readonly string[]).includes(value);
+}
+
 /** Contributor notes stay short. The database check uses the same limit. */
 export const AMENITY_NOTE_MAX = 200;
 
