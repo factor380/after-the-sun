@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createReportSchema } from "./report";
-import { assertIsraelCoordinates, createSpotSchema, updateSpotSchema } from "./spot";
+import {
+  assertIsraelCoordinates,
+  createSpotSchema,
+  suggestSpotSchema,
+  updateSpotSchema,
+} from "./spot";
 
 const spot = {
   name: "חוף הילטון",
@@ -92,6 +97,12 @@ describe("createSpotSchema", () => {
     ).toBe(false);
   });
 
+  it("accepts a spot with no description", () => {
+    expect(
+      createSpotSchema.safeParse({ ...spot, description: undefined }).success,
+    ).toBe(true);
+  });
+
   it("lets an edit change only the amenity fields", () => {
     const parsed = updateSpotSchema.safeParse({
       parking: null,
@@ -104,6 +115,57 @@ describe("createSpotSchema", () => {
     expect(parsed.data.accessibility).toBe("yes");
     expect(parsed.data.accessibilityNote).toBe("שביל סלול");
     expect(parsed.data.name).toBeUndefined();
+  });
+});
+
+describe("suggestSpotSchema", () => {
+  const suggestion = { name: "תצפית עכו", lat: 32.92, lng: 35.07 };
+
+  it("accepts a name and a location", () => {
+    const parsed = suggestSpotSchema.safeParse(suggestion);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.description).toBeNull();
+    expect(parsed.data.photoUrl).toBeNull();
+    expect(parsed.data.contributorName).toBeNull();
+  });
+
+  it("rejects a short name, a bad coordinate, and an outside photo URL", () => {
+    expect(suggestSpotSchema.safeParse({ ...suggestion, name: "א" }).success).toBe(
+      false,
+    );
+    expect(suggestSpotSchema.safeParse({ ...suggestion, lat: 120 }).success).toBe(
+      false,
+    );
+    expect(
+      suggestSpotSchema.safeParse({
+        ...suggestion,
+        photoUrl: "https://example.com/sunset.jpg",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects a credit name longer than 80 characters", () => {
+    expect(
+      suggestSpotSchema.safeParse({
+        ...suggestion,
+        contributorName: "א".repeat(81),
+      }).success,
+    ).toBe(false);
+  });
+
+  it("keeps an empty honeypot and a short optional credit name", () => {
+    const parsed = suggestSpotSchema.safeParse({
+      ...suggestion,
+      website: "",
+      contributorName: "  דנה  ",
+      description: "",
+    });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.website).toBe("");
+    expect(parsed.data.contributorName).toBe("דנה");
+    expect(parsed.data.description).toBeNull();
   });
 });
 

@@ -11,6 +11,7 @@ fi
 export DATABASE_URL="${DATABASE_URL:-postgresql://ci:ci@127.0.0.1:5432/after_the_sun?schema=public}"
 export DIRECT_URL="${DIRECT_URL:-$DATABASE_URL}"
 export E2E_TEST_AUTH=1
+export ADMIN_EMAILS="owner@e2e.after-the-sun.test"
 export E2E_BASE_URL="${E2E_BASE_URL:-http://localhost:3004}"
 # Fixed stand-ins. A real project URL or anon key from the shell is not used.
 export NEXT_PUBLIC_SUPABASE_URL="https://e2e.supabase.co"

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { profileDisplayName } from "@/lib/profile-name";
 import { createClient } from "@/lib/supabase/server";
 import { toPublicSpot } from "@/lib/public-spot";
 import { rateLimit } from "@/lib/rate-limit";
@@ -62,6 +63,7 @@ export async function POST(request: Request) {
     }
 
     const result = await createSpot(user.id, parsed.data, {
+      displayName: profileDisplayName(user.user_metadata),
       consumeRateLimit: () =>
         rateLimit(
           `spots:create:${user.id}`,

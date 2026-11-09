@@ -10,7 +10,7 @@ import { useCurrentUserId } from "@/lib/supabase/use-current-user-id";
 
 type SpotContributorToolsProps = {
   spotId: string;
-  createdById: string;
+  createdById: string | null;
   photoCount: number;
   lat: number;
   lng: number;

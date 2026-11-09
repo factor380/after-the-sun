@@ -33,6 +33,8 @@ describe("routeRefreshesAuthSession", () => {
       "/spots/mine",
       "/spots/abc/edit",
       "/spots/abc/edit/",
+      "/admin/suggestions",
+      "/admin/suggestions/",
     ]) {
       expect(routeRefreshesAuthSession(path), path).toBe(true);
     }

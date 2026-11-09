@@ -12,7 +12,7 @@ export async function GET(_request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
     const spot = await getSpotById(id);
-    if (!spot) {
+    if (!spot || spot.status !== "approved") {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     return NextResponse.json(toPublicSpot(spot));

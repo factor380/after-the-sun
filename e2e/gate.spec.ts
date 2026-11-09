@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { JERUSALEM_SUNSET_PLACES } from "../src/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_PLACES } from "../src/lib/guides/north-golan-sunset";
-import { E2E_TEST_USER_HEADER } from "../src/lib/e2e/guard";
+import { E2E_TEST_ADMIN_HEADER, E2E_TEST_USER_HEADER } from "../src/lib/e2e/guard";
 import { E2E_SEED_SPOTS } from "../src/lib/e2e/seed-spots";
 import { e2eUploadRoot, resolveE2EUploadPath } from "../src/lib/e2e/upload-path";
 import { SUNSET_REGIONS, regionPath } from "../src/lib/regions";
@@ -170,16 +170,15 @@ test("new spot form works signed out and Enter in place search does not submit",
   await page.goto("/spots/new", { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/spots\/new$/);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByText("אפשר למלא את הטופס עכשיו")).toBeVisible();
+  await expect(page.getByText("אפשר לשלוח בלי חשבון")).toBeVisible();
+  await expect(page.getByText("התחברות עם Google מוסיפה את השם שלכם לנקודה.")).toBeVisible();
 
   const name = page.getByPlaceholder("תצפית נמל יפו");
-  const description = page.getByPlaceholder("למה זו נקודת שקיעה מעולה?");
   await expect(name).toBeEnabled();
-  await expect(description).toBeEnabled();
-  await expect(page.getByRole("button", { name: "שיתוף נקודה" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "השתמשו במיקום שלי" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "שליחת הצעה" })).toBeEnabled();
 
   await name.fill("תצפית בדיקה");
-  await description.fill("תיאור קצר לבדיקת הטופס בלי התחברות.");
   await expect(name).toHaveValue("תצפית בדיקה");
 
   const search = page.getByRole("textbox", { name: "חיפוש מיקום" });
@@ -360,6 +359,149 @@ test("test user can create, edit, report, and delete a spot with a photo", async
   await expect
     .poll(async () => (await request.get("/sitemap.xml", { maxRedirects: 0 })).text())
     .not.toContain(`/spots/${id}`);
+});
+
+test("anonymous suggestion stays hidden until an admin approves it", async ({
+  browser,
+  request,
+  baseURL,
+}) => {
+  test.setTimeout(120_000);
+  const origin = requireBase(baseURL);
+  const name = "תצפית הצעה לבדיקה";
+  const rejectedName = "תצפית שנדחית בבדיקה";
+  const trappedName = "מלכודת דבש לבדיקה";
+  const credit = "דנה כהן";
+
+  const created = await request.post("/api/spots/suggestions", {
+    headers: { origin },
+    data: {
+      name,
+      lat: 32.08,
+      lng: 34.78,
+      contributorName: credit,
+      clientRequestId: crypto.randomUUID(),
+    },
+    maxRedirects: 0,
+  });
+  expect(created.status()).toBe(201);
+  const suggestion = (await created.json()) as { id?: string; status?: string };
+  if (!suggestion.id) throw new Error("suggestion did not return an id");
+  const id = suggestion.id;
+  expect(suggestion.status).toBe("pending");
+
+  const rejected = await request.post("/api/spots/suggestions", {
+    headers: { origin },
+    data: {
+      name: rejectedName,
+      lat: 32.09,
+      lng: 34.79,
+      clientRequestId: crypto.randomUUID(),
+    },
+    maxRedirects: 0,
+  });
+  expect(rejected.status()).toBe(201);
+  const rejectedBody = (await rejected.json()) as { id?: string };
+  if (!rejectedBody.id) throw new Error("rejected suggestion did not return an id");
+  const rejectedId = rejectedBody.id;
+
+  const trapped = await request.post("/api/spots/suggestions", {
+    headers: { origin },
+    data: {
+      name: trappedName,
+      lat: 32.1,
+      lng: 34.8,
+      website: "https://spam.example",
+    },
+    maxRedirects: 0,
+  });
+  expect(trapped.status()).toBe(200);
+  const trappedBody = (await trapped.json()) as { id?: string; accepted?: boolean };
+  expect(trappedBody.accepted).toBe(true);
+  expect(trappedBody.id).toBeUndefined();
+
+  const list = (await (await request.get("/api/spots")).json()) as { id: string }[];
+  expect(list.some((spot) => spot.id === id || spot.id === rejectedId)).toBe(false);
+
+  expect((await request.get(`/spots/${id}`, { maxRedirects: 0 })).status()).toBe(404);
+  expect((await request.get(`/spots/${rejectedId}`, { maxRedirects: 0 })).status()).toBe(404);
+  expect(await (await request.get("/")).text()).not.toContain(name);
+  expect(await (await request.get("/sitemap.xml")).text()).not.toContain(`/spots/${id}`);
+  expect(await (await request.get("/llms.txt")).text()).not.toContain(name);
+
+  const anonymousEdit = await request.patch(`/api/spots/${id}`, {
+    headers: { origin },
+    data: { name: "שינוי אנונימי" },
+    maxRedirects: 0,
+  });
+  expect(anonymousEdit.status()).toBe(401);
+
+  const strangerEdit = await request.patch(`/api/spots/${id}`, {
+    headers: authHeaders(origin),
+    data: { name: "שינוי של מישהו אחר" },
+    maxRedirects: 0,
+  });
+  expect(strangerEdit.status()).toBe(404);
+
+  const signedOutAdmin = await request.get("/admin/suggestions", { maxRedirects: 0 });
+  expect(signedOutAdmin.status()).toBeGreaterThanOrEqual(300);
+  expect(signedOutAdmin.status()).toBeLessThan(400);
+
+  const context = await browser.newContext({
+    extraHTTPHeaders: { [E2E_TEST_ADMIN_HEADER]: "1" },
+  });
+  await context.addInitScript(() => {
+    sessionStorage.setItem("ats-welcome-v2", "1");
+  });
+  const page = await context.newPage();
+  await page.goto("/admin/suggestions", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { level: 1, name: "הצעות ממתינות" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: rejectedName })).toBeVisible();
+  await expect(page.getByText(trappedName)).toHaveCount(0);
+  expect(await page.content()).toContain("noindex");
+
+  const rejectedCard = page.locator("li", { hasText: rejectedName });
+  await rejectedCard.getByRole("button", { name: "דחייה" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: rejectedName })).toHaveCount(0);
+  expect((await request.get(`/spots/${rejectedId}`, { maxRedirects: 0 })).status()).toBe(404);
+
+  const approvedCard = page.locator("li", { hasText: name });
+  await approvedCard.getByRole("button", { name: "אישור" }).click();
+  await expect(page.getByRole("heading", { level: 2, name })).toHaveCount(0);
+  await context.close();
+
+  await expect
+    .poll(async () => {
+      const spotPage = await request.get(`/spots/${id}`, { maxRedirects: 0 });
+      if (spotPage.status() !== 200) return "";
+      return await spotPage.text();
+    })
+    .toContain(name);
+
+  const published = await (await request.get(`/spots/${id}`, { maxRedirects: 0 })).text();
+  expect(published).toContain(`נוספה על ידי ${credit}`);
+  expect(headingText(published)).toContain(name);
+
+  await expect
+    .poll(async () => (await request.get("/sitemap.xml", { maxRedirects: 0 })).text())
+    .toContain(`/spots/${id}`);
+  await expect
+    .poll(async () => (await request.get("/llms.txt", { maxRedirects: 0 })).text())
+    .toContain(name);
+
+  const visible = (await (await request.get("/api/spots")).json()) as { id: string; name: string }[];
+  expect(visible.some((spot) => spot.id === id && spot.name === name)).toBe(true);
+  expect(visible.some((spot) => spot.id === rejectedId)).toBe(false);
+  await expect.poll(async () => (await request.get("/")).text()).toContain(name);
+  expect(await (await request.get("/llms.txt")).text()).not.toContain(rejectedName);
+
+  const editAfterApproval = await request.patch(`/api/spots/${id}`, {
+    headers: authHeaders(origin),
+    data: { name: "עריכה אחרי אישור" },
+    maxRedirects: 0,
+  });
+  expect(editAfterApproval.status()).toBe(403);
 });
 
 function requireBase(baseURL: string | undefined): string {

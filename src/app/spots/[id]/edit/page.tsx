@@ -56,6 +56,7 @@ export default async function EditSpotPage({ params }: PageProps) {
   if (!spot) notFound();
 
   if (spot.createdById !== user.id) {
+    if (spot.status !== "approved") notFound();
     redirect(`/spots/${id}`);
   }
 

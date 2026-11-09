@@ -7,8 +7,8 @@ export async function createSpotReport(
   reporterId: string,
   input: CreateReportInput,
 ) {
-  const spot = await prisma.spot.findUnique({
-    where: { id: spotId },
+  const spot = await prisma.spot.findFirst({
+    where: { id: spotId, status: "approved" },
     select: { id: true },
   });
   if (!spot) return null;

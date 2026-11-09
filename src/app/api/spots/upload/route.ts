@@ -2,14 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { isSameOriginRequest } from "@/lib/request-origin";
-import {
-  ALLOWED_SPOT_PHOTO_TYPES,
-  detectSpotPhotoMime,
-  extensionForSpotPhotoType,
-  isAllowedSpotPhotoType,
-  MAX_SPOT_PHOTO_BYTES,
-  SPOT_PHOTOS_BUCKET,
-} from "@/lib/spot-photo";
+import { prepareSpotPhotoFile } from "@/lib/spot-photo-file";
+import { SPOT_PHOTOS_BUCKET } from "@/lib/spot-photo";
 
 const UPLOAD_RATE_LIMIT = 20;
 const UPLOAD_RATE_WINDOW_MS = 60_000;
@@ -43,53 +37,20 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file");
-
-    if (!(file instanceof File)) {
+    const prepared = await prepareSpotPhotoFile(formData.get("file"));
+    if (!prepared.ok) {
       return NextResponse.json(
-        { error: "Missing image file" },
-        { status: 400 },
+        { error: prepared.error },
+        { status: prepared.status },
       );
     }
 
-    if (file.size <= 0 || file.size > MAX_SPOT_PHOTO_BYTES) {
-      return NextResponse.json(
-        { error: "Image must be between 1 byte and 1.5 MB" },
-        { status: 400 },
-      );
-    }
-
-    if (file.type && !isAllowedSpotPhotoType(file.type)) {
-      return NextResponse.json(
-        {
-          error: `Unsupported image type. Allowed: ${ALLOWED_SPOT_PHOTO_TYPES.join(", ")}`,
-        },
-        { status: 400 },
-      );
-    }
-
-    const buffer = new Uint8Array(await file.arrayBuffer());
-    const detected = detectSpotPhotoMime(buffer);
-    if (!detected) {
-      return NextResponse.json(
-        { error: "File content does not match a valid image type" },
-        { status: 400 },
-      );
-    }
-    if (file.type && file.type !== detected) {
-      return NextResponse.json(
-        { error: "Declared image type does not match file content" },
-        { status: 400 },
-      );
-    }
-
-    const ext = extensionForSpotPhotoType(detected);
-    const objectPath = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const objectPath = `${user.id}/${crypto.randomUUID()}.${prepared.photo.extension}`;
 
     const { error: uploadError } = await supabase.storage
       .from(SPOT_PHOTOS_BUCKET)
-      .upload(objectPath, buffer, {
-        contentType: detected,
+      .upload(objectPath, prepared.photo.bytes, {
+        contentType: prepared.photo.mime,
         upsert: false,
         cacheControl: "31536000",
       });

@@ -43,7 +43,7 @@ If the work touches routing, rendered text, photos, or metadata, check:
 | `/guides/north-golan-sunset` | yes | unique title + description, canonical `/guides/north-golan-sunset`, `h1`, `guideArticleJsonLd` (Article, FAQPage, Place ItemList, BreadcrumbList to `/regions/haifa-north`). ISR `revalidate` 600. File-based OG and Twitter image. There is no `/regions/golan` page |
 | `/llms.txt` | text file | `text/plain; charset=utf-8`. Allowed in `robots.ts` for `*` and AI crawlers. Lists public pages and published spots. No fixed spot count. Not an HTML page, so no title or canonical |
 | `/spots/[id]` | yes | `generateMetadata` via `spotPageTitle` / `spotPageDescription`, canonical `/spots/{id}`, `spotJsonLd` |
-| login, new, mine, edit, auth, api | no | `noIndexRobots`; listed in `robots.ts` `disallow` |
+| login, new, mine, edit, admin, auth, api | no | `noIndexRobots`; listed in `robots.ts` `disallow`. `/admin/suggestions` is the suggestion queue |
 
 ## Verify
 

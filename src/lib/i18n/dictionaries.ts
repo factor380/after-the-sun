@@ -20,6 +20,30 @@ type Dict = {
   shareSpotTitle: string;
   shareSpotSubtitle: string;
   shareSpotSignInNote: string;
+  pickOnMapHint: string;
+  useMyLocation: string;
+  locatingMyPosition: string;
+  locationReady: string;
+  suggestionThanksTitle: string;
+  suggestionThanksBody: string;
+  suggestionCreditNote: string;
+  contributorNameLabel: string;
+  addedByPrefix: string;
+  moreDetails: string;
+  suggestSubmit: string;
+  submitNotice: string;
+  signedInCredit: string;
+  signedInCreditNoName: string;
+  photoSignedOutNote: string;
+  photoSkipped: string;
+  adminSuggestionsTitle: string;
+  adminSuggestionsDescription: string;
+  adminSuggestionsSubtitle: string;
+  adminSuggestionsEmpty: string;
+  adminApprove: string;
+  adminReject: string;
+  adminForbidden: string;
+  adminNoName: string;
   draftSignInHint: string;
   draftRestored: string;
   draftPhotosMissing: string;
@@ -202,9 +226,33 @@ export const dictionary: Dict = {
   setupNeeded:
     "חברו את Supabase ב־.env (ראו .env.example), ואז הריצו npx prisma db push ו־npm run db:seed.",
   shareSpotTitle: "שיתוף נקודת שקיעה",
-  shareSpotSubtitle: "תנו שם, תארו את האווירה, וסמנו על המפה.",
+  shareSpotSubtitle: "שם ומיקום מספיקים. תמונה וכל השאר אפשר להשלים אחר כך.",
   shareSpotSignInNote:
-    "אפשר למלא את הטופס עכשיו. ההתחברות עם Google נדרשת רק בשליחה.",
+    "אפשר לשלוח בלי חשבון. ההצעה תפורסם רק אחרי אישור.",
+  pickOnMapHint: "או סמנו נקודה על המפה",
+  useMyLocation: "השתמשו במיקום שלי",
+  locatingMyPosition: "מאתרים את המיקום…",
+  locationReady: "המיקום נקבע",
+  suggestionThanksTitle: "ההצעה נשלחה",
+  suggestionThanksBody: "תודה. הנקודה לא מופיעה במפה עד שנאשר אותה.",
+  suggestionCreditNote: "התחברות עם Google מוסיפה את השם שלכם לנקודה.",
+  contributorNameLabel: "השם שלכם (אופציונלי)",
+  addedByPrefix: "נוספה על ידי",
+  moreDetails: "פרטים נוספים (אפשר להשלים אחר כך)",
+  suggestSubmit: "שליחת הצעה",
+  submitNotice: "בשליחה אתם מאשרים שזו נקודת שקיעה, ושמותר לפרסם את מה ששיתפתם.",
+  signedInCredit: "הנקודה תפורסם בשם",
+  signedInCreditNoName: "התחברתם. אם לחשבון Google יש שם, הוא יופיע על הנקודה.",
+  photoSignedOutNote: "אפשר לצרף תמונה גם בלי חשבון. אם האחסון לא מוגדר, ההצעה תישלח בלי תמונה.",
+  photoSkipped: "ההצעה נשלחה בלי תמונה.",
+  adminSuggestionsTitle: "הצעות ממתינות",
+  adminSuggestionsDescription: "תור האישור של הצעות נקודות שקיעה. העמוד לא ציבורי.",
+  adminSuggestionsSubtitle: "אישור מציג את הנקודה במפה. דחייה משאירה אותה מוסתרת.",
+  adminSuggestionsEmpty: "אין הצעות שממתינות לאישור.",
+  adminApprove: "אישור",
+  adminReject: "דחייה",
+  adminForbidden: "אין הרשאה לצפות בהצעות.",
+  adminNoName: "בלי שם",
   draftSignInHint: "בשליחה תתבקשו להתחבר עם Google. הטופס יישמר ותחזרו לכאן.",
   draftRestored: "הטופס שוחזר. אפשר לשלוח עכשיו.",
   draftPhotosMissing:
