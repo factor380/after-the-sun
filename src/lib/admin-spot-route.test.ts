@@ -138,8 +138,9 @@ describe("PATCH /api/admin/spots/[id]", () => {
 
   it("saves as an admin, revalidates public pages, and does not return emails", async () => {
     const cover = "https://cdn.example/old.jpg";
+    const kept = "https://cdn.example/kept.jpg";
     adminUpdateSpot.mockResolvedValue({
-      spot: { id: SPOT_ID, name: "חוף חדש", status: "approved" },
+      spot: { id: SPOT_ID, name: "חוף חדש", status: "approved", photoUrl: kept },
       removedPhotoUrls: [
         "https://e2e.supabase.co/storage/v1/object/public/spot-photos/admin/old.jpg",
         cover,
@@ -149,8 +150,13 @@ describe("PATCH /api/admin/spots/[id]", () => {
     const response = await patch(validBody);
     const body = await response.json();
     expect(response.status).toBe(200);
-    expect(body).toEqual({ id: SPOT_ID, name: "חוף חדש", status: "approved" });
-    expect(Object.keys(body)).toEqual(["id", "name", "status"]);
+    expect(body).toEqual({
+      id: SPOT_ID,
+      name: "חוף חדש",
+      status: "approved",
+      photoUrl: kept,
+    });
+    expect(Object.keys(body)).toEqual(["id", "name", "status", "photoUrl"]);
     expect(JSON.stringify(body)).not.toContain(ADMIN_EMAIL);
     expect(adminUpdateSpot).toHaveBeenCalledWith(
       SPOT_ID,

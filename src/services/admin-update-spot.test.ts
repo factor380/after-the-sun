@@ -68,7 +68,12 @@ describe("adminUpdateSpot", () => {
     expect(result?.spot.status).toBe("rejected");
     expect(findUnique).toHaveBeenCalledWith({
       where: { id: "spot-1" },
-      include: { photos: { select: { id: true, url: true } } },
+      include: {
+        photos: {
+          orderBy: { createdAt: "asc" },
+          select: { id: true, url: true },
+        },
+      },
     });
     expect(deleteMany).not.toHaveBeenCalled();
     const data = update.mock.calls[0]?.[0].data;
@@ -138,6 +143,106 @@ describe("adminUpdateSpot", () => {
       "https://cdn.example/cover.jpg",
     ]);
     expect(update.mock.calls[0]?.[0].data.photoUrl).toBeNull();
+  });
+
+  it("replaces a cover whose gallery file is deleted with the oldest photo that remains", async () => {
+    const cover = "https://cdn.example/cover.jpg";
+    const older = "https://cdn.example/older.jpg";
+    const newer = "https://cdn.example/newer.jpg";
+    findUnique.mockResolvedValue({
+      id: "spot-1",
+      photoUrl: cover,
+      photos: [
+        { id: "older", url: older },
+        { id: "cover", url: cover },
+        { id: "newer", url: newer },
+      ],
+    });
+
+    const result = await adminUpdateSpot(
+      "spot-1",
+      parsed({ photoUrl: cover, removePhotoIds: ["cover", "cover"] }),
+    );
+
+    expect(deleteMany).toHaveBeenCalledWith({
+      where: { spotId: "spot-1", id: { in: ["cover"] } },
+    });
+    expect(update.mock.calls[0]?.[0].data.photoUrl).toBe(older);
+    expect(result?.removedPhotoUrls).toEqual([cover]);
+  });
+
+  it("clears the cover when its gallery file is the last photo", async () => {
+    const cover = "https://cdn.example/cover.jpg";
+    findUnique.mockResolvedValue({
+      id: "spot-1",
+      photoUrl: cover,
+      photos: [{ id: "cover", url: cover }],
+    });
+
+    const result = await adminUpdateSpot(
+      "spot-1",
+      parsed({ photoUrl: cover, removePhotoIds: ["cover"] }),
+    );
+
+    expect(update.mock.calls[0]?.[0].data.photoUrl).toBeNull();
+    expect(result?.removedPhotoUrls).toEqual([cover]);
+  });
+
+  it("keeps a newly chosen cover while deleting the previous cover file", async () => {
+    const oldCover = "https://cdn.example/old.jpg";
+    const fresh = "https://cdn.example/fresh.jpg";
+    findUnique.mockResolvedValue({
+      id: "spot-1",
+      photoUrl: oldCover,
+      photos: [{ id: "old", url: oldCover }],
+    });
+
+    const result = await adminUpdateSpot(
+      "spot-1",
+      parsed({ photoUrl: fresh, removePhotoIds: ["old"] }),
+    );
+
+    expect(update.mock.calls[0]?.[0].data.photoUrl).toBe(fresh);
+    expect(result?.removedPhotoUrls).toEqual([oldCover]);
+  });
+
+  it("does not keep a cover that is set to a gallery photo being deleted", async () => {
+    const doomed = "https://cdn.example/doomed.jpg";
+    const keep = "https://cdn.example/keep.jpg";
+    const standalone = "https://cdn.example/standalone.jpg";
+    findUnique.mockResolvedValue({
+      id: "spot-1",
+      photoUrl: standalone,
+      photos: [
+        { id: "doomed", url: doomed },
+        { id: "keep", url: keep },
+      ],
+    });
+
+    const result = await adminUpdateSpot(
+      "spot-1",
+      parsed({ photoUrl: doomed, removePhotoIds: ["doomed"] }),
+    );
+
+    expect(update.mock.calls[0]?.[0].data.photoUrl).toBe(keep);
+    expect(result?.removedPhotoUrls).toEqual([doomed, standalone]);
+  });
+
+  it("clears a cover set to the only photo being deleted", async () => {
+    const doomed = "https://cdn.example/doomed.jpg";
+    findUnique.mockResolvedValue({
+      id: "spot-1",
+      photoUrl: doomed,
+      photos: [{ id: "doomed", url: doomed }],
+    });
+
+    const result = await adminUpdateSpot(
+      "spot-1",
+      parsed({ photoUrl: doomed, removePhotoIds: ["doomed"] }),
+    );
+
+    expect(update.mock.calls[0]?.[0].data.photoUrl).toBeNull();
+    expect(result?.removedPhotoUrls).toEqual([doomed]);
   });
 
   it("keeps a cover that did not change", async () => {

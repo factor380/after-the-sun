@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import LocationPickerClient from "@/components/map/LocationPickerClient";
 import SpotAmenityFields from "@/components/spots/SpotAmenityFields";
+import { resolveAdminSpotCover } from "@/lib/admin-cover";
 import {
   compressSpotPhoto,
   SpotPhotoTooLargeError,
@@ -79,6 +80,7 @@ export default function AdminSpotForm({ initial }: { initial: AdminSpotFormIniti
   const router = useRouter();
   const { t } = useLocale();
   const photoInputId = useId();
+  const coverNoteId = useId();
   const statusId = useId();
   const [name, setName] = useState(initial.name);
   const [description, setDescription] = useState(initial.description);
@@ -133,6 +135,18 @@ export default function AdminSpotForm({ initial }: { initial: AdminSpotFormIniti
   const isLocationConfirmed =
     hasDraftLocation && draftLat === confirmedLat && draftLng === confirmedLng;
   const currentCover = photoUrl.trim();
+  const requestedCover = removeCover || coverFile ? null : currentCover || null;
+  const coverResolution = resolveAdminSpotCover({
+    requestedPhotoUrl: requestedCover,
+    existingPhotoUrl: initial.photoUrl,
+    photos,
+    removePhotoIds,
+  });
+  const coverReplacedByDeletion =
+    requestedCover !== null && coverResolution.photoUrl !== requestedCover;
+  const effectiveCover = coverReplacedByDeletion
+    ? (coverResolution.photoUrl ?? "")
+    : currentCover;
 
   function clientError(): string | null {
     const trimmedName = name.trim();
@@ -208,6 +222,12 @@ export default function AdminSpotForm({ initial }: { initial: AdminSpotFormIniti
       if (!removeCover && coverFile) {
         nextPhoto = await uploadCover(coverFile);
       }
+      nextPhoto = resolveAdminSpotCover({
+        requestedPhotoUrl: nextPhoto,
+        existingPhotoUrl: initial.photoUrl,
+        photos,
+        removePhotoIds,
+      }).photoUrl;
 
       const res = await fetchWithNetworkRetry(`/api/admin/spots/${initial.id}`, {
         method: "PATCH",
@@ -246,8 +266,10 @@ export default function AdminSpotForm({ initial }: { initial: AdminSpotFormIniti
       setRemoveCover(false);
       setPhotos((current) => current.filter((photo) => !removePhotoIds.includes(photo.id)));
       setRemovePhotoIds([]);
-      if (typeof nextPhoto === "string") setPhotoUrl(nextPhoto);
-      if (nextPhoto === null) setPhotoUrl("");
+      const savedPhoto = responseField(data, "photoUrl");
+      const shownPhoto =
+        savedPhoto === null || typeof savedPhoto === "string" ? savedPhoto : nextPhoto;
+      setPhotoUrl(typeof shownPhoto === "string" ? shownPhoto : "");
       router.refresh();
     } catch (err) {
       setError(submitErrorText(err, t, "saveFailed"));
@@ -357,15 +379,23 @@ export default function AdminSpotForm({ initial }: { initial: AdminSpotFormIniti
         </select>
       </div>
 
-      <fieldset className="space-y-3">
+      <fieldset
+        className="space-y-3"
+        aria-describedby={coverReplacedByDeletion ? coverNoteId : undefined}
+      >
         <legend className="mb-1 text-sm text-[var(--sand-muted)]">{t("photoOptional")}</legend>
-        {!removeCover && !coverPreview && currentCover.startsWith("https://") ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={currentCover} alt="" className="max-h-48 w-full object-cover" />
-        ) : null}
-        {coverPreview && !removeCover ? (
+        {!removeCover && coverPreview ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={coverPreview} alt="" className="max-h-48 w-full object-cover" />
+        ) : null}
+        {!removeCover && !coverPreview && effectiveCover.startsWith("https://") ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={effectiveCover} alt="" className="max-h-48 w-full object-cover" />
+        ) : null}
+        {coverReplacedByDeletion ? (
+          <p id={coverNoteId} className="text-sm text-[var(--sand-muted)]" role="status">
+            {coverResolution.photoUrl ? t("adminCoverMoved") : t("adminCoverRemoved")}
+          </p>
         ) : null}
         {currentCover || coverFile ? (
           <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--sand)]">
@@ -407,7 +437,7 @@ export default function AdminSpotForm({ initial }: { initial: AdminSpotFormIniti
             id="admin-spot-photo-url"
             type="url"
             dir="ltr"
-            value={photoUrl}
+            value={coverReplacedByDeletion ? effectiveCover : photoUrl}
             disabled={removeCover || Boolean(coverFile)}
             onChange={(event) => setPhotoUrl(event.target.value)}
             className="w-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-start text-sm text-[var(--sand)] outline-none focus:border-[var(--ember)] disabled:opacity-40"

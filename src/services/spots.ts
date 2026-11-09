@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { resolveAdminSpotCover } from "@/lib/admin-cover";
 import { cleanContributorName } from "@/lib/contributor-name";
 import { prisma } from "@/lib/prisma";
 import {
@@ -354,33 +355,29 @@ export async function updateSpot(
 export async function adminUpdateSpot(id: string, input: AdminUpdateSpotInput) {
   const existing = await prisma.spot.findUnique({
     where: { id },
-    include: { photos: { select: { id: true, url: true } } },
+    include: {
+      photos: {
+        orderBy: { createdAt: "asc" },
+        select: { id: true, url: true },
+      },
+    },
   });
   if (!existing) return null;
 
   assertIsraelCoordinates(input.lat, input.lng);
 
   const removeIds = [...new Set(input.removePhotoIds ?? [])];
-  const known = new Map(existing.photos.map((photo) => [photo.id, photo.url]));
+  const known = new Set(existing.photos.map((photo) => photo.id));
   if (removeIds.some((photoId) => !known.has(photoId))) {
     throw new Error("UNKNOWN_PHOTO");
   }
 
-  const nextPhotoUrl = input.photoUrl ?? null;
-  const remainingGallery = existing.photos
-    .filter((photo) => !removeIds.includes(photo.id))
-    .map((photo) => photo.url);
-  const removedPhotoUrls = [
-    ...removeIds.map((photoId) => known.get(photoId) ?? ""),
-  ].filter((url) => url.length > 0);
-  if (
-    existing.photoUrl &&
-    existing.photoUrl !== nextPhotoUrl &&
-    !remainingGallery.includes(existing.photoUrl) &&
-    !removedPhotoUrls.includes(existing.photoUrl)
-  ) {
-    removedPhotoUrls.push(existing.photoUrl);
-  }
+  const { photoUrl: nextPhotoUrl, removedPhotoUrls } = resolveAdminSpotCover({
+    requestedPhotoUrl: input.photoUrl ?? null,
+    existingPhotoUrl: existing.photoUrl,
+    photos: existing.photos,
+    removePhotoIds: removeIds,
+  });
 
   const spot = await prisma.$transaction(async (tx) => {
     if (removeIds.length > 0) {

@@ -82,6 +82,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       id: result.spot.id,
       name: result.spot.name,
       status: result.spot.status,
+      photoUrl: result.spot.photoUrl ?? null,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";

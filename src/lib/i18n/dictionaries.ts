@@ -78,6 +78,8 @@ type Dict = {
   adminRemoveGalleryPhoto: string;
   adminSavedHidden: string;
   adminCoverUrlLabel: string;
+  adminCoverMoved: string;
+  adminCoverRemoved: string;
   adminNewCoverLabel: string;
   adminBackToSuggestions: string;
   draftSignInHint: string;
@@ -325,6 +327,8 @@ export const dictionary: Dict = {
   adminRemoveGalleryPhoto: "הסרת תמונה",
   adminSavedHidden: "השינויים נשמרו. הנקודה לא מופיעה במפה בסטטוס הזה.",
   adminCoverUrlLabel: "כתובת תמונת שער (https, אופציונלי)",
+  adminCoverMoved: "תמונת השער מסומנת להסרה. במקומה תוצג התמונה הראשונה שנשארת.",
+  adminCoverRemoved: "תמונת השער מסומנת להסרה, ולא נשארת תמונה אחרת.",
   adminNewCoverLabel: "החלפת תמונת השער",
   adminBackToSuggestions: "הצעות ממתינות",
   draftSignInHint: "בשליחה תתבקשו להתחבר עם Google. הטופס יישמר ותחזרו לכאן.",
