@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildNewSpotDraftFields, parseNewSpotDraft } from "@/lib/new-spot-draft";
+import {
+  buildNewSpotDraftFields,
+  newSpotDraftHasVisibleContent,
+  newSpotDraftInputHasContent,
+  parseNewSpotDraft,
+} from "@/lib/new-spot-draft";
 
 const NOW = Date.parse("2026-10-18T12:00:00.000Z");
 
@@ -109,6 +114,65 @@ describe("parseNewSpotDraft", () => {
     expect(unknown?.name).toBe("חוף");
     expect(unknown?.parking).toBeNull();
     expect(unknown?.accessibility).toBeNull();
+  });
+
+  it("drops whitespace-only text and still remembers a missing photo", () => {
+    expect(
+      parseNewSpotDraft(
+        payload({
+          name: "   ",
+          description: " \n ",
+          region: " ",
+          lat: null,
+          lng: null,
+          confirmedLat: null,
+          confirmedLng: null,
+          photoUrl: "  ",
+          expectedPhotoCount: 0,
+          contributorName: "  ",
+          parkingNote: "   ",
+          accessibilityNote: " ",
+        }),
+        NOW,
+      ),
+    ).toBeNull();
+
+    const missingPhoto = parseNewSpotDraft(
+      payload({
+        name: " ",
+        description: "",
+        region: "",
+        lat: null,
+        lng: null,
+        confirmedLat: null,
+        confirmedLng: null,
+        photoUrl: "",
+        expectedPhotoCount: 1,
+        contributorName: " ",
+      }),
+      NOW,
+    );
+    expect(missingPhoto?.expectedPhotoCount).toBe(1);
+    expect(missingPhoto && newSpotDraftHasVisibleContent(missingPhoto)).toBe(false);
+    expect(
+      newSpotDraftInputHasContent({
+        name: "   ",
+        description: "",
+        region: "",
+        lat: null,
+        lng: null,
+        confirmedLat: null,
+        confirmedLng: null,
+        photoUrl: "",
+        acceptedGuidelines: false,
+        parking: null,
+        parkingNote: "",
+        accessibility: null,
+        accessibilityNote: "",
+        contributorName: " ",
+        photos: [],
+      }),
+    ).toBe(false);
   });
 
   it("drops stale, future, empty, and non-https values", () => {

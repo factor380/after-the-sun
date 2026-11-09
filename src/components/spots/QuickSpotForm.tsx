@@ -21,6 +21,8 @@ import { messageKeyForRequestFailure } from "@/lib/i18n/user-facing-error";
 import {
   clearNewSpotDraft,
   loadNewSpotDraft,
+  newSpotDraftHasVisibleContent,
+  newSpotDraftInputHasContent,
   saveNewSpotDraft,
   writeNewSpotDraftText,
   type SaveNewSpotDraftInput,
@@ -121,22 +123,29 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
       if (cancelled) return;
       if (restoredDraft && !touchedRef.current) {
         const { fields, photos } = restoredDraft;
-        setName(fields.name);
-        setDescription(fields.description);
-        setRegion(fields.region);
-        setLat(fields.lat ?? fields.confirmedLat);
-        setLng(fields.lng ?? fields.confirmedLng);
-        setParking(fields.parking);
-        setParkingNote(fields.parkingNote);
-        setAccessibility(fields.accessibility);
-        setAccessibilityNote(fields.accessibilityNote);
-        setContributorName(fields.contributorName);
-        const file = photos[0];
-        if (file) {
-          setReadyPhoto({ file, previewUrl: URL.createObjectURL(file) });
+        const visible = newSpotDraftHasVisibleContent(fields, photos.length);
+        if (visible) {
+          setName(fields.name);
+          setDescription(fields.description);
+          setRegion(fields.region);
+          setLat(fields.lat ?? fields.confirmedLat);
+          setLng(fields.lng ?? fields.confirmedLng);
+          setParking(fields.parking);
+          setParkingNote(fields.parkingNote);
+          setAccessibility(fields.accessibility);
+          setAccessibilityNote(fields.accessibilityNote);
+          setContributorName(fields.contributorName);
+          const file = photos[0];
+          if (file) {
+            setReadyPhoto({ file, previewUrl: URL.createObjectURL(file) });
+          }
+          setRestored(true);
+        } else if (!restoredDraft.photosMissing) {
+          void clearNewSpotDraft();
         }
-        setPhotosMissing(restoredDraft.photosMissing);
-        setRestored(true);
+        if (visible || restoredDraft.photosMissing) {
+          setPhotosMissing(restoredDraft.photosMissing);
+        }
       }
       draftReadyRef.current = true;
       if (!cancelled) setDraftReady(true);
@@ -147,7 +156,11 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
   }, []);
 
   useEffect(() => {
-    if (!draftReady) return;
+    if (!draftReady || !keepDraftRef.current || !draftRef.current) return;
+    if (!newSpotDraftInputHasContent(draftRef.current)) {
+      void clearNewSpotDraft();
+      return;
+    }
     const timer = window.setTimeout(() => {
       if (!keepDraftRef.current || !draftRef.current) return;
       void saveNewSpotDraft(draftRef.current);
@@ -241,6 +254,7 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
         file: compressed,
         previewUrl: URL.createObjectURL(compressed),
       });
+      setPhotosMissing(false);
     } catch (caught) {
       if (!mountedRef.current) return;
       setError(
@@ -375,7 +389,7 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
   const hasLocation = lat !== null && lng !== null;
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
+    <form onSubmit={onSubmit} className="space-y-5" data-draft-ready={draftReady ? "true" : "false"}>
       <div
         aria-hidden="true"
         className="absolute h-px w-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)]"
@@ -461,7 +475,7 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
             {t("photoLoading")}
           </p>
         ) : null}
-        {photosMissing ? (
+        {photosMissing && !photo ? (
           <p className="mt-2 text-sm text-[var(--ember)]">{t("draftPhotosMissing")}</p>
         ) : null}
         {photo ? (

@@ -120,21 +120,41 @@ function draftNote(value: unknown): string | null {
   return cleanAmenityNote(value).slice(0, AMENITY_NOTE_MAX);
 }
 
-function hasContent(fields: NewSpotDraftFields): boolean {
+function meaningfulText(value: string): boolean {
+  return value.trim().length > 0;
+}
+
+/**
+ * True when the draft will show the visitor something they entered.
+ * A remembered photo that failed to load is not visible content.
+ */
+export function newSpotDraftHasVisibleContent(
+  fields: NewSpotDraftFields,
+  photoCount = 0,
+): boolean {
   return Boolean(
-    fields.name ||
-      fields.description ||
-      fields.region ||
-      fields.photoUrl ||
+    meaningfulText(fields.name) ||
+      meaningfulText(fields.description) ||
+      meaningfulText(fields.region) ||
+      meaningfulText(fields.photoUrl) ||
       fields.lat !== null ||
       fields.lng !== null ||
-      fields.expectedPhotoCount > 0 ||
       fields.parking !== null ||
       fields.accessibility !== null ||
-      fields.parkingNote ||
-      fields.accessibilityNote ||
-      fields.contributorName,
+      meaningfulText(fields.parkingNote) ||
+      meaningfulText(fields.accessibilityNote) ||
+      meaningfulText(fields.contributorName) ||
+      photoCount > 0,
   );
+}
+
+function hasContent(fields: NewSpotDraftFields): boolean {
+  return newSpotDraftHasVisibleContent(fields) || fields.expectedPhotoCount > 0;
+}
+
+/** Same rule as a saved draft, including a photo that is still on the form. */
+export function newSpotDraftInputHasContent(input: SaveNewSpotDraftInput): boolean {
+  return hasContent(buildNewSpotDraftFields(input));
 }
 
 function contributorName(value: unknown): string {
