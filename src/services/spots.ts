@@ -1,10 +1,14 @@
 import { Prisma } from "@prisma/client";
+import { cleanContributorName } from "@/lib/contributor-name";
 import { prisma } from "@/lib/prisma";
 import {
   assertIsraelCoordinates,
   type CreateSpotInput,
+  type SuggestSpotInput,
   type UpdateSpotInput,
 } from "@/lib/validations/spot";
+
+const PUBLISHED_STATUS = "approved";
 
 export async function ensureProfile(userId: string, displayName?: string | null) {
   return prisma.profile.upsert({
@@ -33,22 +37,33 @@ export async function listSpots(query?: string) {
   const q = query?.trim().slice(0, MAX_SEARCH_QUERY_LENGTH) || undefined;
 
   return prisma.spot.findMany({
-    where: q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { region: { contains: q, mode: "insensitive" } },
-            { description: { contains: q, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
+    where: {
+      status: PUBLISHED_STATUS,
+      ...(q
+        ? {
+            OR: [
+              { name: { contains: q, mode: "insensitive" } },
+              { region: { contains: q, mode: "insensitive" } },
+              { description: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
     orderBy: { createdAt: "desc" },
     include: COVER_PHOTO_SELECTION,
   });
 }
 
 export async function countSpots() {
-  return prisma.spot.count();
+  return prisma.spot.count({ where: { status: PUBLISHED_STATUS } });
+}
+
+export async function listPendingSuggestions() {
+  return prisma.spot.findMany({
+    where: { status: "pending" },
+    orderBy: { createdAt: "asc" },
+    include: COVER_PHOTO_SELECTION,
+  });
 }
 
 export async function listSpotsByUser(userId: string) {
@@ -65,7 +80,7 @@ export async function getSpotById(id: string) {
 
 /** Spot plus its full community gallery, for the detail page. */
 export async function getSpotWithPhotos(id: string) {
-  return prisma.spot.findUnique({
+  const spot = await prisma.spot.findUnique({
     where: { id },
     include: {
       photos: {
@@ -74,6 +89,8 @@ export async function getSpotWithPhotos(id: string) {
       },
     },
   });
+  if (!spot || spot.status !== PUBLISHED_STATUS) return null;
+  return spot;
 }
 
 const CREATED_SPOT_INCLUDE = {
@@ -120,10 +137,13 @@ export type CreateSpotResult =
 export async function createSpot(
   userId: string,
   input: CreateSpotInput,
-  options?: { consumeRateLimit?: () => boolean },
+  options?: { consumeRateLimit?: () => boolean; displayName?: string | null },
 ): Promise<CreateSpotResult> {
   assertIsraelCoordinates(input.lat, input.lng);
-  await ensureProfile(userId);
+  const profile = await ensureProfile(userId, options?.displayName);
+  const contributorName = cleanContributorName(
+    options?.displayName ?? profile.displayName,
+  );
 
   if (input.clientRequestId) {
     const existing = await findSpotByClientRequestId(userId, input.clientRequestId);
@@ -147,7 +167,7 @@ export async function createSpot(
     const spot = await prisma.spot.create({
       data: {
         name: input.name,
-        description: input.description,
+        description: input.description?.trim() ?? "",
         lat: input.lat,
         lng: input.lng,
         region: input.region ?? null,
@@ -157,6 +177,8 @@ export async function createSpot(
         accessibility: input.accessibility ?? null,
         accessibilityNote: input.accessibilityNote ?? null,
         createdById: userId,
+        status: PUBLISHED_STATUS,
+        contributorName,
         clientRequestId: input.clientRequestId ?? null,
         ...(extraPhotoUrls.length > 0
           ? {
@@ -184,6 +206,78 @@ export async function createSpot(
   }
 }
 
+async function findAnonymousSuggestion(clientRequestId: string) {
+  return prisma.spot.findFirst({
+    where: { createdById: null, clientRequestId },
+    include: CREATED_SPOT_INCLUDE,
+  });
+}
+
+/**
+ * Store a suggestion that is not public until an admin approves it.
+ * There is no account, so the row has no owner and cannot be edited.
+ */
+export async function createSuggestion(
+  input: SuggestSpotInput,
+  options?: { consumeRateLimit?: () => boolean },
+): Promise<CreateSpotResult> {
+  assertIsraelCoordinates(input.lat, input.lng);
+
+  if (input.clientRequestId) {
+    const existing = await findAnonymousSuggestion(input.clientRequestId);
+    if (existing) return { ok: true, created: false, spot: existing };
+  }
+
+  if (options?.consumeRateLimit && !options.consumeRateLimit()) {
+    if (input.clientRequestId) {
+      const existing = await findAnonymousSuggestion(input.clientRequestId);
+      if (existing) return { ok: true, created: false, spot: existing };
+    }
+    return { ok: false, reason: "rate_limited" };
+  }
+
+  try {
+    const spot = await prisma.spot.create({
+      data: {
+        name: input.name,
+        description: input.description?.trim() ?? "",
+        lat: input.lat,
+        lng: input.lng,
+        region: input.region?.trim() ? input.region.trim() : null,
+        photoUrl: input.photoUrl ?? null,
+        parking: input.parking ?? null,
+        parkingNote: input.parkingNote ?? null,
+        accessibility: input.accessibility ?? null,
+        accessibilityNote: input.accessibilityNote ?? null,
+        createdById: null,
+        status: "pending",
+        contributorName: cleanContributorName(input.contributorName),
+        clientRequestId: input.clientRequestId ?? null,
+      },
+      include: CREATED_SPOT_INCLUDE,
+    });
+    return { ok: true, created: true, spot };
+  } catch (error) {
+    if (input.clientRequestId && isUniqueViolation(error)) {
+      const existing = await findAnonymousSuggestion(input.clientRequestId);
+      if (existing) return { ok: true, created: false, spot: existing };
+    }
+    throw error;
+  }
+}
+
+export async function moderateSuggestion(
+  id: string,
+  status: "approved" | "rejected",
+) {
+  const updated = await prisma.spot.updateMany({
+    where: { id, status: "pending" },
+    data: { status },
+  });
+  if (updated.count !== 1) return null;
+  return prisma.spot.findUnique({ where: { id } });
+}
+
 export async function updateSpot(
   id: string,
   userId: string,
@@ -192,6 +286,7 @@ export async function updateSpot(
   const existing = await prisma.spot.findUnique({ where: { id } });
   if (!existing) return null;
   if (existing.createdById !== userId) {
+    if (existing.status !== "approved") return null;
     throw new Error("FORBIDDEN");
   }
 
@@ -228,6 +323,7 @@ export async function deleteSpot(id: string, userId: string) {
   const existing = await prisma.spot.findUnique({ where: { id } });
   if (!existing) return null;
   if (existing.createdById !== userId) {
+    if (existing.status !== "approved") return null;
     throw new Error("FORBIDDEN");
   }
 

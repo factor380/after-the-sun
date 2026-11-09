@@ -29,8 +29,8 @@ export async function listSpotPhotos(spotId: string) {
 
 /** Any signed-in user may contribute a photo to an existing spot. */
 export async function addSpotPhoto(spotId: string, userId: string, url: string) {
-  const spot = await prisma.spot.findUnique({
-    where: { id: spotId },
+  const spot = await prisma.spot.findFirst({
+    where: { id: spotId, status: "approved" },
     select: { id: true },
   });
   if (!spot) throw new SpotPhotoError("NOT_FOUND");

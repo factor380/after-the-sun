@@ -13,7 +13,7 @@ export const revalidate = 600;
 const CONTENT_TYPE = "text/plain; charset=utf-8";
 
 /**
- * Published spots are every row `listSpots()` returns. There is no draft flag.
+ * Published spots are the approved rows `listSpots()` returns. Pending suggestions are omitted.
  * Import the service lazily so a missing database at build time stays inside
  * the try/catch and the file can still be served from the static page list.
  */

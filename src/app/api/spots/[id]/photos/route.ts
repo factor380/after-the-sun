@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { addSpotPhotoSchema } from "@/lib/validations/spot-photo";
 import { revalidatePublishedSpots } from "@/lib/revalidate-public";
 import { addSpotPhoto, listSpotPhotos, SpotPhotoError } from "@/services/spot-photos";
+import { getSpotById } from "@/services/spots";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -23,6 +24,10 @@ const ERROR_STATUS: Record<SpotPhotoError["code"], number> = {
 export async function GET(_request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
+    const spot = await getSpotById(id);
+    if (!spot || spot.status !== "approved") {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     const photos = await listSpotPhotos(id);
     return NextResponse.json(photos.map(toPublicSpotPhoto));
   } catch (error) {

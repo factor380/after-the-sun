@@ -21,6 +21,12 @@ export const E2E_TEST_USER_COOKIE = "ats-e2e-user";
 /** Fixed user. Callers cannot choose an id. */
 export const E2E_TEST_USER_ID = "00000000-0000-4000-8000-0000000000e2";
 
+/** Separate from the contributor, so approval is not the same account. */
+export const E2E_TEST_ADMIN_HEADER = "x-ats-e2e-admin";
+export const E2E_TEST_ADMIN_COOKIE = "ats-e2e-admin";
+export const E2E_ADMIN_USER_ID = "00000000-0000-4000-8000-0000000000ad";
+export const E2E_ADMIN_EMAIL = "owner@e2e.after-the-sun.test";
+
 const PRODUCTION_HOSTS = new Set([
   "after-the-sun.com",
   "www.after-the-sun.com",

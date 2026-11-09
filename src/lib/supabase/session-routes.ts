@@ -4,7 +4,7 @@
  * and the CDN can cache the shared HTML.
  */
 const SESSION_ROUTE =
-  /^\/(?:login|auth|api)(?:\/|$)|^\/spots\/(?:new|mine)(?:\/|$)|^\/spots\/[^/]+\/edit(?:\/|$)/;
+  /^\/(?:login|auth|api|admin)(?:\/|$)|^\/spots\/(?:new|mine)(?:\/|$)|^\/spots\/[^/]+\/edit(?:\/|$)/;
 
 export function routeRefreshesAuthSession(pathname: string): boolean {
   return SESSION_ROUTE.test(pathname);

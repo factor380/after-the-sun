@@ -20,7 +20,7 @@ type SpotRecord = {
   lng: number;
   region: string | null;
   photoUrl: string | null;
-  createdById: string;
+  createdById: string | null;
   createdAt: Date;
   /** Absent on records loaded before these columns existed. */
   parking?: string | null;

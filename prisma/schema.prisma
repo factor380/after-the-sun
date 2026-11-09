@@ -31,10 +31,15 @@ model Spot {
   /// yes | partial | no. Null when the contributor skipped the question.
   accessibility       String?
   accessibilityNote   String?  @map("accessibility_note")
-  createdById     String   @db.Uuid
+  /// Null for a suggestion sent without an account. Editing stays owner-only.
+  createdById     String?  @db.Uuid
+  /// pending | approved | rejected. Existing rows default to approved.
+  status          String   @default("approved")
+  /// Public credit. Google display name, or the optional name on a suggestion.
+  contributorName String?
   /// One create-submit attempt. Null on spots saved before idempotency keys.
   clientRequestId String?  @map("client_request_id")
-  createdBy       Profile  @relation(fields: [createdById], references: [id])
+  createdBy       Profile? @relation(fields: [createdById], references: [id])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   reports         SpotReport[]
@@ -43,6 +48,7 @@ model Spot {
   @@unique([createdById, clientRequestId])
   @@index([lat, lng])
   @@index([region])
+  @@index([status, createdAt])
 }
 
 /** Community photos contributed to an existing spot by any signed-in user. */

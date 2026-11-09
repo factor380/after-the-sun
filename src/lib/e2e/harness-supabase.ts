@@ -3,6 +3,10 @@ import path from "node:path";
 import { cookies, headers } from "next/headers";
 import { SPOT_PHOTOS_BUCKET } from "@/lib/spot-photo";
 import {
+  E2E_ADMIN_EMAIL,
+  E2E_ADMIN_USER_ID,
+  E2E_TEST_ADMIN_COOKIE,
+  E2E_TEST_ADMIN_HEADER,
   E2E_TEST_USER_COOKIE,
   E2E_TEST_USER_HEADER,
   E2E_TEST_USER_ID,
@@ -12,7 +16,8 @@ import {
 import type { ServerSupabase } from "@/lib/e2e/server-supabase";
 import { e2eUploadRoot, resolveE2EUploadPath } from "@/lib/e2e/upload-path";
 
-type HarnessRequest = { presented: boolean } | null;
+type HarnessRole = "admin" | "user" | "anon";
+type HarnessRequest = { role: HarnessRole } | null;
 
 async function readHarnessRequest(): Promise<HarnessRequest> {
   try {
@@ -20,10 +25,14 @@ async function readHarnessRequest(): Promise<HarnessRequest> {
     const hostname = hostnameFromHostHeader(headerStore.get("host"));
     if (!isE2ETestHarnessEnabled(hostname)) return null;
     const cookieStore = await cookies();
-    const presented =
+    const admin =
+      headerStore.get(E2E_TEST_ADMIN_HEADER) === "1" ||
+      cookieStore.get(E2E_TEST_ADMIN_COOKIE)?.value === "1";
+    if (admin) return { role: "admin" };
+    const user =
       headerStore.get(E2E_TEST_USER_HEADER) === "1" ||
       cookieStore.get(E2E_TEST_USER_COOKIE)?.value === "1";
-    return { presented };
+    return { role: user ? "user" : "anon" };
   } catch {
     return null;
   }
@@ -40,7 +49,19 @@ export function createHarnessSupabase(): ServerSupabase {
     auth: {
       async getUser() {
         const request = await readHarnessRequest();
-        if (!request?.presented) {
+        if (request?.role === "admin") {
+          return {
+            data: {
+              user: {
+                id: E2E_ADMIN_USER_ID,
+                email: E2E_ADMIN_EMAIL,
+                user_metadata: { full_name: "בעל האתר" },
+              },
+            },
+            error: null,
+          };
+        }
+        if (request?.role !== "user") {
           return { data: { user: null }, error: null };
         }
         return { data: { user: { id: E2E_TEST_USER_ID } }, error: null };
@@ -57,7 +78,7 @@ export function createHarnessSupabase(): ServerSupabase {
         return {
           async upload(objectPath, body) {
             const request = await readHarnessRequest();
-            if (!request?.presented) {
+            if (!request || request.role === "anon") {
               return { error: { message: "Test storage is disabled" } };
             }
             if (bucket !== SPOT_PHOTOS_BUCKET) {
@@ -71,7 +92,7 @@ export function createHarnessSupabase(): ServerSupabase {
           },
           async remove(paths) {
             const request = await readHarnessRequest();
-            if (!request?.presented) {
+            if (!request || request.role === "anon") {
               return { error: { message: "Test storage is disabled" } };
             }
             for (const objectPath of paths) {

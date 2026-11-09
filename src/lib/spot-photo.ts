@@ -45,6 +45,18 @@ export function isSpotPhotoStorageUrl(value: string): boolean {
   );
 }
 
+/**
+ * Cover photo on an anonymous suggestion. Only objects this server uploaded
+ * under `suggestions/`, never another visitor's folder or an arbitrary URL.
+ */
+export function isSuggestionPhotoUrl(value: string): boolean {
+  const objectPath = spotPhotoObjectPath(value);
+  if (!objectPath || objectPath.includes("..")) return false;
+  if (!objectPath.startsWith("suggestions/")) return false;
+  const rest = objectPath.slice("suggestions/".length);
+  return rest.length > 0 && !rest.includes("/");
+}
+
 /** Object path inside the bucket, for cleanup after a photo is removed. */
 export function spotPhotoObjectPath(value: string): string | null {
   if (!isSpotPhotoStorageUrl(value)) return null;

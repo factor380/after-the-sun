@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import SpotForm from "@/components/spots/SpotForm";
+import QuickSpotForm from "@/components/spots/QuickSpotForm";
 import { T } from "@/components/T";
 import { dictionary } from "@/lib/i18n/dictionaries";
+import { profileDisplayName } from "@/lib/profile-name";
 import { noIndexRobots } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
   robots: noIndexRobots,
 };
 
-/** Per-user draft. Never cache. */
+/** The form depends on the session. Never cache. */
 export const dynamic = "force-dynamic";
 
 function isSupabaseConfigured() {
@@ -35,31 +36,34 @@ export default async function NewSpotPage() {
     );
   }
 
-  let user: { id: string } | null = null;
+  let signedIn = false;
+  let displayName: string | null = null;
   try {
     const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
-    user = data.user;
+    if (data.user) {
+      signedIn = true;
+      displayName = profileDisplayName(data.user.user_metadata);
+    }
   } catch {
-    // A failed session check stays signed out. The create API still requires a user.
-    user = null;
+    signedIn = false;
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-5 py-10">
+    <div className="mx-auto w-full max-w-xl px-5 py-8">
       <h1 className="font-[family-name:var(--font-display)] text-4xl text-[var(--sand)]">
         <T k="shareSpotTitle" />
       </h1>
       <p className="mt-2 text-[var(--sand-muted)]">
         <T k="shareSpotSubtitle" />
       </p>
-      {user ? null : (
+      {signedIn ? null : (
         <p className="mt-3 text-sm leading-relaxed text-[var(--sand-muted)]">
           <T k="shareSpotSignInNote" />
         </p>
       )}
-      <div className="mt-8">
-        <SpotForm signedIn={Boolean(user)} />
+      <div className="mt-6">
+        <QuickSpotForm signedIn={signedIn} displayName={displayName} />
       </div>
     </div>
   );

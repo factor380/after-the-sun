@@ -16,7 +16,7 @@ export type GalleryPhoto = {
 type SpotGalleryProps = {
   spotId: string;
   spotName: string;
-  createdById: string;
+  createdById: string | null;
   photos: GalleryPhoto[];
 };
 

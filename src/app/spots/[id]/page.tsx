@@ -12,6 +12,7 @@ import SpotGallery, {
 } from "@/components/spots/SpotGallery";
 import JsonLd from "@/components/seo/JsonLd";
 import { T } from "@/components/T";
+import { dictionary } from "@/lib/i18n/dictionaries";
 import { sunsetTime } from "@/lib/geo/sunset";
 import { allowStaticDataFallback } from "@/lib/static-data-fallback";
 import { matchingRegion, regionPath } from "@/lib/regions";
@@ -131,6 +132,11 @@ export default async function SpotDetailPage({ params }: PageProps) {
           />
         </h1>
         {spot.region ? <SpotRegionLabel region={spot.region} /> : null}
+        {spot.contributorName ? (
+          <p className="mt-2 text-sm text-[var(--sand-muted)]">
+            {`${dictionary.addedByPrefix} ${spot.contributorName}`}
+          </p>
+        ) : null}
         {sunset ? (
           <p className="mt-3 text-sm text-[var(--sand-muted)]">
             <T k="sunsetToday" />{" "}
@@ -140,9 +146,11 @@ export default async function SpotDetailPage({ params }: PageProps) {
           </p>
         ) : null}
 
-        <p className="mt-6 text-lg leading-relaxed text-[var(--sand-muted)]">
-          {spot.description}
-        </p>
+        {spot.description.trim() ? (
+          <p className="mt-6 text-lg leading-relaxed text-[var(--sand-muted)]">
+            {spot.description}
+          </p>
+        ) : null}
         <SpotAmenityNotes spot={spot} />
 
         <SpotLocationMapClient lat={spot.lat} lng={spot.lng} name={spot.name} />

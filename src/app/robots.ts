@@ -7,6 +7,7 @@ const PRIVATE_PATHS = [
   "/spots/new",
   "/spots/mine",
   "/spots/*/edit",
+  "/admin",
   "/api/",
 ];
 
