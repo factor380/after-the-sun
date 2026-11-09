@@ -15,6 +15,8 @@ export default function SiteHeader() {
   const configured = isSupabaseConfigured();
   const [email, setEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(!configured);
+  const [adminCheck, setAdminCheck] = useState<"pending" | "yes" | "no">("pending");
+  const [pendingCount, setPendingCount] = useState(0);
   const [menuPath, setMenuPath] = useState<string | null>(null);
   const menuOpen = menuPath === pathname;
   const menuRef = useRef<HTMLDivElement>(null);
@@ -43,6 +45,37 @@ export default function SiteHeader() {
 
     return () => subscription.unsubscribe();
   }, [configured]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/admin/access", { cache: "no-store", credentials: "same-origin" })
+      .then(async (response) => {
+        const data: unknown = await response.json().catch(() => null);
+        if (cancelled) return;
+        if (
+          response.ok &&
+          data &&
+          typeof data === "object" &&
+          (data as { admin?: unknown }).admin === true
+        ) {
+          const count = (data as { pendingCount?: unknown }).pendingCount;
+          setPendingCount(typeof count === "number" && count > 0 ? Math.floor(count) : 0);
+          setAdminCheck("yes");
+          return;
+        }
+        setPendingCount(0);
+        setAdminCheck("no");
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPendingCount(0);
+          setAdminCheck("no");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   function closeMenu() {
     setMenuPath(null);
@@ -137,8 +170,17 @@ export default function SiteHeader() {
     );
   }
 
+  const showAdmin = adminCheck === "yes";
+  const adminLabel =
+    showAdmin && pendingCount > 0
+      ? `${t("adminNav")} (${pendingCount > 99 ? "99+" : pendingCount})`
+      : t("adminNav");
+
   return (
-    <header className="relative z-40 shrink-0 border-b border-[var(--line)] bg-[var(--dusk-deep)] text-[var(--sand)] shadow-[0_10px_28px_rgb(42_18_16/0.08)]">
+    <header
+      data-admin-check={adminCheck}
+      className="relative z-40 shrink-0 border-b border-[var(--line)] bg-[var(--dusk-deep)] text-[var(--sand)] shadow-[0_10px_28px_rgb(42_18_16/0.08)]"
+    >
       <div className="flex h-14 items-center justify-between gap-2 px-3 md:h-16 md:gap-4 md:px-8">
         <Link
           href="/"
@@ -160,6 +202,20 @@ export default function SiteHeader() {
           >
             {navLinks("row")}
           </nav>
+          {showAdmin ? (
+            <Link
+              href="/admin/suggestions"
+              aria-label={adminLabel}
+              className="inline-flex items-center gap-1 whitespace-nowrap px-1 text-[13px] text-[var(--sand)] transition hover:text-[var(--ember)] md:text-sm"
+            >
+              <span>{t("adminNav")}</span>
+              {pendingCount > 0 ? (
+                <span className="inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ember)] px-1 text-xs font-medium text-white">
+                  {pendingCount > 99 ? "99+" : pendingCount}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
           <Link
             href="/spots/new"
             aria-current={pathname === "/spots/new" ? "page" : undefined}

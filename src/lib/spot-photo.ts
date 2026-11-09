@@ -97,11 +97,14 @@ export function isAllowedSpotPhotoType(
 }
 
 /**
- * `image/*` plus extensions. A MIME-only accept list sends Android Chrome
- * straight to Google Photos; the extensions make it offer the system chooser
- * (camera, files, gallery) instead.
+ * JPEG, PNG, and WebP only, plus the extensions.
+ * `image/*` makes iPhone hand over the original HEIC, which this site cannot
+ * store. Listing the types lets iOS convert the photo to JPEG first.
+ * The extensions still make Android Chrome offer the system chooser instead
+ * of jumping straight into Google Photos.
  */
-export const SPOT_PHOTO_INPUT_ACCEPT = "image/*,.jpg,.jpeg,.png,.webp";
+export const SPOT_PHOTO_INPUT_ACCEPT =
+  "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
 
 const SPOT_PHOTO_FILE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"] as const;
 
@@ -115,6 +118,21 @@ function spotPhotoFileExtension(name: string): string {
   const dot = base.lastIndexOf(".");
   if (dot < 0 || dot === base.length - 1) return "";
   return base.slice(dot).toLowerCase();
+}
+
+/** iPhone camera rolls still sometimes hand us HEIC even after the accept filter. */
+export function isHeicSpotPhoto(file: { type: string; name: string }): boolean {
+  const type = file.type.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+  if (
+    type === "image/heic" ||
+    type === "image/heif" ||
+    type === "image/heic-sequence" ||
+    type === "image/heif-sequence"
+  ) {
+    return true;
+  }
+  const ext = spotPhotoFileExtension(file.name);
+  return ext === ".heic" || ext === ".heif";
 }
 
 /**

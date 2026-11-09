@@ -2,7 +2,12 @@ import { readFile } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { JERUSALEM_SUNSET_PLACES } from "../src/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_PLACES } from "../src/lib/guides/north-golan-sunset";
-import { E2E_TEST_ADMIN_HEADER, E2E_TEST_USER_HEADER } from "../src/lib/e2e/guard";
+import {
+  E2E_TEST_ADMIN_COOKIE,
+  E2E_TEST_ADMIN_HEADER,
+  E2E_TEST_USER_COOKIE,
+  E2E_TEST_USER_HEADER,
+} from "../src/lib/e2e/guard";
 import { E2E_SEED_SPOTS } from "../src/lib/e2e/seed-spots";
 import { e2eUploadRoot, resolveE2EUploadPath } from "../src/lib/e2e/upload-path";
 import { SUNSET_REGIONS, regionPath } from "../src/lib/regions";
@@ -305,6 +310,146 @@ test("missing draft photo notice clears after a new photo is attached", async ({
     buffer: TINY_PNG,
   });
   await expect(missing).toHaveCount(0);
+});
+
+test("the admin suggestions link is visible only to an allowlisted account", async ({
+  browser,
+  request,
+  baseURL,
+}) => {
+  const origin = requireBase(baseURL);
+  const created = await request.post("/api/spots/suggestions", {
+    headers: { origin },
+    data: {
+      name: "הצעה לתג הספירה",
+      lat: 32.07,
+      lng: 34.77,
+      clientRequestId: crypto.randomUUID(),
+    },
+    maxRedirects: 0,
+  });
+  expect(created.status()).toBe(201);
+
+  const anonymous = await request.get("/api/admin/access", { maxRedirects: 0 });
+  expect(await anonymous.json()).toEqual({ admin: false });
+
+  const member = await request.get("/api/admin/access", {
+    headers: { [E2E_TEST_USER_HEADER]: "1" },
+    maxRedirects: 0,
+  });
+  expect(await member.json()).toEqual({ admin: false });
+
+  const admin = await request.get("/api/admin/access", {
+    headers: { [E2E_TEST_ADMIN_HEADER]: "1" },
+    maxRedirects: 0,
+  });
+  const adminBody = (await admin.json()) as { admin?: boolean; pendingCount?: number };
+  expect(adminBody.admin).toBe(true);
+  expect(adminBody.pendingCount).toBeGreaterThan(0);
+  expect(JSON.stringify(adminBody)).not.toContain("@");
+
+  async function openHome(cookieName: string | null) {
+    const context = await browser.newContext();
+    if (cookieName) {
+      await context.addCookies([{ name: cookieName, value: "1", url: origin }]);
+    }
+    await context.addInitScript(() => {
+      sessionStorage.setItem("ats-welcome-v2", "1");
+    });
+    const page = await context.newPage();
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    return { context, page };
+  }
+
+  const signedOut = await openHome(null);
+  await expect(signedOut.page.locator("header")).toHaveAttribute("data-admin-check", "no");
+  await expect(signedOut.page.getByRole("link", { name: /הצעות לאישור/ })).toHaveCount(0);
+  await signedOut.context.close();
+
+  const signedIn = await openHome(E2E_TEST_USER_COOKIE);
+  await expect(signedIn.page.locator("header")).toHaveAttribute("data-admin-check", "no");
+  await expect(signedIn.page.getByRole("link", { name: /הצעות לאישור/ })).toHaveCount(0);
+  await signedIn.context.close();
+
+  const owner = await openHome(E2E_TEST_ADMIN_COOKIE);
+  await expect(owner.page.locator("header")).toHaveAttribute("data-admin-check", "yes");
+  const adminLink = owner.page.getByRole("link", { name: /הצעות לאישור/ });
+  await expect(adminLink).toBeVisible();
+  await expect(adminLink).toHaveAttribute("href", "/admin/suggestions");
+  await owner.context.close();
+});
+
+test("a signed-in quick-form photo is stored and shown, and a signed-out photo is not dropped silently", async ({
+  browser,
+  request,
+  baseURL,
+}) => {
+  const origin = requireBase(baseURL);
+
+  const blocked = await browser.newContext({
+    permissions: ["geolocation"],
+    geolocation: { latitude: 32.08, longitude: 34.78 },
+  });
+  await blocked.addInitScript(() => {
+    sessionStorage.setItem("ats-welcome-v2", "1");
+  });
+  const blockedPage = await blocked.newPage();
+  await blockedPage.goto("/spots/new", { waitUntil: "domcontentloaded" });
+  await blockedPage.getByPlaceholder("תצפית נמל יפו").fill("נקודה בלי תמונה שקטה");
+  await blockedPage.getByRole("button", { name: "השתמשו במיקום שלי" }).click();
+  await expect(blockedPage.getByText("המיקום נקבע")).toBeVisible();
+  await blockedPage.locator('input[type="file"]').setInputFiles({
+    name: "sunset.jpg",
+    mimeType: "image/jpeg",
+    buffer: TINY_JPEG,
+  });
+  await expect(blockedPage.getByRole("button", { name: "הסרה" })).toBeVisible();
+  await blockedPage.getByRole("button", { name: "שליחת הצעה" }).click();
+  await expect(blockedPage.getByText("הנקודה לא נשלחה")).toBeVisible();
+  await expect(blockedPage).toHaveURL(/\/spots\/new$/);
+  const hidden = (await (await request.get("/api/spots")).json()) as { name: string }[];
+  expect(hidden.some((spot) => spot.name === "נקודה בלי תמונה שקטה")).toBe(false);
+  await blocked.close();
+
+  const context = await browser.newContext({
+    permissions: ["geolocation"],
+    geolocation: { latitude: 32.08, longitude: 34.78 },
+  });
+  await context.addCookies([{ name: E2E_TEST_USER_COOKIE, value: "1", url: origin }]);
+  await context.addInitScript(() => {
+    sessionStorage.setItem("ats-welcome-v2", "1");
+  });
+  const page = await context.newPage();
+  await page.goto("/spots/new", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("button", { name: "שיתוף נקודה" })).toBeVisible();
+  await page.getByPlaceholder("תצפית נמל יפו").fill("תצפית עם תמונה");
+  await page.getByRole("button", { name: "השתמשו במיקום שלי" }).click();
+  await expect(page.getByText("המיקום נקבע")).toBeVisible();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "sunset.jpg",
+    mimeType: "image/jpeg",
+    buffer: TINY_JPEG,
+  });
+  await expect(page.getByRole("button", { name: "הסרה" })).toBeVisible();
+  await page.getByRole("button", { name: "שיתוף נקודה" }).click();
+  await page.waitForURL(/\/spots\/(?!new$)[^/]+$/);
+
+  const html = await page.content();
+  const match = html.match(
+    /https:\/\/e2e\.supabase\.co\/storage\/v1\/object\/public\/spot-photos\/[^"\\]+/,
+  );
+  if (!match) throw new Error("spot page did not include the uploaded photo");
+  const photoUrl = match[0];
+  const objectPath = decodeURIComponent(
+    new URL(photoUrl).pathname.replace("/storage/v1/object/public/spot-photos/", ""),
+  );
+  const savedPath = resolveE2EUploadPath(e2eUploadRoot(), objectPath);
+  if (!savedPath) throw new Error("uploaded photo path escaped the local root");
+  const saved = await readFile(savedPath);
+  expect(saved[0]).toBe(0xff);
+  expect(saved[1]).toBe(0xd8);
+  expect(html).toContain(photoUrl);
+  await context.close();
 });
 
 test("parking and accessibility reject unknown values and notes over 200 characters", async ({
