@@ -255,8 +255,7 @@ export const dictionary: Dict = {
   adminNoName: "בלי שם",
   draftSignInHint: "בשליחה תתבקשו להתחבר עם Google. הטופס יישמר ותחזרו לכאן.",
   draftRestored: "הטופס שוחזר. אפשר לשלוח עכשיו.",
-  draftPhotosMissing:
-    "התמונות לא נשמרו במעבר להתחברות. צרפו אותן שוב לפני השליחה.",
+  draftPhotosMissing: "התמונות לא נשמרו. צרפו אותן שוב לפני השליחה.",
   draftSaveFailed:
     "לא הצלחנו לשמור את הטופס בדפדפן. נסו שוב, או התחברו ואז מלאו מחדש.",
   configureSupabase: "הגדירו את Supabase ב־.env לפני הוספת נקודות.",

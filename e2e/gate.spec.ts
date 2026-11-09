@@ -39,6 +39,11 @@ const TINY_JPEG = Buffer.from([
   0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xff, 0xd9,
 ]);
 
+const TINY_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);
+
 const SEEDED_SPOT = E2E_SEED_SPOTS.find((spot) => spot.id === "e2e-tel-aviv");
 if (!SEEDED_SPOT) throw new Error("missing seeded tel aviv spot");
 
@@ -205,6 +210,101 @@ test("new spot form works signed out and Enter in place search does not submit",
   await expect(page.locator("form [role=alert]")).toHaveCount(0);
   await expect(page.getByText("בחרו מיקום על המפה כדי לקבוע את מיקום הנקודה.")).toHaveCount(0);
   await expect(name).toHaveValue("תצפית בדיקה");
+});
+
+test("quick add form restores a draft after refresh and the Google login link", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("ats-welcome-v2", "1");
+  });
+  await page.goto("/spots/new", { waitUntil: "domcontentloaded" });
+
+  await page.getByPlaceholder("תצפית נמל יפו").fill("תצפית הטיוטה");
+  await page.getByLabel("השם שלכם (אופציונלי)").fill("דנה כהן");
+  await page.getByText("פרטים נוספים (אפשר להשלים אחר כך)").click();
+  await page.getByPlaceholder("למה זו נקודת שקיעה מעולה?").fill("תיאור שנשמר בטיוטה אחרי רענון.");
+  await page.getByPlaceholder("תל אביב").fill("יפו");
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByText("הטופס שוחזר. אפשר לשלוח עכשיו.")).toBeVisible();
+  await expect(page.getByPlaceholder("תצפית נמל יפו")).toHaveValue("תצפית הטיוטה");
+  await expect(page.getByLabel("השם שלכם (אופציונלי)")).toHaveValue("דנה כהן");
+  await page.getByText("פרטים נוספים (אפשר להשלים אחר כך)").click();
+  await expect(page.getByPlaceholder("למה זו נקודת שקיעה מעולה?")).toHaveValue(
+    "תיאור שנשמר בטיוטה אחרי רענון.",
+  );
+  await expect(page.getByPlaceholder("תל אביב")).toHaveValue("יפו");
+
+  await page.getByRole("link", { name: "המשך עם Google" }).click();
+  await expect(page).toHaveURL(/\/login\?next=(?:\/|%2F)spots(?:\/|%2F)new/);
+  await page.goto("/spots/new", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("הטופס שוחזר. אפשר לשלוח עכשיו.")).toBeVisible();
+  await expect(page.getByPlaceholder("תצפית נמל יפו")).toHaveValue("תצפית הטיוטה");
+  await expect(page.getByLabel("השם שלכם (אופציונלי)")).toHaveValue("דנה כהן");
+});
+
+test("cleared quick add fields are not announced as restored", async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("ats-welcome-v2", "1");
+  });
+  await page.goto("/spots/new", { waitUntil: "domcontentloaded" });
+  const name = page.getByPlaceholder("תצפית נמל יפו");
+  const credit = page.getByLabel("השם שלכם (אופציונלי)");
+  await name.fill("תצפית הטיוטה");
+  await credit.fill("דנה כהן");
+  await name.fill("");
+  await credit.fill("");
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("form[data-draft-ready=true]")).toBeVisible();
+  await expect(page.getByText("הטופס שוחזר. אפשר לשלוח עכשיו.")).toHaveCount(0);
+  await expect(name).toHaveValue("");
+  await expect(credit).toHaveValue("");
+
+  await name.fill("   ");
+  await credit.fill(" ");
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("form[data-draft-ready=true]")).toBeVisible();
+  await expect(page.getByText("הטופס שוחזר. אפשר לשלוח עכשיו.")).toHaveCount(0);
+  await expect(name).toHaveValue("");
+});
+
+test("missing draft photo notice clears after a new photo is attached", async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("ats-welcome-v2", "1");
+    localStorage.setItem(
+      "ats-new-spot-draft-v1",
+      JSON.stringify({
+        name: "",
+        description: "",
+        region: "",
+        lat: null,
+        lng: null,
+        confirmedLat: null,
+        confirmedLng: null,
+        photoUrl: "",
+        acceptedGuidelines: false,
+        expectedPhotoCount: 1,
+        parking: null,
+        parkingNote: "",
+        accessibility: null,
+        accessibilityNote: "",
+        contributorName: "",
+        savedAt: Date.now(),
+      }),
+    );
+  });
+  await page.goto("/spots/new", { waitUntil: "domcontentloaded" });
+  const missing = page.getByText("התמונות לא נשמרו. צרפו אותן שוב לפני השליחה.");
+  await expect(missing).toBeVisible();
+  await expect(page.getByText("הטופס שוחזר. אפשר לשלוח עכשיו.")).toHaveCount(0);
+
+  await page.locator("input[type=file]").setInputFiles({
+    name: "sunset.png",
+    mimeType: "image/png",
+    buffer: TINY_PNG,
+  });
+  await expect(missing).toHaveCount(0);
 });
 
 test("parking and accessibility reject unknown values and notes over 200 characters", async ({

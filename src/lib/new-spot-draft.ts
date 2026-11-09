@@ -13,10 +13,10 @@ import {
 } from "@/types/spot";
 
 /**
- * Anonymous add-spot drafts survive the Google OAuth redirect.
+ * Add-spot drafts survive a refresh and the Google sign-in redirect.
  * Text stays in localStorage. Photo bytes stay in IndexedDB because
  * localStorage cannot reliably hold compressed images.
- * Nothing here is sent to the server; the create API still requires a session.
+ * The draft stays in the browser until the form is submitted.
  */
 
 const STORAGE_KEY = "ats-new-spot-draft-v1";
@@ -27,6 +27,7 @@ const PHOTO_KEY = "selected";
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 const NAME_MAX = 80;
+const CONTRIBUTOR_MAX = 80;
 const DESCRIPTION_MAX = 1000;
 const REGION_MAX = 80;
 const PHOTO_URL_MAX = 2048;
@@ -46,6 +47,8 @@ export type NewSpotDraftFields = {
   parkingNote: string;
   accessibility: Accessibility | null;
   accessibilityNote: string;
+  /** Optional credit on an anonymous suggestion. Absent on drafts saved before it. */
+  contributorName: string;
   savedAt: number;
 };
 
@@ -63,6 +66,7 @@ export type SaveNewSpotDraftInput = {
   parkingNote: string;
   accessibility: Accessibility | null;
   accessibilityNote: string;
+  contributorName?: string;
   photos: File[];
 };
 
@@ -116,20 +120,86 @@ function draftNote(value: unknown): string | null {
   return cleanAmenityNote(value).slice(0, AMENITY_NOTE_MAX);
 }
 
-function hasContent(fields: NewSpotDraftFields): boolean {
+function meaningfulText(value: string): boolean {
+  return value.trim().length > 0;
+}
+
+/**
+ * True when the draft will show the visitor something they entered.
+ * A remembered photo that failed to load is not visible content.
+ */
+export function newSpotDraftHasVisibleContent(
+  fields: NewSpotDraftFields,
+  photoCount = 0,
+): boolean {
   return Boolean(
-    fields.name ||
-      fields.description ||
-      fields.region ||
-      fields.photoUrl ||
+    meaningfulText(fields.name) ||
+      meaningfulText(fields.description) ||
+      meaningfulText(fields.region) ||
+      meaningfulText(fields.photoUrl) ||
       fields.lat !== null ||
       fields.lng !== null ||
-      fields.expectedPhotoCount > 0 ||
       fields.parking !== null ||
       fields.accessibility !== null ||
-      fields.parkingNote ||
-      fields.accessibilityNote,
+      meaningfulText(fields.parkingNote) ||
+      meaningfulText(fields.accessibilityNote) ||
+      meaningfulText(fields.contributorName) ||
+      photoCount > 0,
   );
+}
+
+function hasContent(fields: NewSpotDraftFields): boolean {
+  return newSpotDraftHasVisibleContent(fields) || fields.expectedPhotoCount > 0;
+}
+
+/** Same rule as a saved draft, including a photo that is still on the form. */
+export function newSpotDraftInputHasContent(input: SaveNewSpotDraftInput): boolean {
+  return hasContent(buildNewSpotDraftFields(input));
+}
+
+function contributorName(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.slice(0, CONTRIBUTOR_MAX);
+}
+
+/** Fields written to localStorage. `savedAt` is the clock used for the TTL. */
+export function buildNewSpotDraftFields(
+  input: SaveNewSpotDraftInput,
+  now = Date.now(),
+): NewSpotDraftFields {
+  return {
+    name: input.name.slice(0, NAME_MAX),
+    description: input.description.slice(0, DESCRIPTION_MAX),
+    region: input.region.slice(0, REGION_MAX),
+    lat: input.lat,
+    lng: input.lng,
+    confirmedLat: input.confirmedLat,
+    confirmedLng: input.confirmedLng,
+    photoUrl: httpsPhotoUrl(input.photoUrl) ?? "",
+    acceptedGuidelines: input.acceptedGuidelines,
+    expectedPhotoCount: Math.min(input.photos.length, MAX_PHOTOS_ON_CREATE),
+    parking: choice(input.parking, PARKING_VALUES),
+    parkingNote: cleanAmenityNote(input.parkingNote).slice(0, AMENITY_NOTE_MAX),
+    accessibility: choice(input.accessibility, ACCESSIBILITY_VALUES),
+    accessibilityNote: cleanAmenityNote(input.accessibilityNote).slice(0, AMENITY_NOTE_MAX),
+    contributorName: contributorName(input.contributorName),
+    savedAt: now,
+  };
+}
+
+/** Synchronous text save. Safe to call from `pagehide`, when photo writes may not finish. */
+export function writeNewSpotDraftText(input: SaveNewSpotDraftInput): boolean {
+  const fields = buildNewSpotDraftFields(input);
+  try {
+    if (!hasContent(fields)) {
+      localStorage.removeItem(STORAGE_KEY);
+    } else {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fields));
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Parse a stored draft. Returns null when the payload is missing, stale, or corrupt. */
@@ -167,6 +237,7 @@ export function parseNewSpotDraft(raw: string, now = Date.now()): NewSpotDraftFi
   const parkingNote = draftNote(record.parkingNote);
   const accessibilityNote = draftNote(record.accessibilityNote);
   if (parkingNote === null || accessibilityNote === null) return null;
+  const credit = contributorName(record.contributorName);
 
   const savedAt = record.savedAt;
   if (typeof savedAt !== "number" || !Number.isFinite(savedAt)) return null;
@@ -198,6 +269,7 @@ export function parseNewSpotDraft(raw: string, now = Date.now()): NewSpotDraftFi
     parkingNote,
     accessibility: choice(record.accessibility, ACCESSIBILITY_VALUES),
     accessibilityNote,
+    contributorName: credit,
     savedAt,
   };
   if (!hasContent(fields)) return null;
@@ -300,34 +372,12 @@ async function deletePhotos(): Promise<void> {
 export async function saveNewSpotDraft(
   input: SaveNewSpotDraftInput,
 ): Promise<{ stored: boolean; photosStored: boolean }> {
-  const fields: NewSpotDraftFields = {
-    name: input.name.slice(0, NAME_MAX),
-    description: input.description.slice(0, DESCRIPTION_MAX),
-    region: input.region.slice(0, REGION_MAX),
-    lat: input.lat,
-    lng: input.lng,
-    confirmedLat: input.confirmedLat,
-    confirmedLng: input.confirmedLng,
-    photoUrl: httpsPhotoUrl(input.photoUrl) ?? "",
-    acceptedGuidelines: input.acceptedGuidelines,
-    expectedPhotoCount: Math.min(input.photos.length, MAX_PHOTOS_ON_CREATE),
-    parking: choice(input.parking, PARKING_VALUES),
-    parkingNote: cleanAmenityNote(input.parkingNote).slice(0, AMENITY_NOTE_MAX),
-    accessibility: choice(input.accessibility, ACCESSIBILITY_VALUES),
-    accessibilityNote: cleanAmenityNote(input.accessibilityNote).slice(
-      0,
-      AMENITY_NOTE_MAX,
-    ),
-    savedAt: Date.now(),
-  };
-
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(fields));
-  } catch {
+  if (!writeNewSpotDraftText(input)) {
     return { stored: false, photosStored: false };
   }
 
-  if (input.photos.length === 0) {
+  const fields = buildNewSpotDraftFields(input);
+  if (!hasContent(fields) || input.photos.length === 0) {
     await deletePhotos();
     return { stored: true, photosStored: true };
   }
