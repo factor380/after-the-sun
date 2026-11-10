@@ -7,6 +7,12 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const SEEN_KEY = "ats-welcome-v2";
 
+/**
+ * Once-per-session map intro. Rendered only by the home page, so it never
+ * opens on a direct landing elsewhere. A later client navigation to `/`
+ * still opens it when this key is unset; dismissing it keeps it closed
+ * for the rest of the browser session.
+ */
 export default function WelcomeModal() {
   const { t, dir } = useLocale();
   const router = useRouter();

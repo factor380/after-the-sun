@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Fredoka, Heebo } from "next/font/google";
 import SiteAnalytics from "@/components/SiteAnalytics";
 import SiteHeader from "@/components/SiteHeader";
-import WelcomeModal from "@/components/WelcomeModal";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import {
@@ -88,7 +87,6 @@ export default function RootLayout({
             <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto">
               {children}
             </main>
-            <WelcomeModal />
           </ThemeProvider>
         </LocaleProvider>
         <SiteAnalytics />
