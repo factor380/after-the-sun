@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import WelcomeModal from "@/components/WelcomeModal";
 import SpotMapClient from "@/components/map/SpotMapClient";
 import { SetupNeededNotice } from "@/components/home/HomeCopy";
 import { HomeSpotIndex } from "@/components/home/HomeSpotIndex";
@@ -59,6 +60,12 @@ export default async function HomePage() {
           <SpotList spots={spots} />
         </SpotsDrawer>
       </div>
+      {/*
+        Map intro only. Other routes never mount this, so a direct landing
+        on a spot, region, or form stays clear. The first visit to `/` in a
+        session still opens it, including a client navigation from elsewhere.
+      */}
+      <WelcomeModal />
     </SpotSelectionProvider>
   );
 }
