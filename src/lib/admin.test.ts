@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { adminWriteDecision, isAdminEmail } from "@/lib/admin";
+import { adminAccessForEmail, adminWriteDecision, isAdminEmail } from "@/lib/admin";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -51,5 +51,30 @@ describe("adminWriteDecision", () => {
     expect(allowed).toEqual({ ok: true, userId: "admin-1" });
     expect(JSON.stringify(allowed)).not.toContain("@");
     expect(adminWriteDecision({ id: "user-2" }).ok).toBe(false);
+  });
+});
+
+describe("adminAccessForEmail", () => {
+  it("hides the admin entry from signed-out visitors and other accounts", () => {
+    vi.stubEnv("ADMIN_EMAILS", "owner@gmail.com,secret@family.test");
+    for (const email of [null, undefined, "", "visitor@gmail.com"]) {
+      const hidden = adminAccessForEmail(email, 4);
+      expect(hidden).toEqual({ admin: false });
+      expect(JSON.stringify(hidden)).not.toContain("secret@family.test");
+      expect(JSON.stringify(hidden)).not.toContain("owner@gmail.com");
+      expect(hidden).not.toHaveProperty("pendingCount");
+    }
+  });
+
+  it("shows the entry and the pending count only for an allowlisted email", () => {
+    vi.stubEnv("ADMIN_EMAILS", "owner@gmail.com,secret@family.test");
+    const shown = adminAccessForEmail("Owner@Gmail.com", 4.9);
+    expect(shown).toEqual({ admin: true, pendingCount: 4 });
+    expect(JSON.stringify(shown)).not.toContain("secret@family.test");
+    expect(JSON.stringify(shown)).not.toContain("@");
+    expect(adminAccessForEmail("owner@gmail.com", Number.NaN)).toEqual({
+      admin: true,
+      pendingCount: 0,
+    });
   });
 });

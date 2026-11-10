@@ -23,6 +23,7 @@ import {
 } from "@/lib/new-spot-draft";
 import {
   isAcceptableSpotPhotoFile,
+  isHeicSpotPhoto,
   MAX_PHOTOS_ON_CREATE,
   MAX_SPOT_PHOTO_INPUT_BYTES,
   replacePhotoWhenReady,
@@ -247,7 +248,7 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         return;
       }
       if (!isAcceptableSpotPhotoFile(file)) {
-        setError(t("photoInvalidType"));
+        setError(t(isHeicSpotPhoto(file) ? "photoHeicUnsupported" : "photoInvalidType"));
         return;
       }
     }

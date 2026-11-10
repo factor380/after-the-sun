@@ -5,6 +5,7 @@ const SERVER_ERROR_KEYS: Record<string, MessageKey> = {
   SPOT_LIMIT: "photoAddSpotLimit",
   USER_LIMIT: "photoAddUserLimit",
   "Location must be within Israel bounds": "locationOutsideIsrael",
+  "Photo storage is not configured": "photoStorageMissing",
 };
 
 export function messageKeyForRequestFailure(

@@ -10,9 +10,9 @@ const UPLOAD_RATE_LIMIT = 8;
 const UPLOAD_RATE_WINDOW_MS = 60 * 60 * 1000;
 
 /**
- * Anonymous suggestion photo. Requires the service-role key because Storage
- * RLS only lets a signed-in user write their own folder. Without the key the
- * suggestion can still be sent with no photo.
+ * Anonymous suggestion photo. Storage RLS only lets a signed-in user write
+ * their own folder, so this route uses the service-role key. Without that
+ * key the upload fails and the form must not save the spot.
  */
 export async function POST(request: Request) {
   try {

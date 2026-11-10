@@ -29,6 +29,7 @@ import {
 } from "@/lib/new-spot-draft";
 import {
   isAcceptableSpotPhotoFile,
+  isHeicSpotPhoto,
   MAX_SPOT_PHOTO_INPUT_BYTES,
   SPOT_PHOTO_INPUT_ACCEPT,
 } from "@/lib/spot-photo";
@@ -80,10 +81,11 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
   const [locating, setLocating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [thanks, setThanks] = useState<{ photoSkipped: boolean } | null>(null);
+  const [thanks, setThanks] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
   const [restored, setRestored] = useState(false);
   const [photosMissing, setPhotosMissing] = useState(false);
+  const [allowWithoutRestoredPhoto, setAllowWithoutRestoredPhoto] = useState(false);
 
   function touch() {
     touchedRef.current = true;
@@ -242,7 +244,7 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
       return;
     }
     if (!isAcceptableSpotPhotoFile(file)) {
-      setError(t("photoInvalidType"));
+      setError(t(isHeicSpotPhoto(file) ? "photoHeicUnsupported" : "photoInvalidType"));
       return;
     }
 
@@ -255,6 +257,7 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
         previewUrl: URL.createObjectURL(compressed),
       });
       setPhotosMissing(false);
+      setAllowWithoutRestoredPhoto(false);
     } catch (caught) {
       if (!mountedRef.current) return;
       setError(
@@ -265,29 +268,28 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
     }
   }
 
-  async function uploadPhoto(file: File): Promise<{ url: string | null; skipped: boolean }> {
+  async function uploadPhoto(file: File): Promise<string> {
     const body = new FormData();
     body.append("file", file);
     const endpoint = signedIn ? "/api/spots/upload" : "/api/spots/suggestions/upload";
     const res = await fetchWithNetworkRetry(endpoint, { method: "POST", body });
     const data = await readResponseJson(res);
-    if (!signedIn && res.status === 503) return { url: null, skipped: true };
     if (!res.ok) {
       throw new Error(
         t(
           messageKeyForRequestFailure(
             res.status,
             responseField(data, "error"),
-            "photoUploadFailed",
+            "photoBlockedSubmit",
           ),
         ),
       );
     }
     const photoUrl = responseField(data, "photoUrl");
     if (typeof photoUrl !== "string" || !photoUrl.startsWith("https://")) {
-      throw new Error(t("photoUploadFailed"));
+      throw new Error(t("photoBlockedSubmit"));
     }
-    return { url: photoUrl, skipped: false };
+    return photoUrl;
   }
 
   async function onSubmit(event: React.FormEvent) {
@@ -300,14 +302,16 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
       return;
     }
 
+    if (photosMissing && !photo && !allowWithoutRestoredPhoto) {
+      setError(t("draftPhotosMissing"));
+      return;
+    }
+
     setSaving(true);
     try {
       let photoUrl: string | null = null;
-      let photoSkipped = false;
       if (photo) {
-        const uploaded = await uploadPhoto(photo.file);
-        photoUrl = uploaded.url;
-        photoSkipped = uploaded.skipped;
+        photoUrl = await uploadPhoto(photo.file);
       }
 
       const payload = {
@@ -356,7 +360,7 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
         return;
       }
 
-      setThanks({ photoSkipped });
+      setThanks(true);
     } catch (caught) {
       setError(submitErrorText(caught, t, "saveFailed"));
     } finally {
@@ -373,9 +377,6 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
         <p className="mt-3 text-base leading-relaxed text-[var(--sand-muted)]">
           {t("suggestionThanksBody")}
         </p>
-        {thanks.photoSkipped ? (
-          <p className="mt-3 text-sm text-[var(--sand-muted)]">{t("photoSkipped")}</p>
-        ) : null}
         <Link
           href="/"
           className="mt-6 inline-flex min-h-12 items-center bg-[var(--ember)] px-5 font-medium text-white"
@@ -476,7 +477,22 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
           </p>
         ) : null}
         {photosMissing && !photo ? (
-          <p className="mt-2 text-sm text-[var(--ember)]">{t("draftPhotosMissing")}</p>
+          <div className="mt-2 space-y-2">
+            <p className="text-sm text-[var(--ember)]">{t("draftPhotosMissing")}</p>
+            {allowWithoutRestoredPhoto ? null : (
+              <button
+                type="button"
+                onClick={() => {
+                  touch();
+                  setAllowWithoutRestoredPhoto(true);
+                  setError(null);
+                }}
+                className="text-sm text-[var(--sand-muted)] underline"
+              >
+                {t("sendWithoutRestoredPhoto")}
+              </button>
+            )}
+          </div>
         ) : null}
         {photo ? (
           <div className="relative mt-3 overflow-hidden rounded-sm border border-[var(--line)]">

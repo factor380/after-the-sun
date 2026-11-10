@@ -30,3 +30,16 @@ export function adminWriteDecision(user: AdminPrincipal | null): AdminWriteDecis
   }
   return { ok: true, userId: user.id };
 }
+
+/**
+ * What the browser is allowed to learn. Never includes the allowlist or an email.
+ * `admin: false` is the only response for signed-out visitors and everyone else.
+ */
+export function adminAccessForEmail(
+  email: string | null | undefined,
+  pendingCount: number,
+): { admin: false } | { admin: true; pendingCount: number } {
+  if (!isAdminEmail(email)) return { admin: false };
+  const count = Number.isFinite(pendingCount) ? Math.max(0, Math.floor(pendingCount)) : 0;
+  return { admin: true, pendingCount: count };
+}

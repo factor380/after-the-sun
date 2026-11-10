@@ -35,7 +35,6 @@ type Dict = {
   signedInCredit: string;
   signedInCreditNoName: string;
   photoSignedOutNote: string;
-  photoSkipped: string;
   adminSuggestionsTitle: string;
   adminSuggestionsDescription: string;
   adminSuggestionsSubtitle: string;
@@ -116,6 +115,11 @@ type Dict = {
   photoLoadFailed: string;
   photoPickBusy: string;
   photoInvalidType: string;
+  photoHeicUnsupported: string;
+  photoBlockedSubmit: string;
+  photoStorageMissing: string;
+  sendWithoutRestoredPhoto: string;
+  adminNav: string;
   photoUploadFailed: string;
   photoUrlOptional: string;
   photoLandscapeGuide: string;
@@ -281,8 +285,8 @@ export const dictionary: Dict = {
   submitNotice: "בשליחה אתם מאשרים שזו נקודת שקיעה, ושמותר לפרסם את מה ששיתפתם.",
   signedInCredit: "הנקודה תפורסם בשם",
   signedInCreditNoName: "התחברתם. אם לחשבון Google יש שם, הוא יופיע על הנקודה.",
-  photoSignedOutNote: "אפשר לצרף תמונה גם בלי חשבון. אם האחסון לא מוגדר, ההצעה תישלח בלי תמונה.",
-  photoSkipped: "ההצעה נשלחה בלי תמונה.",
+  photoSignedOutNote:
+    "אם התמונה לא נשמרת, הנקודה לא תישלח. אפשר להסיר אותה ולשלוח בלי תמונה, או להתחבר עם Google.",
   adminSuggestionsTitle: "הצעות ממתינות",
   adminSuggestionsDescription: "תור האישור של הצעות נקודות שקיעה. העמוד לא ציבורי.",
   adminSuggestionsSubtitle: "אישור מציג את הנקודה במפה. דחייה משאירה אותה מוסתרת.",
@@ -366,6 +370,14 @@ export const dictionary: Dict = {
   photoLoadFailed: "התמונה לא נטענה. נסו שוב, או בחרו תמונה ששמורה בטלפון.",
   photoPickBusy: "התמונה עדיין נטענת. אפשר לבחור שוב כשתסתיים.",
   photoInvalidType: "סוג קובץ לא נתמך. בחרו JPEG, PNG או WebP.",
+  photoHeicUnsupported:
+    "תמונת HEIC מהאייפון לא נתמכת. שמרו אותה כ־JPEG או PNG ונסו שוב.",
+  photoBlockedSubmit:
+    "העלאת התמונה נכשלה, ולכן הנקודה לא נשלחה. נסו שוב, או הסירו את התמונה.",
+  photoStorageMissing:
+    "אי אפשר לשמור תמונה בלי התחברות כל עוד האחסון לא מוגדר בשרת. הנקודה לא נשלחה. התחברו עם Google, או הסירו את התמונה ושלחו שוב.",
+  sendWithoutRestoredPhoto: "שליחה בלי התמונה",
+  adminNav: "הצעות לאישור",
   photoUploadFailed: "העלאת התמונה נכשלה",
   photoUrlOptional: "או הדביקו כתובת תמונה (HTTPS)",
   photoLandscapeGuide:
