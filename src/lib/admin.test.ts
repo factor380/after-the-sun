@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { adminAccessForEmail, isAdminEmail } from "@/lib/admin";
+import { adminAccessForEmail, adminWriteDecision, isAdminEmail } from "@/lib/admin";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -20,11 +20,41 @@ describe("isAdminEmail", () => {
   });
 });
 
-describe("adminAccessForEmail", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
+describe("adminWriteDecision", () => {
+  it("refuses a signed-out caller and a signed-in non-admin with 403", () => {
+    vi.stubEnv("ADMIN_EMAILS", "secret-admin@gmail.com");
+    expect(adminWriteDecision(null)).toEqual({
+      ok: false,
+      status: 403,
+      reason: "signed-out",
+    });
+    expect(adminWriteDecision({ id: "", email: "secret-admin@gmail.com" })).toEqual({
+      ok: false,
+      status: 403,
+      reason: "signed-out",
+    });
+    const refused = adminWriteDecision({
+      id: "user-1",
+      email: "other@gmail.com",
+    });
+    expect(refused).toEqual({ ok: false, status: 403, reason: "forbidden" });
+    expect(JSON.stringify(refused)).not.toContain("secret-admin@gmail.com");
+    expect(JSON.stringify(refused)).not.toContain("other@gmail.com");
   });
 
+  it("allows an admin id and does not return the email or the allowlist", () => {
+    vi.stubEnv("ADMIN_EMAILS", " secret-admin@gmail.com ");
+    const allowed = adminWriteDecision({
+      id: "admin-1",
+      email: "Secret-Admin@gmail.com",
+    });
+    expect(allowed).toEqual({ ok: true, userId: "admin-1" });
+    expect(JSON.stringify(allowed)).not.toContain("@");
+    expect(adminWriteDecision({ id: "user-2" }).ok).toBe(false);
+  });
+});
+
+describe("adminAccessForEmail", () => {
   it("hides the admin entry from signed-out visitors and other accounts", () => {
     vi.stubEnv("ADMIN_EMAILS", "owner@gmail.com,secret@family.test");
     for (const email of [null, undefined, "", "visitor@gmail.com"]) {

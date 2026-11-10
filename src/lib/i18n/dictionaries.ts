@@ -43,6 +43,44 @@ type Dict = {
   adminReject: string;
   adminForbidden: string;
   adminNoName: string;
+  adminAllSpots: string;
+  adminEditSpot: string;
+  adminEditSpotTitle: string;
+  adminEditSpotSubtitle: string;
+  adminSpotsTitle: string;
+  adminSpotsDescription: string;
+  adminSpotsSubtitle: string;
+  adminSpotsEmpty: string;
+  adminForbiddenEdit: string;
+  adminNeedSignIn: string;
+  adminSpotNotFound: string;
+  adminInvalidSpot: string;
+  adminNameTooShort: string;
+  adminNameTooLong: string;
+  adminDescriptionTooLong: string;
+  adminRegionTooLong: string;
+  adminContributorTooLong: string;
+  adminNoteTooLong: string;
+  adminStatusInvalid: string;
+  adminPhotoInvalid: string;
+  adminAmenitiesInvalid: string;
+  adminUnknownPhoto: string;
+  adminCoordinatesInvalid: string;
+  adminRequestBlocked: string;
+  adminStatusLabel: string;
+  adminStatusPending: string;
+  adminStatusApproved: string;
+  adminStatusRejected: string;
+  adminContributorEditLabel: string;
+  adminRemoveCover: string;
+  adminGalleryLabel: string;
+  adminRemoveGalleryPhoto: string;
+  adminSavedHidden: string;
+  adminCoverUrlLabel: string;
+  adminCoverMoved: string;
+  adminCoverRemoved: string;
+  adminNewCoverLabel: string;
+  adminBackToSuggestions: string;
   draftSignInHint: string;
   draftRestored: string;
   draftPhotosMissing: string;
@@ -257,6 +295,46 @@ export const dictionary: Dict = {
   adminReject: "דחייה",
   adminForbidden: "אין הרשאה לצפות בהצעות.",
   adminNoName: "בלי שם",
+  adminAllSpots: "כל הנקודות",
+  adminEditSpot: "עריכת מנהל",
+  adminEditSpotTitle: "עריכת נקודה",
+  adminEditSpotSubtitle:
+    "אחרי שמירה, נקודה מפורסמת מתעדכנת במפה, בעמודי האזור ובמפת האתר.",
+  adminSpotsTitle: "ניהול נקודות",
+  adminSpotsDescription: "עריכת נקודות השקיעה. העמוד לא ציבורי.",
+  adminSpotsSubtitle:
+    "בחרו נקודה כדי לעדכן שם, מיקום, תיאור, אזור, חניה ונגישות, שם המוסיף, סטטוס או תמונות.",
+  adminSpotsEmpty: "אין נקודות.",
+  adminForbiddenEdit: "אין הרשאה לערוך נקודות.",
+  adminNeedSignIn: "צריך להתחבר כדי לערוך.",
+  adminSpotNotFound: "הנקודה לא נמצאה.",
+  adminInvalidSpot: "הנתונים לא תקינים. בדקו את השדות ונסו שוב.",
+  adminNameTooShort: "השם צריך לפחות 2 תווים.",
+  adminNameTooLong: "השם ארוך מדי (עד 80 תווים).",
+  adminDescriptionTooLong: "התיאור ארוך מדי (עד 1000 תווים).",
+  adminRegionTooLong: "שם האזור ארוך מדי (עד 80 תווים).",
+  adminContributorTooLong: "שם המוסיף ארוך מדי (עד 80 תווים).",
+  adminNoteTooLong: "ההערה ארוכה מדי (עד 200 תווים).",
+  adminStatusInvalid: "סטטוס לא תקין.",
+  adminPhotoInvalid: "כתובת התמונה חייבת להיות קישור https.",
+  adminAmenitiesInvalid: "פרטי החניה או הנגישות לא תקינים.",
+  adminUnknownPhoto: "אחת התמונות לא שייכת לנקודה.",
+  adminCoordinatesInvalid: "הקואורדינטות לא תקינות.",
+  adminRequestBlocked: "הבקשה נחסמה.",
+  adminStatusLabel: "סטטוס",
+  adminStatusPending: "ממתין לאישור",
+  adminStatusApproved: "מפורסם",
+  adminStatusRejected: "נדחה",
+  adminContributorEditLabel: "שם המוסיף",
+  adminRemoveCover: "הסרת תמונת השער",
+  adminGalleryLabel: "תמונות נוספות",
+  adminRemoveGalleryPhoto: "הסרת תמונה",
+  adminSavedHidden: "השינויים נשמרו. הנקודה לא מופיעה במפה בסטטוס הזה.",
+  adminCoverUrlLabel: "כתובת תמונת שער (https, אופציונלי)",
+  adminCoverMoved: "תמונת השער מסומנת להסרה. במקומה תוצג התמונה הראשונה שנשארת.",
+  adminCoverRemoved: "תמונת השער מסומנת להסרה, ולא נשארת תמונה אחרת.",
+  adminNewCoverLabel: "החלפת תמונת השער",
+  adminBackToSuggestions: "הצעות ממתינות",
   draftSignInHint: "בשליחה תתבקשו להתחבר עם Google. הטופס יישמר ותחזרו לכאן.",
   draftRestored: "הטופס שוחזר. אפשר לשלוח עכשיו.",
   draftPhotosMissing: "התמונות לא נשמרו. צרפו אותן שוב לפני השליחה.",

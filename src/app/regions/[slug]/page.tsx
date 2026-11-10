@@ -29,10 +29,12 @@ import type { SpotSummary } from "@/types/spot";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-/** Cached for 10 minutes; spot writes refresh it through `revalidatePublishedSpots`. */
+/**
+ * Cached for 10 minutes; spot writes refresh it through `revalidatePublishedSpots`.
+ * Unknown slugs still 404 inside the page. On-demand rendering stays enabled so
+ * a purge can rebuild a known region instead of leaving a hard 404.
+ */
 export const revalidate = 600;
-
-export const dynamicParams = false;
 
 export function generateStaticParams() {
   return SUNSET_REGIONS.map((region) => ({ slug: region.slug }));

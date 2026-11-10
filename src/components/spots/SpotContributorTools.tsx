@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AdminSpotEditLink from "@/components/admin/AdminSpotEditLink";
 import AddSpotPhoto from "@/components/spots/AddSpotPhoto";
 import NavigateToSpot from "@/components/spots/NavigateToSpot";
 import ReportSpot from "@/components/spots/ReportSpot";
@@ -35,6 +36,7 @@ export default function SpotContributorTools({
 
   return (
     <>
+      <AdminSpotEditLink spotId={spotId} />
       {isOwner ? (
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <Link

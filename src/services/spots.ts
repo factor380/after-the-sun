@@ -1,8 +1,10 @@
 import { Prisma } from "@prisma/client";
+import { resolveAdminSpotCover } from "@/lib/admin-cover";
 import { cleanContributorName } from "@/lib/contributor-name";
 import { prisma } from "@/lib/prisma";
 import {
   assertIsraelCoordinates,
+  type AdminUpdateSpotInput,
   type CreateSpotInput,
   type SuggestSpotInput,
   type UpdateSpotInput,
@@ -76,6 +78,33 @@ export async function listSpotsByUser(userId: string) {
 
 export async function getSpotById(id: string) {
   return prisma.spot.findUnique({ where: { id }, include: COVER_PHOTO_SELECTION });
+}
+
+/** Any status, with the gallery. Callers must already be admins. */
+export async function getSpotForAdmin(id: string) {
+  return prisma.spot.findUnique({
+    where: { id },
+    include: {
+      photos: {
+        orderBy: { createdAt: "asc" },
+        select: { id: true, url: true },
+      },
+    },
+  });
+}
+
+export async function listSpotsForAdmin() {
+  return prisma.spot.findMany({
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      region: true,
+      status: true,
+      contributorName: true,
+      updatedAt: true,
+    },
+  });
 }
 
 /** Spot plus its full community gallery, for the detail page. */
@@ -317,6 +346,65 @@ export async function updateSpot(
         : {}),
     },
   });
+}
+
+/**
+ * Replace the editable fields of any spot. Does not check the caller —
+ * the admin route has to reject non-admins before this runs.
+ */
+export async function adminUpdateSpot(id: string, input: AdminUpdateSpotInput) {
+  const existing = await prisma.spot.findUnique({
+    where: { id },
+    include: {
+      photos: {
+        orderBy: { createdAt: "asc" },
+        select: { id: true, url: true },
+      },
+    },
+  });
+  if (!existing) return null;
+
+  assertIsraelCoordinates(input.lat, input.lng);
+
+  const removeIds = [...new Set(input.removePhotoIds ?? [])];
+  const known = new Set(existing.photos.map((photo) => photo.id));
+  if (removeIds.some((photoId) => !known.has(photoId))) {
+    throw new Error("UNKNOWN_PHOTO");
+  }
+
+  const { photoUrl: nextPhotoUrl, removedPhotoUrls } = resolveAdminSpotCover({
+    requestedPhotoUrl: input.photoUrl ?? null,
+    existingPhotoUrl: existing.photoUrl,
+    photos: existing.photos,
+    removePhotoIds: removeIds,
+  });
+
+  const spot = await prisma.$transaction(async (tx) => {
+    if (removeIds.length > 0) {
+      await tx.spotPhoto.deleteMany({
+        where: { spotId: id, id: { in: removeIds } },
+      });
+    }
+    return tx.spot.update({
+      where: { id },
+      data: {
+        name: input.name,
+        description: input.description.trim(),
+        lat: input.lat,
+        lng: input.lng,
+        region: input.region ?? null,
+        photoUrl: nextPhotoUrl,
+        parking: input.parking ?? null,
+        parkingNote: input.parkingNote ?? null,
+        accessibility: input.accessibility ?? null,
+        accessibilityNote: input.accessibilityNote ?? null,
+        contributorName: cleanContributorName(input.contributorName),
+        status: input.status,
+      },
+    });
+  });
+
+  return { spot, removedPhotoUrls };
 }
 
 export async function deleteSpot(id: string, userId: string) {

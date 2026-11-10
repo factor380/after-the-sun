@@ -50,6 +50,11 @@ export default async function AdminSuggestionsPage() {
       <p className="mt-2 text-sm leading-relaxed text-[var(--sand-muted)]">
         {dictionary.adminSuggestionsSubtitle}
       </p>
+      <p className="mt-3">
+        <Link href="/admin/spots" className="text-sm text-[var(--ember)] underline">
+          {dictionary.adminAllSpots}
+        </Link>
+      </p>
 
       {suggestions.length === 0 ? (
         <p className="mt-8 text-[var(--sand-muted)]">{dictionary.adminSuggestionsEmpty}</p>
@@ -86,7 +91,15 @@ export default async function AdminSuggestionsPage() {
                   className="mt-3 max-h-48 w-full object-cover"
                 />
               ) : null}
-              <div className="mt-4 flex gap-3">
+              <p className="mt-4">
+                <Link
+                  href={`/admin/spots/${spot.id}`}
+                  className="text-sm text-[var(--ember)] underline"
+                >
+                  {dictionary.adminEditSpot}
+                </Link>
+              </p>
+              <div className="mt-3 flex gap-3">
                 <form action={`/api/admin/suggestions/${spot.id}`} method="post" className="flex-1">
                   <input type="hidden" name="action" value="approve" />
                   <button

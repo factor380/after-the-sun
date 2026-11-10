@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { adminSpotValidationMessage } from "@/lib/admin-spot-messages";
+import { dictionary } from "@/lib/i18n/dictionaries";
 import { createReportSchema } from "./report";
 import {
+  adminUpdateSpotSchema,
   assertIsraelCoordinates,
   createSpotSchema,
   suggestSpotSchema,
@@ -168,6 +171,79 @@ describe("suggestSpotSchema", () => {
     expect(parsed.data.description).toBeNull();
   });
 });
+
+describe("adminUpdateSpotSchema", () => {
+  const edit = {
+    name: "חוף הילטון",
+    description: "תצפית פתוחה לים בשעת השקיעה.",
+    lat: 32.09,
+    lng: 34.77,
+    region: " תל אביב ",
+    photoUrl: "",
+    parking: "paid",
+    parkingNote: "  חניון  ",
+    accessibility: "partial",
+    accessibilityNote: "",
+    contributorName: "  דנה  ",
+    status: "approved",
+    createdById: "should-be-stripped",
+  };
+
+  it("accepts a full edit and strips fields an admin must not reassign", () => {
+    const parsed = adminUpdateSpotSchema.safeParse(edit);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.name).toBe("חוף הילטון");
+    expect(parsed.data.region).toBe("תל אביב");
+    expect(parsed.data.photoUrl).toBeNull();
+    expect(parsed.data.parkingNote).toBe("חניון");
+    expect(parsed.data.accessibilityNote).toBeNull();
+    expect(parsed.data.contributorName).toBe("דנה");
+    expect(parsed.data.status).toBe("approved");
+    expect(parsed.data).not.toHaveProperty("createdById");
+  });
+
+  it("allows an empty description, the same as creating a spot", () => {
+    const parsed = adminUpdateSpotSchema.safeParse({
+      ...edit,
+      description: "   ",
+      status: "pending",
+      contributorName: "",
+    });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.description).toBe("");
+    expect(parsed.data.contributorName).toBeNull();
+    expect(parsed.data.status).toBe("pending");
+  });
+
+  it("rejects a short name, a long credit, a bad status, and a non-https photo", () => {
+    expect(messageFor({ ...edit, name: " א " })).toBe(dictionary.adminNameTooShort);
+    expect(messageFor({ ...edit, name: "א".repeat(81) })).toBe(dictionary.adminNameTooLong);
+    expect(messageFor({ ...edit, description: "א".repeat(1001) })).toBe(
+      dictionary.adminDescriptionTooLong,
+    );
+    expect(messageFor({ ...edit, region: "א".repeat(81) })).toBe(dictionary.adminRegionTooLong);
+    expect(messageFor({ ...edit, contributorName: "א".repeat(81) })).toBe(
+      dictionary.adminContributorTooLong,
+    );
+    expect(messageFor({ ...edit, status: "published" })).toBe(dictionary.adminStatusInvalid);
+    expect(messageFor({ ...edit, photoUrl: "http://example.com/a.jpg" })).toBe(
+      dictionary.adminPhotoInvalid,
+    );
+    expect(messageFor({ ...edit, lat: 120 })).toBe(dictionary.adminCoordinatesInvalid);
+    expect(messageFor({ ...edit, parking: "free" })).toBe(dictionary.adminAmenitiesInvalid);
+    expect(messageFor({ ...edit, parkingNote: "א".repeat(201) })).toBe(
+      dictionary.adminNoteTooLong,
+    );
+  });
+});
+
+function messageFor(body: unknown): string {
+  const parsed = adminUpdateSpotSchema.safeParse(body);
+  if (parsed.success) throw new Error("expected the admin edit to fail");
+  return adminSpotValidationMessage(parsed.error);
+}
 
 describe("assertIsraelCoordinates", () => {
   it("accepts a point in Tel Aviv", () => {
