@@ -10,9 +10,12 @@ import {
 } from "../src/lib/e2e/guard";
 import { E2E_SEED_SPOTS } from "../src/lib/e2e/seed-spots";
 import { e2eUploadRoot, resolveE2EUploadPath } from "../src/lib/e2e/upload-path";
-import { SUNSET_REGIONS, regionPath } from "../src/lib/regions";
+import { SUNSET_REGIONS, matchingRegion, regionPath, unassignedSpotSummaries } from "../src/lib/regions";
+import { getSiteUrl } from "../src/lib/seo";
+import { spotFaq } from "../src/lib/spot-faq";
 import {
   anchorHrefs,
+  decodeHtml,
   documentTitle,
   findTypedNodes,
   headingText,
@@ -51,6 +54,11 @@ const TINY_PNG = Buffer.from(
 
 const SEEDED_SPOT = E2E_SEED_SPOTS.find((spot) => spot.id === "e2e-tel-aviv");
 if (!SEEDED_SPOT) throw new Error("missing seeded tel aviv spot");
+const NO_FAQ_SPOT = E2E_SEED_SPOTS.find((spot) => spot.id === "e2e-no-faq");
+if (!NO_FAQ_SPOT) throw new Error("missing seeded spot without a region");
+
+/** The only seeded spot stored with an empty region. Any other blank label fails the guard. */
+const EMPTY_REGION_FIXTURE = "נקודה בלי פרטים (e2e-no-faq): empty region";
 
 let createdSpotId: string | null = null;
 
@@ -158,6 +166,117 @@ test("public pages, sitemap, robots, and llms.txt", async ({ request, baseURL })
     const response = await request.get(`${url.pathname}${url.search}`, { maxRedirects: 0 });
     expect(response.status(), destination).toBe(200);
   }
+});
+
+test("every published spot belongs to one region page", async ({ request }) => {
+  const spots = (await (await request.get("/api/spots")).json()) as {
+    id: string;
+    name: string;
+    region: string | null;
+  }[];
+  const missing = unassignedSpotSummaries(spots);
+  expect(missing, missing.join("\n")).toEqual([EMPTY_REGION_FIXTURE]);
+
+  const html = new Map<string, string>();
+  for (const region of SUNSET_REGIONS) {
+    const response = await request.get(regionPath(region.slug), { maxRedirects: 0 });
+    expect(response.status(), region.slug).toBe(200);
+    html.set(region.slug, await response.text());
+  }
+
+  for (const spot of E2E_SEED_SPOTS) {
+    const hits = SUNSET_REGIONS.filter((region) =>
+      html.get(region.slug)?.includes(`/spots/${spot.id}`),
+    ).map((region) => region.slug);
+    const label = spot.region?.trim() ?? "";
+    if (!label) {
+      expect(hits, `${spot.name} (${spot.id}): empty region`).toEqual([]);
+      continue;
+    }
+    expect(hits, `${spot.name} (${spot.id}): ${label}`).toEqual([
+      matchingRegion(label)?.slug,
+    ]);
+  }
+
+  const haifa = html.get("haifa-north") ?? "";
+  const north = E2E_SEED_SPOTS.find((spot) => spot.region === "צפון");
+  const gilboa = E2E_SEED_SPOTS.find((spot) => spot.region === "הרי הגלבוע");
+  if (!north || !gilboa) throw new Error("missing seeded north labels");
+  expect(haifa).toContain(`/spots/${north.id}`);
+  expect(haifa).toContain(north.name);
+  expect(haifa).toContain(`/spots/${gilboa.id}`);
+  expect(haifa).toContain(gilboa.name);
+  expect(haifa).toContain("הרי הגלבוע");
+
+  const origin = getSiteUrl();
+  const locs = sitemapLocs(await (await request.get("/sitemap.xml")).text());
+  const llmsText = await (await request.get("/llms.txt")).text();
+  const hub = await (await request.get("/regions")).text();
+  const paths = ["/regions", ...SUNSET_REGIONS.map((region) => regionPath(region.slug))];
+  expect(paths).toHaveLength(SUNSET_REGIONS.length + 1);
+  expect(SUNSET_REGIONS).toHaveLength(7);
+  for (const path of paths) {
+    expect(locs.some((loc) => new URL(loc).pathname === path), path).toBe(true);
+    expect(llmsText, path).toContain(`](${origin}${path === "/regions" ? "/regions" : path}):`);
+    expect(hub, path).toContain(`href="${path}"`);
+  }
+});
+
+test("spot FAQ is visible with FAQPage JSON-LD, and absent when nothing applies", async ({
+  page,
+}) => {
+  await page.goto(`/spots/${SEEDED_SPOT.id}`, { waitUntil: "domcontentloaded" });
+  const section = page.locator("#spot-faq");
+  await expect(section).toBeVisible();
+  await expect(section).toHaveAttribute("dir", "rtl");
+  await expect(section.getByRole("heading", { level: 2, name: "שאלות נפוצות" })).toBeVisible();
+
+  const expected = spotFaq(SEEDED_SPOT);
+  expect(expected.length).toBeGreaterThan(0);
+  const questions = section.locator("dt");
+  await expect(questions).toHaveCount(expected.length);
+  for (const item of expected) {
+    await expect(section.getByText(item.question, { exact: true })).toBeVisible();
+    await expect(section.getByText(item.answer, { exact: true })).toBeVisible();
+  }
+
+  const html = await page.content();
+  const rendered = visibleFaqs(html);
+  expect(rendered).toEqual(expected);
+  const blocks = jsonLdBlocks(html);
+  const faqs = blocks.flatMap((block) => findTypedNodes(block, "FAQPage"));
+  expect(faqs).toHaveLength(1);
+  const mainEntity = faqs[0]?.mainEntity;
+  expect(Array.isArray(mainEntity)).toBe(true);
+  const entities = mainEntity as {
+    "@type"?: string;
+    name?: string;
+    acceptedAnswer?: { "@type"?: string; text?: string };
+  }[];
+  expect(entities).toHaveLength(rendered.length);
+  for (const [index, entity] of entities.entries()) {
+    expect(entity["@type"]).toBe("Question");
+    expect(entity.name).toBe(rendered[index]?.question);
+    expect(entity.acceptedAnswer?.["@type"]).toBe("Answer");
+    expect(entity.acceptedAnswer?.text).toBe(rendered[index]?.answer);
+  }
+  const attractionBlocks = blocks.filter(
+    (block) => findTypedNodes(block, "TouristAttraction").length > 0,
+  );
+  expect(attractionBlocks).toHaveLength(1);
+  expect(findTypedNodes(attractionBlocks[0], "FAQPage")).toHaveLength(0);
+
+  await page.goto(`/spots/${NO_FAQ_SPOT.id}`, { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { level: 1, name: NO_FAQ_SPOT.name })).toBeVisible();
+  await expect(page.locator("#spot-faq")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "שאלות נפוצות" })).toHaveCount(0);
+  const emptyHtml = await page.content();
+  expect(jsonLdBlocks(emptyHtml).flatMap((block) => findTypedNodes(block, "FAQPage"))).toEqual(
+    [],
+  );
+  expect(
+    jsonLdBlocks(emptyHtml).flatMap((block) => findTypedNodes(block, "TouristAttraction")),
+  ).toHaveLength(1);
 });
 
 test("judea-samaria redirects only when this branch defines that redirect", async ({
@@ -748,6 +867,24 @@ test("anonymous suggestion stays hidden until an admin approves it", async ({
   });
   expect(editAfterApproval.status()).toBe(403);
 });
+
+function visibleFaqs(html: string): { question: string; answer: string }[] {
+  const section = html.match(/<section\b[^>]*\bid="spot-faq"[\s\S]*?<\/section>/i);
+  if (!section) return [];
+  const pairs: { question: string; answer: string }[] = [];
+  const pattern = /<dt\b[^>]*>([\s\S]*?)<\/dt>\s*<dd\b[^>]*>([\s\S]*?)<\/dd>/gi;
+  for (const match of section[0].matchAll(pattern)) {
+    pairs.push({
+      question: decodeHtml(match[1] ?? "")
+        .replace(/<[^>]+>/g, "")
+        .trim(),
+      answer: decodeHtml(match[2] ?? "")
+        .replace(/<[^>]+>/g, "")
+        .trim(),
+    });
+  }
+  return pairs;
+}
 
 function requireBase(baseURL: string | undefined): string {
   if (!baseURL) throw new Error("Playwright baseURL is not set");

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { E2E_SEED_SPOTS } from "@/lib/e2e/seed-spots";
 import { getSiteUrl, jsonLdString, regionPageJsonLd, regionsIndexJsonLd } from "@/lib/seo";
 import {
   REGIONS_INDEX,
@@ -9,6 +10,7 @@ import {
   publicRegionPages,
   regionPath,
   regionSpotCountLabel,
+  unassignedSpotSummaries,
 } from "@/lib/regions";
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -206,7 +208,13 @@ describe("sunset regions", () => {
     const live: Record<string, string | undefined> = {
       "נפת חדרה": "sharon-coast",
       "מישור החוף": "south-shfela",
-      "הרי הגלבוע": undefined,
+      "הרי הגלבוע": "haifa-north",
+      "מרכז": "south-shfela",
+      "צפון": "haifa-north",
+      "יער יתיר": "south-shfela",
+      "צפון השומרון": "samaria",
+      "חרמון": "haifa-north",
+      "החרמון": "haifa-north",
       "הרצליה": "sharon-coast",
       "גוש עציון": "judea",
       "רמות מנשה": "sharon-coast",
@@ -278,9 +286,58 @@ describe("sunset regions", () => {
     expect(matchingRegion("מזרח יהודה")?.slug).toBe("judea");
 
     expect(matchingRegion("חוף")).toBeUndefined();
-    expect(matchingRegion("הרי הגלבוע")).toBeUndefined();
+    expect(matchingRegion("הרי הגלבוע")?.slug).toBe("haifa-north");
     expect(matchingRegion("תל אביב חוף")?.slug).toBe("tel-aviv");
     expect(matchingRegion("תל אביב, שוק הכרמל")?.slug).toBe("tel-aviv");
+  });
+
+  it("assigns the exact labels of the five spots that had no region page", () => {
+    const live = [
+      { spot: "מצפה חרובים", label: "הרי הגלבוע", slug: "haifa-north" },
+      { spot: "תצפית בגמזו", label: "מרכז", slug: "south-shfela" },
+      { spot: "עכו", label: "צפון", slug: "haifa-north" },
+      { spot: "יער יתיר", label: "יער יתיר", slug: "south-shfela" },
+      { spot: "גבעת אברנם הנקין", label: null, slug: undefined },
+    ] as const;
+
+    expect(live.map((entry) => entry.spot)).toEqual([
+      "מצפה חרובים",
+      "תצפית בגמזו",
+      "עכו",
+      "יער יתיר",
+      "גבעת אברנם הנקין",
+    ]);
+
+    for (const entry of live) {
+      expect(matchingRegion(entry.label)?.slug, entry.spot).toBe(entry.slug);
+    }
+
+    expect(matchingRegion("צפון השומרון")?.slug).toBe("samaria");
+    expect(matchingRegion("מרכז שומרון")?.slug).toBe("samaria");
+    expect(matchingRegion("דרום הר חברון")?.slug).toBe("judea");
+    expect(matchingRegion("רמת הגולן")?.slug).toBe("haifa-north");
+    expect(matchingRegion("גליל עליון")?.slug).toBe("haifa-north");
+    expect(getRegionBySlug("haifa-north")?.matchers).toContain("חרמון");
+    expect(getRegionBySlug("haifa-north")?.matchers).not.toContain("רמת הגולן");
+    expect(getRegionBySlug("haifa-north")?.description).toContain("גלבוע");
+    expect(getRegionBySlug("haifa-north")?.description).toContain("עמקים");
+    expect(getRegionBySlug("haifa-north")?.intro).toContain("העמקים");
+    expect(getRegionBySlug("haifa-north")?.description).not.toContain("—");
+    expect(getRegionBySlug("haifa-north")?.intro).not.toContain("—");
+
+    const missing = unassignedSpotSummaries(
+      live.map((entry) => ({ id: entry.spot, name: entry.spot, region: entry.label })),
+    );
+    expect(missing, missing.join("\n")).toEqual([
+      "גבעת אברנם הנקין (גבעת אברנם הנקין): empty region",
+    ]);
+  });
+
+  it("names every seeded spot that has no region page", () => {
+    const missing = unassignedSpotSummaries(E2E_SEED_SPOTS);
+    expect(missing, missing.join("\n")).toEqual([
+      "נקודה בלי פרטים (e2e-no-faq): empty region",
+    ]);
   });
 
   it("builds ItemList and BreadcrumbList JSON-LD without raw <", () => {

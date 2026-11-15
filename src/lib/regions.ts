@@ -48,9 +48,9 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
     name: "חיפה והצפון",
     title: "נקודות שקיעה בחיפה ובצפון",
     description:
-      "נקודות שקיעה בחיפה, בגליל, בכנרת ובגולן על המפה הקהילתית After the Sun. רשימה מתעדכנת עם קישור לכל נקודה.",
+      "נקודות שקיעה בחיפה, בגליל, בגלבוע, בעמקים, בכנרת ובגולן על המפה הקהילתית After the Sun. רשימה עם קישור לכל נקודה.",
     intro:
-      "אלה נקודות השקיעה שסומנו בחיפה או בצפון על המפה. נקודה מופיעה כאן כשהאזור שנכתב בה מציין חיפה, גליל, כנרת, גולן, או יישוב צפוני אחר.",
+      "אלה נקודות השקיעה שסומנו בחיפה או בצפון על המפה. נקודה מופיעה כאן כשהאזור שנכתב בה מציין חיפה, גליל, גלבוע, העמקים, כנרת, גולן, או יישוב צפוני אחר.",
     matchers: [
       "חיפה",
       "גליל",
@@ -67,6 +67,15 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
       // Carmel coast (חוף הכרמל, חוף דור), not the southern coastal plain.
       "כרמל",
       "דור",
+      // "צפון השומרון" stays on Shomron: that page is tested first.
+      "צפון",
+      "גלבוע",
+      "עמק יזרעאל",
+      "עמק המעיינות",
+      "בית שאן",
+      "עפולה",
+      // "רמת הגולן" already matches "גולן".
+      "חרמון",
     ],
   },
   {
@@ -107,6 +116,12 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
       "הרי יהודה",
       "דימונה",
       "עוטף עזה",
+      // תצפית בגמזו is stored as "מרכז". Gimzo is next to Modiin, which is
+      // already on this page. "מרכז שומרון" stays on Shomron because that page
+      // is tested first.
+      "מרכז",
+      // The stored label is the place name. KKL places יער יתיר in the northern Negev.
+      "יער יתיר",
     ],
   },
   {
@@ -255,16 +270,20 @@ export function getRegionBySlug(slug: string): SunsetRegion | undefined {
 
 /**
  * Drawer and page order follow `SUNSET_REGIONS`. Yehuda and Shomron are
- * tested before the south page so "דרום הר חברון" is not taken by "דרום".
- * A label that only says "דרום" still reaches the south page.
+ * tested before Haifa and the south page so a broad word does not take their
+ * labels: "דרום הר חברון" stays off "דרום", "צפון השומרון" stays off "צפון",
+ * and "מרכז שומרון" stays off "מרכז". A label that only says "דרום", "צפון",
+ * or "מרכז" still reaches the broader page.
  */
 function regionsInMatchOrder(): SunsetRegion[] {
   const ahead = new Set(["judea", "samaria"]);
   const early = SUNSET_REGIONS.filter((region) => ahead.has(region.slug));
   const rest = SUNSET_REGIONS.filter((region) => !ahead.has(region.slug));
-  const southAt = rest.findIndex((region) => region.slug === "south-shfela");
-  if (southAt < 0) return [...SUNSET_REGIONS];
-  return [...rest.slice(0, southAt), ...early, ...rest.slice(southAt)];
+  const insertAt = rest.findIndex(
+    (region) => region.slug === "haifa-north" || region.slug === "south-shfela",
+  );
+  if (insertAt < 0) return [...rest, ...early];
+  return [...rest.slice(0, insertAt), ...early, ...rest.slice(insertAt)];
 }
 
 /** The first matching region in match order, if any. */
@@ -288,6 +307,21 @@ export function filterSpotsForRegion<T extends { region: string | null }>(
   region: SunsetRegion,
 ): T[] {
   return spots.filter((spot) => spotMatchesRegion(spot.region, region));
+}
+
+/**
+ * Spots that land on no region page. An empty label is listed here.
+ * Callers should put the result in the assertion message so a blank region
+ * fails in the open instead of being skipped.
+ */
+export function unassignedSpotSummaries(
+  spots: readonly { id: string; name: string; region: string | null | undefined }[],
+): string[] {
+  return spots.flatMap((spot) => {
+    const label = typeof spot.region === "string" ? spot.region.trim() : "";
+    if (matchingRegion(label)) return [];
+    return [`${spot.name} (${spot.id}): ${label || "empty region"}`];
+  });
 }
 
 function placeTokens(value: string | null | undefined): string[] {

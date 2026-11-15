@@ -493,3 +493,24 @@ export function spotJsonLd(spot: {
     ],
   };
 }
+
+/** Separate FAQPage document. Render it only when `items` is not empty. */
+export function spotFaqJsonLd(
+  name: string,
+  items: readonly { question: string; answer: string }[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    name,
+    inLanguage: "he-IL",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+}
