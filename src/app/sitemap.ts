@@ -12,9 +12,12 @@ export const dynamic = "force-dynamic";
  * Bump when public HTML or JSON-LD changes without a database write.
  * Spot edits newer than this still win, so Google is not told every deploy is a content change.
  */
-const PUBLIC_MARKUP_REVISION = new Date("2026-11-15T18:00:00.000Z");
-/** Region page copy was updated on this date. Spot edits newer than this still win. */
-const REGION_PAGES_PUBLISHED = new Date("2026-11-15T18:00:00.000Z");
+const PUBLIC_MARKUP_REVISION = new Date("2026-11-15T18:45:00.000Z");
+/**
+ * Region page copy changed on this date.
+ * If the change ships on a later calendar day, bump this to the merge day.
+ */
+const REGION_PAGES_PUBLISHED = new Date("2026-11-15T18:45:00.000Z");
 
 function lastModified(updatedAt: Date): Date {
   return updatedAt > PUBLIC_MARKUP_REVISION ? updatedAt : PUBLIC_MARKUP_REVISION;

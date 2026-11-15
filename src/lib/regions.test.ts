@@ -312,6 +312,11 @@ describe("sunset regions", () => {
       expect(matchingRegion(entry.label)?.slug, entry.spot).toBe(entry.slug);
     }
 
+    expect(matchingRegion("צפון השרון")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("מרכז השרון")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("מרכז, כפר סבא")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("מרכז")?.slug).toBe("south-shfela");
+    expect(matchingRegion("צפון")?.slug).toBe("haifa-north");
     expect(matchingRegion("צפון השומרון")?.slug).toBe("samaria");
     expect(matchingRegion("מרכז שומרון")?.slug).toBe("samaria");
     expect(matchingRegion("דרום הר חברון")?.slug).toBe("judea");

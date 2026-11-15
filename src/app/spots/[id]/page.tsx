@@ -25,7 +25,7 @@ import {
   spotPageDescription,
   spotPageTitle,
 } from "@/lib/seo";
-import { spotFaq } from "@/lib/spot-faq";
+import { faqAnswerSegments, spotFaq, type SpotFaqItem } from "@/lib/spot-faq";
 import { getSpotWithPhotos, listSpots } from "@/services/spots";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -173,7 +173,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
   );
 }
 
-function SpotFaq({ items }: { items: { question: string; answer: string }[] }) {
+function SpotFaq({ items }: { items: SpotFaqItem[] }) {
   return (
     <section
       id="spot-faq"
@@ -191,11 +191,29 @@ function SpotFaq({ items }: { items: { question: string; answer: string }[] }) {
         {items.map((item) => (
           <div key={item.question}>
             <dt className="font-medium leading-relaxed text-[var(--sand)]">{item.question}</dt>
-            <dd className="mt-2 leading-relaxed text-[var(--sand-muted)]">{item.answer}</dd>
+            <dd className="mt-2 leading-relaxed text-[var(--sand-muted)]">
+              <SpotFaqAnswer item={item} />
+            </dd>
           </div>
         ))}
       </dl>
     </section>
+  );
+}
+
+function SpotFaqAnswer({ item }: { item: SpotFaqItem }) {
+  return faqAnswerSegments(item).map((segment, index) =>
+    segment.href ? (
+      <Link
+        key={index}
+        href={segment.href}
+        className="text-[var(--ember)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--sand)]"
+      >
+        {segment.text}
+      </Link>
+    ) : (
+      <span key={index}>{segment.text}</span>
+    ),
   );
 }
 

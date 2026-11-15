@@ -269,14 +269,15 @@ export function getRegionBySlug(slug: string): SunsetRegion | undefined {
 }
 
 /**
- * Drawer and page order follow `SUNSET_REGIONS`. Yehuda and Shomron are
- * tested before Haifa and the south page so a broad word does not take their
- * labels: "דרום הר חברון" stays off "דרום", "צפון השומרון" stays off "צפון",
- * and "מרכז שומרון" stays off "מרכז". A label that only says "דרום", "צפון",
- * or "מרכז" still reaches the broader page.
+ * Drawer and page order follow `SUNSET_REGIONS`. Yehuda, Shomron, and the
+ * Sharon are tested before Haifa and the south page so a broad word does not
+ * take their labels: "דרום הר חברון" stays off "דרום", "צפון השומרון" stays
+ * off "צפון", "מרכז שומרון" stays off "מרכז", and "צפון השרון" / "מרכז השרון"
+ * stay on the Sharon page. A label that only says "דרום", "צפון", or "מרכז"
+ * still reaches the broader page.
  */
 function regionsInMatchOrder(): SunsetRegion[] {
-  const ahead = new Set(["judea", "samaria"]);
+  const ahead = new Set(["judea", "samaria", "sharon-coast"]);
   const early = SUNSET_REGIONS.filter((region) => ahead.has(region.slug));
   const rest = SUNSET_REGIONS.filter((region) => !ahead.has(region.slug));
   const insertAt = rest.findIndex(

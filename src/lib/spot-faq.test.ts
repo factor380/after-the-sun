@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { jsonLdString, spotFaqJsonLd, spotJsonLd } from "@/lib/seo";
-import { spotFaq } from "@/lib/spot-faq";
+import { faqAnswerSegments, spotFaq } from "@/lib/spot-faq";
 
 const NAME = "מצפה חרובים";
 
@@ -18,15 +18,16 @@ describe("spotFaq", () => {
     ).toEqual([
       {
         question: "איפה חונים במצפה חרובים?",
-        answer: "יש חניה. חניון ליד הכניסה",
+        answer: "במצפה חרובים יש חניה. חניון ליד הכניסה",
       },
       {
-        question: "האם מצפה חרובים נגיש?",
-        answer: "נגיש חלקית. יש מדרגה אחת",
+        question: "מה הנגישות במצפה חרובים?",
+        answer: "במצפה חרובים נגיש חלקית. יש מדרגה אחת",
       },
       {
-        question: "איפה נמצא מצפה חרובים?",
-        answer: "מצפה חרובים נמצא בהרי הגלבוע. עמוד האזור: חיפה והצפון.",
+        question: "איפה נמצאת הנקודה מצפה חרובים?",
+        answer: "האזור שסומן: הרי הגלבוע. הנקודה מופיעה בעמוד האזור חיפה והצפון.",
+        regionLink: { href: "/regions/haifa-north", name: "חיפה והצפון" },
       },
     ]);
   });
@@ -40,12 +41,26 @@ describe("spotFaq", () => {
     });
 
     expect(items).toEqual([
-      { question: "איפה חונים ביער יתיר?", answer: "חניה בתשלום" },
-      { question: "האם יער יתיר נגיש?", answer: "לא נגיש" },
-      { question: "איפה נמצא יער יתיר?", answer: "יער יתיר נמצא באפק." },
+      { question: "איפה חונים ביער יתיר?", answer: "ביער יתיר חניה בתשלום." },
+      { question: "מה הנגישות ביער יתיר?", answer: "ביער יתיר לא נגיש." },
+      { question: "איפה נמצאת הנקודה יער יתיר?", answer: "האזור שסומן: אפק." },
     ]);
+    expect(items[2]?.regionLink).toBeUndefined();
     expect(items[2]?.answer).not.toContain("/regions/");
     expect(items[2]?.answer).not.toContain("http");
+  });
+
+  it("skips the region sentence when the label is the spot name", () => {
+    const items = spotFaq({ name: "יער יתיר", region: "יער יתיר" });
+
+    expect(items).toEqual([
+      {
+        question: "איפה נמצאת הנקודה יער יתיר?",
+        answer: "הנקודה מופיעה בעמוד האזור הדרום והשפלה.",
+        regionLink: { href: "/regions/south-shfela", name: "הדרום והשפלה" },
+      },
+    ]);
+    expect(items[0]?.answer.startsWith("האזור שסומן")).toBe(false);
   });
 
   it("keeps a note when the choice itself is missing", () => {
@@ -56,18 +71,26 @@ describe("spotFaq", () => {
         accessibility: "yes",
       }),
     ).toEqual([
-      { question: "איפה חונים בעכו?", answer: "ברחוב הסמוך" },
-      { question: "האם עכו נגיש?", answer: "נגיש" },
+      { question: "איפה חונים בעכו?", answer: "בעכו: ברחוב הסמוך" },
+      { question: "מה הנגישות בעכו?", answer: "בעכו נגיש." },
     ]);
   });
 
   it("includes a no-parking answer without a note", () => {
-    expect(spotFaq({ name: "תצפית בגמזו", parking: "no", region: "מרכז" })).toEqual([
-      { question: "איפה חונים בתצפית בגמזו?", answer: "אין חניה במקום" },
+    const items = spotFaq({ name: "תצפית בגמזו", parking: "no", region: "מרכז" });
+
+    expect(items).toEqual([
+      { question: "איפה חונים בתצפית בגמזו?", answer: "בתצפית בגמזו אין חניה במקום." },
       {
-        question: "איפה נמצא תצפית בגמזו?",
-        answer: "תצפית בגמזו נמצא במרכז. עמוד האזור: הדרום והשפלה.",
+        question: "איפה נמצאת הנקודה תצפית בגמזו?",
+        answer: "האזור שסומן: מרכז. הנקודה מופיעה בעמוד האזור הדרום והשפלה.",
+        regionLink: { href: "/regions/south-shfela", name: "הדרום והשפלה" },
       },
+    ]);
+    const segments = faqAnswerSegments(items[1]!);
+    expect(segments.map((segment) => segment.text).join("")).toBe(items[1]?.answer);
+    expect(segments.filter((segment) => segment.href)).toEqual([
+      { text: "הדרום והשפלה", href: "/regions/south-shfela" },
     ]);
   });
 
@@ -137,11 +160,24 @@ describe("spotFaqJsonLd", () => {
     expect(data.mainEntity.map((item) => item.acceptedAnswer.text)).toEqual(
       items.map((item) => item.answer),
     );
+    const location = items.find((item) => item.regionLink);
+    expect(location?.regionLink).toEqual({
+      href: "/regions/tel-aviv",
+      name: "תל אביב–יפו",
+    });
+    const segments = faqAnswerSegments(location!);
+    expect(segments.map((segment) => segment.text).join("")).toBe(location?.answer);
+    expect(segments[0]?.text).toContain("האזור שסומן: תל אביב–יפו");
+    expect(segments[0]?.href).toBeUndefined();
+    expect(segments.filter((segment) => segment.href)).toEqual([
+      { text: "תל אביב–יפו", href: "/regions/tel-aviv" },
+    ]);
 
     const serialized = jsonLdString(data);
     expect(serialized).not.toContain("<");
     expect(serialized).toContain("\\u003c");
     expect(serialized).not.toContain("localhost");
+    expect(serialized).not.toContain("/regions/");
 
     const attraction = spotJsonLd({
       id: "spot-1",

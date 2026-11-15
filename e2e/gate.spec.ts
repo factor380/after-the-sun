@@ -237,12 +237,17 @@ test("spot FAQ is visible with FAQPage JSON-LD, and absent when nothing applies"
   await expect(questions).toHaveCount(expected.length);
   for (const item of expected) {
     await expect(section.getByText(item.question, { exact: true })).toBeVisible();
-    await expect(section.getByText(item.answer, { exact: true })).toBeVisible();
+    await expect(section).toContainText(item.answer);
   }
+  const location = expected.find((item) => item.regionLink);
+  if (!location?.regionLink) throw new Error("seeded tel aviv FAQ has no region link");
+  const regionLink = section.locator(`a[href="${location.regionLink.href}"]`);
+  await expect(regionLink).toBeVisible();
+  await expect(regionLink).toHaveText(location.regionLink.name);
 
   const html = await page.content();
   const rendered = visibleFaqs(html);
-  expect(rendered).toEqual(expected);
+  expect(rendered).toEqual(expected.map(({ question, answer }) => ({ question, answer })));
   const blocks = jsonLdBlocks(html);
   const faqs = blocks.flatMap((block) => findTypedNodes(block, "FAQPage"));
   expect(faqs).toHaveLength(1);
@@ -259,7 +264,9 @@ test("spot FAQ is visible with FAQPage JSON-LD, and absent when nothing applies"
     expect(entity.name).toBe(rendered[index]?.question);
     expect(entity.acceptedAnswer?.["@type"]).toBe("Answer");
     expect(entity.acceptedAnswer?.text).toBe(rendered[index]?.answer);
+    expect(entity.acceptedAnswer?.text).not.toContain("/regions/");
   }
+  expect(JSON.stringify(faqs[0])).not.toContain(location.regionLink.href);
   const attractionBlocks = blocks.filter(
     (block) => findTypedNodes(block, "TouristAttraction").length > 0,
   );
