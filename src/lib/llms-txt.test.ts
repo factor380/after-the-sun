@@ -102,6 +102,17 @@ describe("buildLlmsTxt", () => {
 
     const index = entries.find((entry) => entry.url === `${origin}/regions`);
     expect(index).toMatchObject({ changeFrequency: "weekly", priority: 0.85 });
+    const now = Date.now();
+    for (const entry of entries) {
+      if (!(entry.lastModified instanceof Date)) continue;
+      expect(entry.lastModified.getTime(), entry.url).toBeLessThanOrEqual(now);
+    }
+    for (const page of publicRegionPages()) {
+      const entry = entries.find((item) => item.url === `${origin}${page.path}`);
+      expect((entry?.lastModified as Date).toISOString(), page.path).toBe(
+        "2026-11-15T00:00:00.000Z",
+      );
+    }
     expect(entries.some((entry) => entry.url === `${origin}/regions/judea-samaria`)).toBe(
       false,
     );
