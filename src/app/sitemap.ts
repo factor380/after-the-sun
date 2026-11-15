@@ -11,13 +11,16 @@ export const dynamic = "force-dynamic";
 /**
  * Bump when public HTML or JSON-LD changes without a database write.
  * Spot edits newer than this still win, so Google is not told every deploy is a content change.
+ * UTC midnight on the change day. A clock time on that day was still in the future
+ * for part of the day, and `lastModified` uses this value as the floor for region pages.
  */
-const PUBLIC_MARKUP_REVISION = new Date("2026-11-15T18:45:00.000Z");
+const PUBLIC_MARKUP_REVISION = new Date("2026-11-15T00:00:00.000Z");
 /**
- * Region page copy changed on this date.
- * If the change ships on a later calendar day, bump this to the merge day.
+ * Region page copy changed on this calendar day.
+ * If the change ships on a later calendar day, bump this to that day's UTC midnight.
+ * Do not use a clock time: it can still be in the future when the sitemap is fetched.
  */
-const REGION_PAGES_PUBLISHED = new Date("2026-11-15T18:45:00.000Z");
+const REGION_PAGES_PUBLISHED = new Date("2026-11-15T00:00:00.000Z");
 
 function lastModified(updatedAt: Date): Date {
   return updatedAt > PUBLIC_MARKUP_REVISION ? updatedAt : PUBLIC_MARKUP_REVISION;

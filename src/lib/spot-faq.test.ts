@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { jsonLdString, spotFaqJsonLd, spotJsonLd } from "@/lib/seo";
-import { faqAnswerSegments, spotFaq } from "@/lib/spot-faq";
+import { faqAnswerSegments, spotFaq, withHebrewPrefix } from "@/lib/spot-faq";
 
 const NAME = "מצפה חרובים";
 
@@ -18,11 +18,11 @@ describe("spotFaq", () => {
     ).toEqual([
       {
         question: "איפה חונים במצפה חרובים?",
-        answer: "במצפה חרובים יש חניה. חניון ליד הכניסה",
+        answer: "במצפה חרובים יש חניה. חניון ליד הכניסה.",
       },
       {
         question: "מה הנגישות במצפה חרובים?",
-        answer: "במצפה חרובים נגיש חלקית. יש מדרגה אחת",
+        answer: "המקום נגיש חלקית. יש מדרגה אחת.",
       },
       {
         question: "איפה נמצאת הנקודה מצפה חרובים?",
@@ -42,7 +42,7 @@ describe("spotFaq", () => {
 
     expect(items).toEqual([
       { question: "איפה חונים ביער יתיר?", answer: "ביער יתיר חניה בתשלום." },
-      { question: "מה הנגישות ביער יתיר?", answer: "ביער יתיר לא נגיש." },
+      { question: "מה הנגישות ביער יתיר?", answer: "המקום אינו נגיש." },
       { question: "איפה נמצאת הנקודה יער יתיר?", answer: "האזור שסומן: אפק." },
     ]);
     expect(items[2]?.regionLink).toBeUndefined();
@@ -61,6 +61,12 @@ describe("spotFaq", () => {
       },
     ]);
     expect(items[0]?.answer.startsWith("האזור שסומן")).toBe(false);
+    expect(items[0]?.answer).not.toContain("נמצא ביער יתיר");
+    expect(items[0]?.answer).not.toContain("יער יתיר");
+
+    const spaced = spotFaq({ name: "יער יתיר", region: "יער  יתיר" });
+    expect(spaced[0]?.answer).toBe("הנקודה מופיעה בעמוד האזור הדרום והשפלה.");
+    expect(spotFaq({ name: "אפק", region: "אפק" })).toEqual([]);
   });
 
   it("keeps a note when the choice itself is missing", () => {
@@ -71,8 +77,8 @@ describe("spotFaq", () => {
         accessibility: "yes",
       }),
     ).toEqual([
-      { question: "איפה חונים בעכו?", answer: "בעכו: ברחוב הסמוך" },
-      { question: "מה הנגישות בעכו?", answer: "בעכו נגיש." },
+      { question: "איפה חונים בעכו?", answer: "בעכו: ברחוב הסמוך." },
+      { question: "מה הנגישות בעכו?", answer: "המקום נגיש." },
     ]);
   });
 
@@ -116,6 +122,114 @@ describe("spotFaq", () => {
         region: "   ",
       }),
     ).toEqual([]);
+  });
+
+  it("contracts the definite article and leaves a radical ה in place", () => {
+    expect(withHebrewPrefix("ב", "החרמון")).toBe("בחרמון");
+    expect(withHebrewPrefix("ל", "החרמון")).toBe("לחרמון");
+    expect(withHebrewPrefix("מ", "החרמון")).toBe("מהחרמון");
+    expect(withHebrewPrefix("ב", "הגולן")).toBe("בגולן");
+    expect(withHebrewPrefix("ל", "השרון")).toBe("לשרון");
+    expect(withHebrewPrefix("מ", "הנגב")).toBe("מהנגב");
+    expect(withHebrewPrefix("ב", "המרפסת של המדינה")).toBe("במרפסת של המדינה");
+    expect(withHebrewPrefix("ל", "המרפסת של המדינה")).toBe("למרפסת של המדינה");
+    expect(withHebrewPrefix("מ", "המרפסת של המדינה")).toBe("מהמרפסת של המדינה");
+
+    expect(withHebrewPrefix("ב", "הר גילה")).toBe("בהר גילה");
+    expect(withHebrewPrefix("ב", "הר הרצל")).toBe("בהר הרצל");
+    expect(withHebrewPrefix("ל", "הר הרצל")).toBe("להר הרצל");
+    expect(withHebrewPrefix("מ", "הר הרצל")).toBe("מהר הרצל");
+    expect(withHebrewPrefix("ב", "הרצליה")).toBe("בהרצליה");
+    expect(withHebrewPrefix("ל", "הרצלייה")).toBe("להרצלייה");
+    expect(withHebrewPrefix("מ", "הרצליה")).toBe("מהרצליה");
+    expect(withHebrewPrefix("ב", "הוד השרון")).toBe("בהוד השרון");
+    expect(withHebrewPrefix("ב", "הרי יהודה")).toBe("בהרי יהודה");
+    expect(withHebrewPrefix("ב", "גמלא")).toBe("בגמלא");
+    expect(withHebrewPrefix("ב", "נמל יפו")).toBe("בנמל יפו");
+    expect(withHebrewPrefix("ב", "הזוהר")).toBe("ב-הזוהר");
+    expect(withHebrewPrefix("ל", "הזוהר")).toBe("ל-הזוהר");
+    expect(withHebrewPrefix("מ", "הזוהר")).toBe("מהזוהר");
+
+    const hermon = spotFaq({
+      name: "החרמון",
+      region: "גולן",
+      parking: "yes",
+      parkingNote: "האתר נסגר ב-16:00",
+      accessibility: "yes",
+    });
+    expect(hermon.map((item) => item.question)).toEqual([
+      "איפה חונים בחרמון?",
+      "מה הנגישות בחרמון?",
+      "איפה נמצאת הנקודה החרמון?",
+    ]);
+    expect(hermon.map((item) => item.answer)).toEqual([
+      "בחרמון יש חניה. האתר נסגר ב-16:00.",
+      "המקום נגיש.",
+      "האזור שסומן: גולן. הנקודה מופיעה בעמוד האזור חיפה והצפון.",
+    ]);
+    expect(hermon.join(" ")).not.toContain("בהחרמון");
+
+    expect(
+      spotFaq({ name: "המרפסת של המדינה", parking: "yes" }).map((item) => item.question),
+    ).toEqual(["איפה חונים במרפסת של המדינה?"]);
+    expect(spotFaq({ name: "הר הרצל", parking: "yes" })[0]?.answer).toBe(
+      "בהר הרצל יש חניה.",
+    );
+    expect(spotFaq({ name: "הרצליה", parking: "paid" })[0]?.answer).toBe(
+      "בהרצליה חניה בתשלום.",
+    );
+  });
+
+  it("phrases accessibility as a sentence about the place", () => {
+    expect(spotFaq({ name: "גמלא", accessibility: "yes" })).toEqual([
+      { question: "מה הנגישות בגמלא?", answer: "המקום נגיש." },
+    ]);
+    expect(spotFaq({ name: "נמל יפו", accessibility: "no" })).toEqual([
+      { question: "מה הנגישות בנמל יפו?", answer: "המקום אינו נגיש." },
+    ]);
+    expect(
+      spotFaq({
+        name: "נמל יפו",
+        accessibility: "partial",
+        accessibilityNote: "שביל סלול עד הרציף",
+      })[0]?.answer,
+    ).toBe("המקום נגיש חלקית. שביל סלול עד הרציף.");
+  });
+
+  it("ends notes with one terminal mark and drops a repeated sentence", () => {
+    expect(
+      spotFaq({
+        name: "חוף גורדון",
+        parking: "paid",
+        parkingNote: "חניה בתשלום",
+        accessibility: "yes",
+        accessibilityNote: "הנגשה מלאה לפי העירייה",
+      }),
+    ).toEqual([
+      { question: "איפה חונים בחוף גורדון?", answer: "בחוף גורדון חניה בתשלום." },
+      {
+        question: "מה הנגישות בחוף גורדון?",
+        answer: "המקום נגיש. הנגשה מלאה לפי העירייה.",
+      },
+    ]);
+    expect(
+      spotFaq({ name: "חוף הילטון", parking: "paid", parkingNote: "חניה בתשלום." })[0]
+        ?.answer,
+    ).toBe("בחוף הילטון חניה בתשלום.");
+    expect(
+      spotFaq({ name: "מרינה הרצליה", parking: "paid", parkingNote: "חניון בתשלום" })[0]
+        ?.answer,
+    ).toBe("במרינה הרצליה חניה בתשלום. חניון בתשלום.");
+    expect(
+      spotFaq({ name: "נמל יפו", parking: "yes", parkingNote: "חניה ליד הנמל." })[0]
+        ?.answer,
+    ).toBe("בנמל יפו יש חניה. חניה ליד הנמל.");
+    expect(
+      spotFaq({ name: "עכו", parkingNote: "ברחוב הסמוך!" })[0]?.answer,
+    ).toBe("בעכו: ברחוב הסמוך!");
+    expect(
+      spotFaq({ name: "עכו", accessibilityNote: "יש מדרגה אחת…" })[0]?.answer,
+    ).toBe("בעכו: יש מדרגה אחת…");
   });
 });
 

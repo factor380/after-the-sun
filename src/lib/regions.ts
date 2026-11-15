@@ -67,7 +67,7 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
       // Carmel coast (חוף הכרמל, חוף דור), not the southern coastal plain.
       "כרמל",
       "דור",
-      // "צפון השומרון" stays on Shomron: that page is tested first.
+      // Broad word only. "צפון הנגב" and "צפון השומרון" match the place first.
       "צפון",
       "גלבוע",
       "עמק יזרעאל",
@@ -117,8 +117,8 @@ export const SUNSET_REGIONS: readonly SunsetRegion[] = [
       "דימונה",
       "עוטף עזה",
       // תצפית בגמזו is stored as "מרכז". Gimzo is next to Modiin, which is
-      // already on this page. "מרכז שומרון" stays on Shomron because that page
-      // is tested first.
+      // already on this page. "מרכז שומרון" and "מרכז השרון" match the place
+      // name before this broad word.
       "מרכז",
       // The stored label is the place name. KKL places יער יתיר in the northern Negev.
       "יער יתיר",
@@ -270,11 +270,11 @@ export function getRegionBySlug(slug: string): SunsetRegion | undefined {
 
 /**
  * Drawer and page order follow `SUNSET_REGIONS`. Yehuda, Shomron, and the
- * Sharon are tested before Haifa and the south page so a broad word does not
- * take their labels: "דרום הר חברון" stays off "דרום", "צפון השומרון" stays
- * off "צפון", "מרכז שומרון" stays off "מרכז", and "צפון השרון" / "מרכז השרון"
- * stay on the Sharon page. A label that only says "דרום", "צפון", or "מרכז"
- * still reaches the broader page.
+ * Sharon are tested before Haifa and the south page so two specific names in
+ * one label keep a stable winner: "יהודה ושומרון" stays on Yehuda, and
+ * "דרום הר חברון" hits "הר חברון" before any later page.
+ * Broad direction words are not decided here. `matchingRegion` tries every
+ * specific place first, then צפון / מרכז / דרום.
  */
 function regionsInMatchOrder(): SunsetRegion[] {
   const ahead = new Set(["judea", "samaria", "sharon-coast"]);
@@ -287,13 +287,35 @@ function regionsInMatchOrder(): SunsetRegion[] {
   return [...rest.slice(0, insertAt), ...early, ...rest.slice(insertAt)];
 }
 
-/** The first matching region in match order, if any. */
+/**
+ * A label that is only "צפון", "מרכז", or "דרום" (or the same word with ה).
+ * Specific places such as נגב, ים המלח, שרון, שומרון, and יהודה are tested
+ * first, so "צפון הנגב" is not taken by the broad "צפון" matcher.
+ */
+const BROAD_DIRECTION_WORDS = new Set(["צפון", "מרכז", "דרום"]);
+
+function isBroadDirectionMatcher(matcher: string): boolean {
+  const parts = placeTokens(matcher);
+  return parts.length === 1 && BROAD_DIRECTION_WORDS.has(parts[0] ?? "");
+}
+
+function findRegion(tokens: string[], broad: boolean): SunsetRegion | undefined {
+  return regionsInMatchOrder().find((region) =>
+    region.matchers.some((matcher) => {
+      if (isBroadDirectionMatcher(matcher) !== broad) return false;
+      return tokensIncludePhrase(tokens, matcher);
+    }),
+  );
+}
+
+/**
+ * The first matching region. Specific place names win over צפון / מרכז / דרום.
+ * A label that only says one of those three words still uses the broad page.
+ */
 export function matchingRegion(regionText: string | null | undefined): SunsetRegion | undefined {
   const tokens = placeTokens(regionText);
   if (tokens.length === 0) return undefined;
-  return regionsInMatchOrder().find((region) =>
-    region.matchers.some((matcher) => tokensIncludePhrase(tokens, matcher)),
-  );
+  return findRegion(tokens, false) ?? findRegion(tokens, true);
 }
 
 export function spotMatchesRegion(

@@ -241,6 +241,8 @@ describe("sunset regions", () => {
       "גליל מערבי": "haifa-north",
       "תל אביב–יפו": "tel-aviv",
       "קיסריה": "sharon-coast",
+      "נגב": "south-shfela",
+      "כרמל": "haifa-north",
     };
 
     for (const [label, slug] of Object.entries(live)) {
@@ -312,9 +314,24 @@ describe("sunset regions", () => {
       expect(matchingRegion(entry.label)?.slug, entry.spot).toBe(entry.slug);
     }
 
+    expect(matchingRegion("צפון הנגב")?.slug).toBe("south-shfela");
+    expect(matchingRegion("צפון הנגב")?.name).toBe("הדרום והשפלה");
+    expect(matchingRegion("צפון ים המלח")?.slug).toBe("south-shfela");
+    expect(matchingRegion("צפון ים המלח")?.name).toBe("הדרום והשפלה");
+    expect(matchingRegion("צפון הערבה")?.slug).toBe("south-shfela");
+    expect(matchingRegion("צפון אילת")?.slug).toBe("south-shfela");
+    expect(matchingRegion("חוף הצפון אילת")?.slug).toBe("south-shfela");
+    expect(matchingRegion("דרום הנגב")?.slug).toBe("south-shfela");
+    expect(matchingRegion("מרכז הנגב")?.slug).toBe("south-shfela");
     expect(matchingRegion("צפון השרון")?.slug).toBe("sharon-coast");
     expect(matchingRegion("מרכז השרון")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("דרום השרון")?.slug).toBe("sharon-coast");
     expect(matchingRegion("מרכז, כפר סבא")?.slug).toBe("sharon-coast");
+    expect(matchingRegion("צפון יהודה")?.slug).toBe("judea");
+    expect(matchingRegion("דרום יהודה")?.slug).toBe("judea");
+    expect(matchingRegion("הצפון")?.slug).toBe("haifa-north");
+    expect(matchingRegion("המרכז")?.slug).toBe("south-shfela");
+    expect(matchingRegion("הדרום")?.slug).toBe("south-shfela");
     expect(matchingRegion("מרכז")?.slug).toBe("south-shfela");
     expect(matchingRegion("צפון")?.slug).toBe("haifa-north");
     expect(matchingRegion("צפון השומרון")?.slug).toBe("samaria");
