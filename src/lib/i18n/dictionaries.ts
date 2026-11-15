@@ -172,6 +172,10 @@ type Dict = {
   networkInterrupted: string;
   saving: string;
   shareSpot: string;
+  shareThisSpot: string;
+  shareLinkCopied: string;
+  shareOnWhatsApp: string;
+  shareSpotLead: string;
   signInTitle: string;
   signInSubtitle: string;
   signInWithGoogle: string;
@@ -435,6 +439,10 @@ export const dictionary: Dict = {
     "החיבור נקטע בזמן השליחה. בדקו את החיבור ונסו שוב.",
   saving: "שומר…",
   shareSpot: "שיתוף נקודה",
+  shareThisSpot: "שיתוף הנקודה",
+  shareLinkCopied: "הקישור הועתק",
+  shareOnWhatsApp: "שיתוף בוואטסאפ",
+  shareSpotLead: "נקודת שקיעה",
   signInTitle: "התחברות",
   signInSubtitle: "התחברו עם חשבון Google כדי לשתף נקודות ותמונות.",
   signInWithGoogle: "המשך עם Google",
