@@ -20,10 +20,12 @@ import {
   SITE_NAME,
   noIndexRobots,
   spotCoverImage,
+  spotFaqJsonLd,
   spotJsonLd,
   spotPageDescription,
   spotPageTitle,
 } from "@/lib/seo";
+import { faqAnswerSegments, spotFaq, type SpotFaqItem } from "@/lib/spot-faq";
 import { getSpotWithPhotos, listSpots } from "@/services/spots";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -89,6 +91,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
   if (!spot) notFound();
 
   const sunset = sunsetTime(spot.lat, spot.lng);
+  const faqs = spotFaq(spot);
 
   const galleryPhotos: GalleryPhoto[] = [
     ...(spot.photoUrl
@@ -104,6 +107,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
   return (
     <article className="pb-16">
       <JsonLd data={spotJsonLd(spot)} />
+      {faqs.length > 0 ? <JsonLd data={spotFaqJsonLd(spot.name, faqs)} /> : null}
       <SpotGallery
         spotId={spot.id}
         spotName={spot.name}
@@ -152,6 +156,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
           </p>
         ) : null}
         <SpotAmenityNotes spot={spot} />
+        {faqs.length > 0 ? <SpotFaq items={faqs} /> : null}
 
         <SpotLocationMapClient lat={spot.lat} lng={spot.lng} name={spot.name} />
 
@@ -165,6 +170,50 @@ export default async function SpotDetailPage({ params }: PageProps) {
         />
       </div>
     </article>
+  );
+}
+
+function SpotFaq({ items }: { items: SpotFaqItem[] }) {
+  return (
+    <section
+      id="spot-faq"
+      dir="rtl"
+      className="mt-8 border-t border-[var(--line)] pt-6"
+      aria-labelledby="spot-faq-heading"
+    >
+      <h2
+        id="spot-faq-heading"
+        className="font-[family-name:var(--font-display)] text-2xl text-[var(--sand)]"
+      >
+        שאלות נפוצות
+      </h2>
+      <dl className="mt-6 space-y-6">
+        {items.map((item) => (
+          <div key={item.question}>
+            <dt className="font-medium leading-relaxed text-[var(--sand)]">{item.question}</dt>
+            <dd className="mt-2 leading-relaxed text-[var(--sand-muted)]">
+              <SpotFaqAnswer item={item} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+function SpotFaqAnswer({ item }: { item: SpotFaqItem }) {
+  return faqAnswerSegments(item).map((segment, index) =>
+    segment.href ? (
+      <Link
+        key={index}
+        href={segment.href}
+        className="text-[var(--ember)] underline decoration-[var(--line)] underline-offset-4 transition hover:text-[var(--sand)]"
+      >
+        {segment.text}
+      </Link>
+    ) : (
+      <span key={index}>{segment.text}</span>
+    ),
   );
 }
 

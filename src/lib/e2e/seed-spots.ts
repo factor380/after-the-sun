@@ -6,12 +6,18 @@ export type E2ESeedSpot = {
   description: string;
   lat: number;
   lng: number;
-  /** Free-text region. The first matching region page lists the spot. */
-  region: string;
+  /** Free-text region. The first matching region page lists the spot. Null stays off every page. */
+  region: string | null;
+  parking?: "yes" | "paid" | "no" | null;
+  parkingNote?: string | null;
+  accessibility?: "yes" | "partial" | "no" | null;
+  accessibilityNote?: string | null;
 };
 
 /**
- * One spot for every public region page. Coordinates sit inside Israel.
+ * One spot for every public region page, plus the live labels "צפון" and
+ * "הרי הגלבוע", and one spot with no amenities and no region.
+ * Coordinates sit inside Israel.
  * None of these rows carry a photo, so spot pages use the shared PNG card.
  */
 export const E2E_SEED_SPOTS: readonly E2ESeedSpot[] = [
@@ -22,6 +28,10 @@ export const E2E_SEED_SPOTS: readonly E2ESeedSpot[] = [
     lat: 32.0525,
     lng: 34.7511,
     region: "תל אביב–יפו",
+    parking: "yes",
+    parkingNote: "חניה ליד הנמל",
+    accessibility: "partial",
+    accessibilityNote: "שביל סלול עד הרציף",
   },
   {
     id: "e2e-jerusalem",
@@ -70,5 +80,33 @@ export const E2E_SEED_SPOTS: readonly E2ESeedSpot[] = [
     lat: 32.3285,
     lng: 34.8515,
     region: "נתניה",
+  },
+  {
+    id: "e2e-tzfon",
+    name: "תצפית בדיקת צפון",
+    description: "נקודה שסומנה עם האזור צפון.",
+    lat: 32.9278,
+    lng: 35.0818,
+    region: "צפון",
+  },
+  {
+    id: "e2e-gilboa",
+    name: "מצפה בדיקת גלבוע",
+    description: "נקודה שסומנה עם האזור הרי הגלבוע.",
+    lat: 32.482,
+    lng: 35.421,
+    region: "הרי הגלבוע",
+  },
+  {
+    id: "e2e-no-faq",
+    name: "נקודה בלי פרטים",
+    description: "נקודה בלי חניה, בלי נגישות ובלי אזור.",
+    lat: 31.7,
+    lng: 34.75,
+    region: null,
+    parking: null,
+    parkingNote: null,
+    accessibility: null,
+    accessibilityNote: null,
   },
 ];

@@ -17,12 +17,17 @@ async function main() {
 
   await prisma.spot.createMany({
     data: E2E_SEED_SPOTS.map((spot) => ({
-      ...spot,
+      id: spot.id,
+      name: spot.name,
+      description: spot.description,
+      lat: spot.lat,
+      lng: spot.lng,
+      region: spot.region,
       photoUrl: null,
-      parking: null,
-      parkingNote: null,
-      accessibility: null,
-      accessibilityNote: null,
+      parking: spot.parking ?? null,
+      parkingNote: spot.parkingNote ?? null,
+      accessibility: spot.accessibility ?? null,
+      accessibilityNote: spot.accessibilityNote ?? null,
       createdById: E2E_SEED_USER_ID,
     })),
   });
