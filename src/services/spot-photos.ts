@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isRecordOwner } from "@/lib/spot-ownership";
 import {
   MAX_PHOTOS_PER_SPOT,
   MAX_PHOTOS_PER_USER_PER_SPOT,
@@ -80,7 +81,10 @@ export async function deleteSpotPhoto(
   });
 
   if (!photo || photo.spotId !== spotId) throw new SpotPhotoError("NOT_FOUND");
-  if (photo.uploadedById !== userId && photo.spot.createdById !== userId) {
+  if (
+    !isRecordOwner(userId, photo.uploadedById) &&
+    !isRecordOwner(userId, photo.spot.createdById)
+  ) {
     throw new SpotPhotoError("FORBIDDEN");
   }
 

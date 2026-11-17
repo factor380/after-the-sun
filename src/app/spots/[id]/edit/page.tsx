@@ -10,6 +10,7 @@ import {
   readAmenityNote,
 } from "@/lib/spot-amenities";
 import { noIndexRobots } from "@/lib/seo";
+import { isRecordOwner } from "@/lib/spot-ownership";
 import { createClient } from "@/lib/supabase/server";
 import { getSpotById } from "@/services/spots";
 
@@ -55,7 +56,7 @@ export default async function EditSpotPage({ params }: PageProps) {
   const spot = await getSpotById(id);
   if (!spot) notFound();
 
-  if (spot.createdById !== user.id) {
+  if (!isRecordOwner(user.id, spot.createdById)) {
     if (spot.status !== "approved") notFound();
     redirect(`/spots/${id}`);
   }

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { canDeleteSpotPhoto } from "@/lib/spot-ownership";
 import { useCurrentUserId } from "@/lib/supabase/use-current-user-id";
 
 export type GalleryPhoto = {
@@ -103,8 +104,7 @@ export default function SpotGallery({
   const active = openIndex === null ? null : photos[openIndex];
 
   function canDelete(photo: GalleryPhoto) {
-    if (!photo.id || !userId) return false;
-    return userId === createdById || photo.uploadedById === userId;
+    return canDeleteSpotPhoto(userId, createdById, photo);
   }
 
   if (count === 0) {
