@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import SpotLocationMapClient from "@/components/map/SpotLocationMapClient";
+import ShareSpotButton from "@/components/spots/ShareSpotButton";
 import SpotContributorTools from "@/components/spots/SpotContributorTools";
 import {
   SpotAmenityIcons,
@@ -26,6 +27,7 @@ import {
   spotPageTitle,
 } from "@/lib/seo";
 import { faqAnswerSegments, spotFaq, type SpotFaqItem } from "@/lib/spot-faq";
+import { buildSpotShare, whatsAppShareHref } from "@/lib/spot-share";
 import { getSpotWithPhotos, listSpots } from "@/services/spots";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -92,6 +94,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
 
   const sunset = sunsetTime(spot.lat, spot.lng);
   const faqs = spotFaq(spot);
+  const share = buildSpotShare({ id: spot.id, name: spot.name });
 
   const galleryPhotos: GalleryPhoto[] = [
     ...(spot.photoUrl
@@ -135,6 +138,14 @@ export default async function SpotDetailPage({ params }: PageProps) {
             className="text-[0.65em]"
           />
         </h1>
+        {share ? (
+          <ShareSpotButton
+            title={share.title}
+            text={share.text}
+            url={share.url}
+            whatsAppHref={whatsAppShareHref(share)}
+          />
+        ) : null}
         {spot.region ? <SpotRegionLabel region={spot.region} /> : null}
         {spot.contributorName ? (
           <p className="mt-2 text-sm text-[var(--sand-muted)]">
