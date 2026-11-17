@@ -6,6 +6,7 @@ import AddSpotPhoto from "@/components/spots/AddSpotPhoto";
 import NavigateToSpot from "@/components/spots/NavigateToSpot";
 import ReportSpot from "@/components/spots/ReportSpot";
 import { T } from "@/components/T";
+import { isRecordOwner } from "@/lib/spot-ownership";
 import { MAX_PHOTOS_PER_SPOT } from "@/lib/spot-photo";
 import { useCurrentUserId } from "@/lib/supabase/use-current-user-id";
 
@@ -32,7 +33,7 @@ export default function SpotContributorTools({
 }: SpotContributorToolsProps) {
   const userId = useCurrentUserId();
   const isAuthenticated = userId !== null;
-  const isOwner = userId === createdById;
+  const isOwner = isRecordOwner(userId, createdById);
 
   return (
     <>

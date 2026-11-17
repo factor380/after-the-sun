@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { resolveAdminSpotCover } from "@/lib/admin-cover";
 import { cleanContributorName } from "@/lib/contributor-name";
 import { prisma } from "@/lib/prisma";
+import { isRecordOwner } from "@/lib/spot-ownership";
 import {
   assertIsraelCoordinates,
   type AdminUpdateSpotInput,
@@ -314,7 +315,7 @@ export async function updateSpot(
 ) {
   const existing = await prisma.spot.findUnique({ where: { id } });
   if (!existing) return null;
-  if (existing.createdById !== userId) {
+  if (!isRecordOwner(userId, existing.createdById)) {
     if (existing.status !== "approved") return null;
     throw new Error("FORBIDDEN");
   }
@@ -410,7 +411,7 @@ export async function adminUpdateSpot(id: string, input: AdminUpdateSpotInput) {
 export async function deleteSpot(id: string, userId: string) {
   const existing = await prisma.spot.findUnique({ where: { id } });
   if (!existing) return null;
-  if (existing.createdById !== userId) {
+  if (!isRecordOwner(userId, existing.createdById)) {
     if (existing.status !== "approved") return null;
     throw new Error("FORBIDDEN");
   }
