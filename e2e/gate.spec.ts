@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { JERUSALEM_SUNSET_PLACES } from "../src/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_PLACES } from "../src/lib/guides/north-golan-sunset";
+import { WINTER_COAST_SUNSET_PLACES } from "../src/lib/guides/winter-coast-sunset";
 import {
   E2E_TEST_ADMIN_COOKIE,
   E2E_TEST_ADMIN_HEADER,
@@ -40,6 +41,7 @@ const AI_BOTS = [
 const GUIDE_SPOT_PATHS = new Set([
   ...JERUSALEM_SUNSET_PLACES.map((place) => place.path),
   ...NORTH_GOLAN_SUNSET_PLACES.map((place) => place.path),
+  ...WINTER_COAST_SUNSET_PLACES.map((place) => place.path),
 ]);
 
 const TINY_JPEG = Buffer.from([

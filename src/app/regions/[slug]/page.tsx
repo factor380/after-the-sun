@@ -6,6 +6,7 @@ import { SpotLinkList } from "@/components/spots/SpotLinkList";
 import { T } from "@/components/T";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
+import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { toPublicSpot } from "@/lib/public-spot";
 import {
@@ -73,6 +74,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+function listedRegionSlugs(guide: {
+  regionSlug: string;
+  regionSlugs?: readonly string[];
+}): readonly string[] {
+  if ("regionSlugs" in guide && guide.regionSlugs) return guide.regionSlugs;
+  return [guide.regionSlug];
+}
+
 function listedCountLabel(count: number): string {
   if (count === 1) return "כרגע נקודה אחת ברשימה.";
   if (count === 2) return "כרגע שתי נקודות ברשימה.";
@@ -131,8 +140,8 @@ export default async function RegionPage({ params }: PageProps) {
       <p className="mt-5 text-lg leading-relaxed text-[var(--sand-muted)]">
         {region.intro}
       </p>
-      {[JERUSALEM_SUNSET_GUIDE, NORTH_GOLAN_SUNSET_GUIDE]
-        .filter((guide) => guide.regionSlug === region.slug)
+      {[JERUSALEM_SUNSET_GUIDE, NORTH_GOLAN_SUNSET_GUIDE, WINTER_COAST_SUNSET_GUIDE]
+        .filter((guide) => listedRegionSlugs(guide).includes(region.slug))
         .map((guide) => (
           <p key={guide.path} className="mt-4 text-lg leading-relaxed text-[var(--sand-muted)]">
             מדריך מומלץ:{" "}
