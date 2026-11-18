@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
+import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { REGIONS_INDEX, getRegionBySlug, publicRegionPages, spotMatchesRegion } from "@/lib/regions";
 import { getSiteUrl } from "@/lib/seo";
 import { listSpots } from "@/services/spots";
@@ -128,6 +129,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}${NORTH_GOLAN_SUNSET_GUIDE.path}`,
       lastModified: lastModified(
         new Date(`${NORTH_GOLAN_SUNSET_GUIDE.dateModified}T00:00:00.000Z`),
+      ),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}${WINTER_COAST_SUNSET_GUIDE.path}`,
+      lastModified: lastModified(
+        new Date(`${WINTER_COAST_SUNSET_GUIDE.dateModified}T00:00:00.000Z`),
       ),
       changeFrequency: "monthly",
       priority: 0.7,

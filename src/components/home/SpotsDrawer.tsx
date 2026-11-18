@@ -15,6 +15,7 @@ import { useSpotSelection } from "@/components/home/SpotSelectionProvider";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
+import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { SUNSET_REGIONS, regionPath } from "@/lib/regions";
 
 type SpotsDrawerProps = {
@@ -258,6 +259,12 @@ export function SpotsDrawer({
             className="block text-sm font-medium text-[var(--ember)] underline-offset-4 hover:underline"
           >
             מדריך שקיעה בצפון ובגולן
+          </Link>
+          <Link
+            href={WINTER_COAST_SUNSET_GUIDE.path}
+            className="block text-sm font-medium text-[var(--ember)] underline-offset-4 hover:underline"
+          >
+            מדריך שקיעות חורף על הים
           </Link>
         </div>
 
