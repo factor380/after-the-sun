@@ -7,14 +7,13 @@ import {
   CAMPAIGN_GOAL,
   campaignDescription,
   campaignLead,
-  campaignTitle,
   campaignWhyNow,
   getCampaignSpotCount,
 } from "@/lib/campaign";
 import { toPublicSpot } from "@/lib/public-spot";
 import { REGIONS_INDEX, SUNSET_REGIONS, regionPath } from "@/lib/regions";
 import { dictionary } from "@/lib/i18n/dictionaries";
-import { SITE_NAME, aboutPageJsonLd, indexRobots } from "@/lib/seo";
+import { ABOUT_PAGE_TITLE, SITE_NAME, aboutPageJsonLd, indexRobots } from "@/lib/seo";
 import { allowStaticDataFallback } from "@/lib/static-data-fallback";
 import { listSpots } from "@/services/spots";
 import type { SpotSummary } from "@/types/spot";
@@ -26,12 +25,11 @@ const PATH = "/about";
 
 export async function generateMetadata(): Promise<Metadata> {
   const count = await getCampaignSpotCount();
-  const title = campaignTitle(count);
   const description = campaignDescription(count);
-  const brandedTitle = `${title} | ${SITE_NAME}`;
+  const brandedTitle = `${ABOUT_PAGE_TITLE} | ${SITE_NAME}`;
 
   return {
-    title,
+    title: ABOUT_PAGE_TITLE,
     description,
     alternates: { canonical: PATH },
     robots: indexRobots,
@@ -84,19 +82,18 @@ export default async function AboutPage() {
     getCampaignSpotCount(),
     loadRecentSpots(),
   ]);
-  const title = campaignTitle(count);
   const description = campaignDescription(count);
   const progress = Math.min(100, Math.round((count / CAMPAIGN_GOAL) * 100));
 
   return (
     <article className="mx-auto w-full max-w-2xl px-5 pb-20 pt-6 md:pt-10">
-      <JsonLd data={aboutPageJsonLd({ title, description })} />
+      <JsonLd data={aboutPageJsonLd({ title: ABOUT_PAGE_TITLE, description })} />
 
-      <p className="text-sm font-medium text-[var(--ember)]">{CAMPAIGN_DEADLINE_LABEL}</p>
-      <h1 className="mt-3 text-balance font-[family-name:var(--font-display)] text-4xl leading-tight text-[var(--sand)] md:text-5xl">
-        {title}
+      <h1 className="text-balance font-[family-name:var(--font-display)] text-4xl leading-tight text-[var(--sand)] md:text-5xl">
+        {ABOUT_PAGE_TITLE}
       </h1>
-      <p className="mt-5 text-lg leading-relaxed text-[var(--sand-muted)]">
+      <p className="mt-5 text-sm font-medium text-[var(--ember)]">{CAMPAIGN_DEADLINE_LABEL}</p>
+      <p className="mt-3 text-lg leading-relaxed text-[var(--sand-muted)]">
         {campaignLead(count)}
       </p>
 

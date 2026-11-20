@@ -29,14 +29,16 @@ If the work touches routing, rendered text, photos, or metadata, check:
 - JSON-LD goes through `JsonLd` (`jsonLdString` escapes `<`). Do not dump unsanitized HTML.
 - Root `<html>` stays `lang="he"` `dir="rtl"`.
 - Public copy is Hebrew. Titles use the layout template (`%s | After the Sun`); do not append the brand twice.
+- The home `default` title is `HOME_TITLE`: Hebrew tagline first, then the brand (`נקודות שקיעה בישראל | After the Sun`). Do not put the Latin brand first — RTL mobile results truncate it.
+- `/about` uses the stable `ABOUT_PAGE_TITLE`. Do not put the live spot count in that title, its og/twitter title, or the about JSON-LD name. The count stays in the description and the page body.
 - OG images: default `src/app/opengraph-image.tsx` (`/opengraph-image`, 1200×630). Spot pages use the cover photo when it is a public https URL; otherwise they use that same default image. Do not generate a per-spot card. `twitter:card` stays `summary_large_image`, and `spotJsonLd` uses the same image URL. `/regions` has its own `opengraph-image.tsx` and `twitter-image.tsx`; a page `openGraph` block without those files drops the root card.
 
 ## Page types
 
 | Route | Index? | Required |
 |---|---|---|
-| `/` | yes | canonical `/`, `websiteJsonLd` + `spotsItemListJsonLd`, crawlable spot links, `h1` |
-| `/about` | yes | unique title + description, canonical `/about`, `h1`, `aboutPageJsonLd`. `/50` 308s here and stays out of the sitemap. The goal is 75 spots by the end of 2026; the live count comes from published spots |
+| `/` | yes | canonical `/`, `HOME_TITLE` (Hebrew first), `websiteJsonLd` (`name` is the brand, `alternateName` is the Hebrew tagline) + `spotsItemListJsonLd`, crawlable spot links, `h1` |
+| `/about` | yes | stable `ABOUT_PAGE_TITLE` (no live count) + description, canonical `/about`, `h1` matching that title, `aboutPageJsonLd`. `/50` 308s here and stays out of the sitemap. The goal is 75 spots by the end of 2026; the live count comes from published spots and stays in the description and body, not the title |
 | `/regions` | yes | unique title + description from `REGIONS_INDEX`, canonical `/regions` via `getSiteUrl()` / `absoluteUrl()`, `h1`, a link to every `/regions/{slug}`, spot counts when the database answers, `regionsIndexJsonLd` (CollectionPage + ItemList), file-based `opengraph-image` and `twitter-image` (the page `openGraph` block does not inherit the root card) |
 | `/regions/[slug]` | yes | unique title + description from `SUNSET_REGIONS`, canonical `/regions/{slug}`, `h1`, visible spot links, `regionPageJsonLd` (ItemList + BreadcrumbList). Unknown slugs 404. `/regions/judea-samaria` 308s to `/regions` and stays out of the sitemap and llms.txt |
 | `/guides/jerusalem-sunset` | yes | unique title + description, canonical `/guides/jerusalem-sunset`, `h1`, `guideArticleJsonLd` (Article image is the Gan HaKipod share card, plus FAQPage + Place ItemList). ISR `revalidate` 600. File-based OG and Twitter image |

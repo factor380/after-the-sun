@@ -7,6 +7,19 @@ export { absoluteUrl, getSiteUrl };
 
 export const SITE_NAME = "After the Sun";
 export const SITE_TAGLINE = "נקודות שקיעה בישראל";
+/**
+ * Home `<title>`, og:title, and twitter:title.
+ * Hebrew leads so an RTL mobile result keeps the phrase instead of a
+ * truncated Latin fragment such as "the Sun". Child routes still use the
+ * layout template `%s | After the Sun`.
+ */
+export const HOME_TITLE = `${SITE_TAGLINE} | ${SITE_NAME}`;
+/**
+ * `/about` title segment. Stable on purpose: a live spot count in the title
+ * goes stale in Google sitelinks. The layout template appends the brand.
+ * The goal and the current count stay in the description and the page body.
+ */
+export const ABOUT_PAGE_TITLE = "אודות – מפה קהילתית של נקודות שקיעה בישראל";
 export const SITE_DESCRIPTION =
   "מפה קהילתית של נקודות שקיעה בישראל. גלו תצפיות, חופים ומקומות מומלצים לראות בהם שקיעה, ושתפו את הנקודה שלכם.";
 
@@ -300,6 +313,9 @@ export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    // `name` is the brand Google can show beside the URL. `alternateName` is
+    // the Hebrew phrase that leads HOME_TITLE, so the title link and the
+    // site name stay distinct.
     name: SITE_NAME,
     alternateName: SITE_TAGLINE,
     url,

@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  ABOUT_PAGE_TITLE,
   DEFAULT_OG_ALT,
+  HOME_TITLE,
+  SITE_NAME,
+  SITE_TAGLINE,
   aboutPageJsonLd,
   absoluteUrl,
   defaultOgImage,
@@ -42,6 +46,35 @@ function place(overrides?: {
     accessibilityNote: overrides?.accessibilityNote,
   };
 }
+
+describe("search result titles", () => {
+  it("leads the home title with the Hebrew phrase and keeps the brand under 60 characters", () => {
+    expect(HOME_TITLE).toBe("נקודות שקיעה בישראל | After the Sun");
+    expect(HOME_TITLE).toBe(`${SITE_TAGLINE} | ${SITE_NAME}`);
+    expect(HOME_TITLE.startsWith(SITE_TAGLINE)).toBe(true);
+    expect(HOME_TITLE.endsWith(SITE_NAME)).toBe(true);
+    expect(HOME_TITLE.length).toBeLessThanOrEqual(60);
+  });
+
+  it("keeps the about title stable, Hebrew-first, and free of a live spot count", () => {
+    const branded = `${ABOUT_PAGE_TITLE} | ${SITE_NAME}`;
+
+    expect(ABOUT_PAGE_TITLE).toBe("אודות – מפה קהילתית של נקודות שקיעה בישראל");
+    expect(ABOUT_PAGE_TITLE.startsWith("אודות")).toBe(true);
+    expect(branded.length).toBeLessThanOrEqual(60);
+    expect(branded).not.toMatch(/\d/);
+    expect(branded).not.toContain("מ-");
+    expect(branded).not.toContain("ל-75");
+  });
+
+  it("keeps the WebSite name as the brand and the Hebrew phrase as alternateName", () => {
+    const website = websiteJsonLd() as { name: string; alternateName: string };
+
+    expect(website.name).toBe(SITE_NAME);
+    expect(website.alternateName).toBe(SITE_TAGLINE);
+    expect(website.name).not.toBe(HOME_TITLE);
+  });
+});
 
 describe("defaultOgImage", () => {
   it("points at the home page card with absolute https size and alt", () => {
