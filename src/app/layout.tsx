@@ -5,9 +5,9 @@ import SiteHeader from "@/components/SiteHeader";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import {
+  HOME_TITLE,
   SITE_DESCRIPTION,
   SITE_NAME,
-  SITE_TAGLINE,
   getSiteUrl,
   indexRobots,
 } from "@/lib/seo";
@@ -26,12 +26,11 @@ const body = Heebo({
 });
 
 const siteUrl = getSiteUrl();
-const defaultTitle = `${SITE_NAME} | ${SITE_TAGLINE}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: defaultTitle,
+    default: HOME_TITLE,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -49,7 +48,7 @@ export const metadata: Metadata = {
   creator: SITE_NAME,
   robots: indexRobots,
   openGraph: {
-    title: defaultTitle,
+    title: HOME_TITLE,
     description: SITE_DESCRIPTION,
     url: siteUrl,
     siteName: SITE_NAME,
@@ -58,7 +57,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: defaultTitle,
+    title: HOME_TITLE,
     description: SITE_DESCRIPTION,
   },
   verification: {
