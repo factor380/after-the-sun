@@ -2,15 +2,22 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { T } from "@/components/T";
 import { dictionary } from "@/lib/i18n/dictionaries";
-import { noIndexRobots } from "@/lib/seo";
+import { noIndexRobots, pageSocialMetadata } from "@/lib/seo";
 import LoginForm from "./LoginForm";
 
 /** Sign-in depends on the request URL and must not be cached with public pages. */
 export const dynamic = "force-dynamic";
 
+const title = dictionary.signInTitle;
+const description = dictionary.signInSubtitle;
+const path = "/login";
+
 export const metadata: Metadata = {
-  title: dictionary.signInTitle,
+  title,
+  description,
+  alternates: { canonical: path },
   robots: noIndexRobots,
+  ...pageSocialMetadata({ title, description, path }),
 };
 
 export default function LoginPage() {

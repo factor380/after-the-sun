@@ -3,15 +3,20 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdminEmail } from "@/lib/admin";
 import { dictionary } from "@/lib/i18n/dictionaries";
-import { noIndexRobots } from "@/lib/seo";
+import { noIndexRobots, pageSocialMetadata } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { listPendingSuggestions } from "@/services/spots";
 
+const title = dictionary.adminSuggestionsTitle;
+const description = dictionary.adminSuggestionsDescription;
+const path = "/admin/suggestions";
+
 export const metadata: Metadata = {
-  title: dictionary.adminSuggestionsTitle,
-  description: dictionary.adminSuggestionsDescription,
-  alternates: { canonical: "/admin/suggestions" },
+  title,
+  description,
+  alternates: { canonical: path },
   robots: noIndexRobots,
+  ...pageSocialMetadata({ title, description, path }),
 };
 
 export const dynamic = "force-dynamic";

@@ -9,17 +9,26 @@ import {
   normalizeParking,
   readAmenityNote,
 } from "@/lib/spot-amenities";
-import { noIndexRobots } from "@/lib/seo";
+import { noIndexRobots, pageSocialMetadata } from "@/lib/seo";
 import { isRecordOwner } from "@/lib/spot-ownership";
 import { createClient } from "@/lib/supabase/server";
 import { getSpotById } from "@/services/spots";
 
-export const metadata: Metadata = {
-  title: dictionary.editSpotTitle,
-  robots: noIndexRobots,
-};
-
 type PageProps = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const title = dictionary.editSpotTitle;
+  const description = dictionary.editSpotSubtitle;
+  const path = `/spots/${encodeURIComponent(id)}/edit`;
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    robots: noIndexRobots,
+    ...pageSocialMetadata({ title, description, path }),
+  };
+}
 
 /** Owner-only editor. Never cache. */
 export const dynamic = "force-dynamic";

@@ -3,15 +3,20 @@ import Link from "next/link";
 import { AdminAccessDenied } from "@/components/admin/AdminAccessDenied";
 import { requireAdminPage } from "@/lib/admin-session";
 import { dictionary } from "@/lib/i18n/dictionaries";
-import { noIndexRobots } from "@/lib/seo";
+import { noIndexRobots, pageSocialMetadata } from "@/lib/seo";
 import { isSpotStatus } from "@/types/spot";
 import { listSpotsForAdmin } from "@/services/spots";
 
+const title = dictionary.adminSpotsTitle;
+const description = dictionary.adminSpotsDescription;
+const path = "/admin/spots";
+
 export const metadata: Metadata = {
-  title: dictionary.adminSpotsTitle,
-  description: dictionary.adminSpotsDescription,
-  alternates: { canonical: "/admin/spots" },
+  title,
+  description,
+  alternates: { canonical: path },
   robots: noIndexRobots,
+  ...pageSocialMetadata({ title, description, path }),
 };
 
 export const dynamic = "force-dynamic";

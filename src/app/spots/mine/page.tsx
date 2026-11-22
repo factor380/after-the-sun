@@ -5,13 +5,20 @@ import MySpotsList from "@/components/spots/MySpotsList";
 import { T } from "@/components/T";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { toPublicSpot } from "@/lib/public-spot";
-import { noIndexRobots } from "@/lib/seo";
+import { noIndexRobots, pageSocialMetadata } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { listSpotsByUser } from "@/services/spots";
 
+const title = dictionary.mySpotsTitle;
+const description = dictionary.mySpotsSubtitle;
+const path = "/spots/mine";
+
 export const metadata: Metadata = {
-  title: dictionary.mySpotsTitle,
+  title,
+  description,
+  alternates: { canonical: path },
   robots: noIndexRobots,
+  ...pageSocialMetadata({ title, description, path }),
 };
 
 /** Lists only the signed-in user's spots. Never cache. */

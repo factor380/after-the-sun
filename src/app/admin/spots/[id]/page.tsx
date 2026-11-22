@@ -5,7 +5,7 @@ import { AdminAccessDenied } from "@/components/admin/AdminAccessDenied";
 import AdminSpotForm from "@/components/admin/AdminSpotForm";
 import { requireAdminPage } from "@/lib/admin-session";
 import { dictionary } from "@/lib/i18n/dictionaries";
-import { noIndexRobots } from "@/lib/seo";
+import { noIndexRobots, pageSocialMetadata } from "@/lib/seo";
 import {
   normalizeAccessibility,
   normalizeParking,
@@ -18,10 +18,15 @@ type PageProps = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
+  const title = dictionary.adminEditSpotTitle;
+  const description = dictionary.adminEditSpotSubtitle;
+  const path = `/admin/spots/${encodeURIComponent(id)}`;
   return {
-    title: dictionary.adminEditSpotTitle,
+    title,
+    description,
+    alternates: { canonical: path },
     robots: noIndexRobots,
-    alternates: { canonical: `/admin/spots/${id}` },
+    ...pageSocialMetadata({ title, description, path }),
   };
 }
 

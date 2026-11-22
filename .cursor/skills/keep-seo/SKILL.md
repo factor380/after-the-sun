@@ -46,7 +46,7 @@ If the work touches routing, rendered text, photos, or metadata, check:
 | `/guides/winter-coast-sunset` | yes | unique title + description, canonical `/guides/winter-coast-sunset`, `h1`, `guideArticleJsonLd` (Article, FAQPage, Place ItemList, BreadcrumbList to `/regions/tel-aviv`). ISR `revalidate` 600. File-based OG and Twitter image. Also linked from `/regions/sharon-coast`, `/regions/haifa-north`, and `/regions/south-shfela` |
 | `/llms.txt` | text file | `text/plain; charset=utf-8`. Allowed in `robots.ts` for `*` and AI crawlers. Lists public pages and published spots. No fixed spot count. Not an HTML page, so no title or canonical |
 | `/spots/[id]` | yes | `generateMetadata` via `spotPageTitle` / `spotPageDescription`, canonical `/spots/{id}`, `spotJsonLd` |
-| login, new, mine, edit, admin, auth, api | no | `noIndexRobots`; listed in `robots.ts` `disallow`. `/admin/suggestions` is the suggestion queue |
+| login, new, mine, edit, admin, auth, api | no | `noIndexRobots`; listed in `robots.ts` `disallow`. `/admin/suggestions` is the suggestion queue. Pages with their own title also set `pageSocialMetadata` so og:title, twitter:title, and og:url are that page (`%s | After the Sun`, absolute canonical) instead of the home title and URL. No separate image file: the helper keeps the default card |
 
 ## Verify
 
