@@ -7,11 +7,13 @@ import NavigateToSpot from "@/components/spots/NavigateToSpot";
 import ReportSpot from "@/components/spots/ReportSpot";
 import { T } from "@/components/T";
 import { isRecordOwner } from "@/lib/spot-ownership";
+import { spotPublicPath } from "@/lib/spot-slug";
 import { MAX_PHOTOS_PER_SPOT } from "@/lib/spot-photo";
 import { useCurrentUserId } from "@/lib/supabase/use-current-user-id";
 
 type SpotContributorToolsProps = {
   spotId: string;
+  slug: string;
   createdById: string | null;
   photoCount: number;
   lat: number;
@@ -25,6 +27,7 @@ type SpotContributorToolsProps = {
  */
 export default function SpotContributorTools({
   spotId,
+  slug,
   createdById,
   photoCount,
   lat,
@@ -41,7 +44,7 @@ export default function SpotContributorTools({
       {isOwner ? (
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <Link
-            href={`/spots/${spotId}/edit`}
+            href={`${spotPublicPath(slug)}/edit`}
             className="border border-[var(--line)] px-4 py-2 text-[var(--sand-muted)] transition hover:border-[var(--ember)] hover:text-[var(--sand)]"
           >
             <T k="editSpot" />
@@ -59,11 +62,12 @@ export default function SpotContributorTools({
 
       <AddSpotPhoto
         spotId={spotId}
+        slug={slug}
         isAuthenticated={isAuthenticated}
         isFull={photoCount >= MAX_PHOTOS_PER_SPOT}
       />
 
-      <ReportSpot spotId={spotId} isAuthenticated={isAuthenticated} />
+      <ReportSpot spotId={spotId} slug={slug} isAuthenticated={isAuthenticated} />
     </>
   );
 }

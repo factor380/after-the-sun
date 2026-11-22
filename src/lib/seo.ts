@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { spotAmenityFeatures } from "@/lib/spot-amenities";
+import { spotPublicPath } from "@/lib/spot-slug";
 import type { SpotSummary } from "@/types/spot";
 import { absoluteUrl, getSiteUrl } from "@/lib/site-url";
 
@@ -254,7 +255,7 @@ export function regionPageJsonLd(input: {
       itemListElement: input.spots.map((spot, index) => ({
         "@type": "ListItem",
         position: index + 1,
-        url: absoluteUrl(`/spots/${spot.id}`),
+        url: absoluteUrl(spotPublicPath(spot.slug)),
         name: spot.name,
       })),
     });
@@ -369,7 +370,7 @@ export function spotsItemListJsonLd(spots: SpotSummary[]) {
     itemListElement: spots.map((spot, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: absoluteUrl(`/spots/${spot.id}`),
+      url: absoluteUrl(spotPublicPath(spot.slug)),
       name: spot.name,
     })),
   };
@@ -482,6 +483,7 @@ export function guideArticleJsonLd(input: {
 
 export function spotJsonLd(spot: {
   id: string;
+  slug: string;
   name: string;
   description: string;
   region: string | null;
@@ -494,7 +496,7 @@ export function spotJsonLd(spot: {
   accessibility?: string | null;
   accessibilityNote?: string | null;
 }) {
-  const url = absoluteUrl(`/spots/${spot.id}`);
+  const url = absoluteUrl(spotPublicPath(spot.slug));
   const photos = spotHttpsImageUrls(spot);
   const image = photos.length > 0 ? photos : [defaultOgImage().url];
   const amenityFeature = spotAmenityFeatures(spot);
@@ -550,10 +552,12 @@ export function spotJsonLd(spot: {
 export function spotFaqJsonLd(
   name: string,
   items: readonly { question: string; answer: string }[],
+  pageUrl?: string,
 ) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    ...(pageUrl ? { "@id": `${pageUrl}#faq`, url: pageUrl } : {}),
     name,
     inLanguage: "he-IL",
     mainEntity: items.map((item) => ({

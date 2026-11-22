@@ -51,7 +51,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!spot) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    revalidatePublishedSpots(spot.id);
+    revalidatePublishedSpots({ id: spot.id, slug: spot.slug });
     return NextResponse.json(toPublicSpot(spot));
   } catch (error) {
     console.error("PATCH /api/spots/[id]", error);
@@ -86,7 +86,7 @@ export async function DELETE(request: Request, context: RouteContext) {
     if (!spot) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    revalidatePublishedSpots(id);
+    revalidatePublishedSpots({ id: spot.id, slug: spot.slug });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("DELETE /api/spots/[id]", error);

@@ -3,6 +3,13 @@
  * Keep the wording, including every `[לא מאומת]` marker.
  */
 
+import { spotPublicPath, spotSlugFromName } from "@/lib/spot-slug";
+
+/** Public path from the spot's stored name, which is what the slug is built from. */
+function guideSpotPath(storedName: string): string {
+  return spotPublicPath(spotSlugFromName(storedName));
+}
+
 export const UNVERIFIED_MARK = "[לא מאומת]";
 
 export const JERUSALEM_SUNSET_GUIDE = {
@@ -58,7 +65,7 @@ export type GuidePlace = {
 export const JERUSALEM_SUNSET_PLACES: readonly GuidePlace[] = [
   {
     name: "הר הרצל",
-    path: "/spots/cmthi733a0001kz04ukit3wtr",
+    path: guideSpotPath("הר הרצל"),
     lead: 'מי שהוסיף את הנקודה תיאר אותה בשתי מילים: "נוף וואו פנוי". קשה להתווכח.',
     facts: [
       { label: "מיקום", text: "הר הרצל, במערב ירושלים." },
@@ -82,7 +89,7 @@ export const JERUSALEM_SUNSET_PLACES: readonly GuidePlace[] = [
   },
   {
     name: "תצפית הפסנתר",
-    path: "/spots/cmsp36sqj0001ky04i83jkpzp",
+    path: guideSpotPath("תצפית הפסנתר"),
     lead: 'נקודה רומנטית במיוחד בהרי ירושלים. יש בה פסנתר עשוי אבן, ולפי מי שהוסיף אותה זה "מקום מומלץ להצעות נישואים".',
     facts: [
       { label: "מיקום", text: "בהרי ירושלים, ליד יד קנדי, עם נוף לכיוון מודיעין." },
@@ -102,7 +109,7 @@ export const JERUSALEM_SUNSET_PLACES: readonly GuidePlace[] = [
   },
   {
     name: "תצפית עין עוזי",
-    path: "/spots/cmuu1cz6t0001l004ea4ivgi2",
+    path: guideSpotPath("תצפית עין עוזי"),
     lead: 'מעיין ושקיעה באותו מקום. לפי מי שהוסיף את הנקודה, "רואים משם שקיעה בהרי ירושלים".',
     facts: [
       { label: "מיקום", text: "בקצה המערבי של העיר, מול הרי ירושלים." },
@@ -122,7 +129,7 @@ export const JERUSALEM_SUNSET_PLACES: readonly GuidePlace[] = [
   },
   {
     name: "גן הקיפוד",
-    path: "/spots/cmujygjcz0001l604bdtrkxhz",
+    path: guideSpotPath("גן הקיפוד"),
     lead: "פארק גדול בשכונת רמות. לפי מי שהוסיף אותו, יש בו גן שעשועים, שבילי הליכה ומקומות ישיבה. בזכות הגודל שלו יש בו גם פרטיות, והנוף משקיף על הרי ירושלים.",
     facts: [
       { label: "מיקום", text: "שכונת רמות, ירושלים." },
@@ -142,7 +149,7 @@ export const JERUSALEM_SUNSET_PLACES: readonly GuidePlace[] = [
   },
   {
     name: "מרכז וולפסון (מרכז שלום מאיר)",
-    path: "/spots/cmsxecqg70001l704umtzffkj",
+    path: guideSpotPath("מרכז וולפסון ירושלים"),
     lead: 'תצפית עירונית בלב שכונת שערי חסד. מבניין מעניין צופים על גן סאקר, על הכנסת ועל הסביבה. מי שהוסיף את הנקודה מספר על "אוויר הרים צלול כיין" ועל מקומות ישיבה בתצפית. המקום נקרא גם מרכז שלום מאיר.',
     facts: [
       {
@@ -162,7 +169,7 @@ export const JERUSALEM_SUNSET_PLACES: readonly GuidePlace[] = [
   },
   {
     name: "מצפה אודי, נחל זמרי, פסגת זאב",
-    path: "/spots/cmtri3z0e0001jx04yqyigmvs",
+    path: guideSpotPath("פרגולה נחל זמרי, פסגת זאב, ירושלים"),
     lead: "מצפה אודי הוא פרגולה שהיא חלק מטיילת שמשקיפה על נחל זמרי, ואדי שקט שחיים בו צבאים. יש שם ספסלים ופרגולה.",
     facts: [
       { label: "מיקום", text: "הטיילת בשכונת פסגת זאב, מעל נחל זמרי." },

@@ -23,6 +23,7 @@ async function loadPublishedSpots(): Promise<LlmsSpot[]> {
     const spots = await listSpots();
     return spots.map((spot) => ({
       id: spot.id,
+      slug: spot.slug,
       name: spot.name,
       description: spot.description,
       region: spot.region,

@@ -4,9 +4,11 @@ import {
   E2E_TEST_ADMIN_HEADER,
   E2E_TEST_USER_HEADER,
 } from "../src/lib/e2e/guard";
+import { spotSlugFromName } from "../src/lib/spot-slug";
 import { findTypedNodes, headingText, jsonLdBlocks } from "./html";
 
 const ORIGINAL_NAME = "תצפית לפני עריכת מנהל";
+const ORIGINAL_SLUG = spotSlugFromName(ORIGINAL_NAME);
 const EDITED_NAME = "תצפית אחרי עריכת מנהל";
 const MOVED_NAME = "תצפית ירושלים מעודכנת";
 const CREDIT = "נועה בדיקה";
@@ -155,7 +157,7 @@ test("an admin can edit a spot and everyone else is refused", async ({
     await page.getByLabel("סטטוס").selectOption("approved");
     await page.getByRole("button", { name: "שמירת שינויים" }).click();
 
-    await expect(page).toHaveURL(new RegExp(`/spots/${id}$`));
+    await expect(page).toHaveURL(new RegExp(`/spots/${ORIGINAL_SLUG}$`));
     await expect(page.getByRole("heading", { level: 1 })).toContainText(EDITED_NAME);
     await expect(page.getByText(`נוספה על ידי ${CREDIT}`)).toBeVisible();
     await expect(page.getByRole("link", { name: "עריכת מנהל" })).toBeVisible();
@@ -172,7 +174,7 @@ test("an admin can edit a spot and everyone else is refused", async ({
         (response) =>
           response.url().includes("/api/admin/session") && response.status() === 200,
       );
-      await userPage.goto(`/spots/${id}`, { waitUntil: "domcontentloaded" });
+      await userPage.goto(`/spots/${ORIGINAL_SLUG}`, { waitUntil: "domcontentloaded" });
       await session;
       await expect(userPage.getByRole("link", { name: "עריכת מנהל" })).toHaveCount(0);
     } finally {
@@ -187,7 +189,7 @@ test("an admin can edit a spot and everyone else is refused", async ({
     .toContain(EDITED_NAME);
   await expect
     .poll(async () => (await request.get("/sitemap.xml", { maxRedirects: 0 })).text())
-    .toContain(`/spots/${id}`);
+    .toContain(`/spots/${ORIGINAL_SLUG}`);
   await expect
     .poll(async () => (await request.get("/llms.txt", { maxRedirects: 0 })).text())
     .toContain(EDITED_NAME);
@@ -214,13 +216,13 @@ test("an admin can edit a spot and everyone else is refused", async ({
 
   await expect
     .poll(async () => {
-      const spotPage = await request.get(`/spots/${id}`, { maxRedirects: 0 });
+      const spotPage = await request.get(`/spots/${ORIGINAL_SLUG}`, { maxRedirects: 0 });
       if (spotPage.status() !== 200) return "";
       return await spotPage.text();
     })
     .toContain(MOVED_NAME);
 
-  const published = await (await request.get(`/spots/${id}`, { maxRedirects: 0 })).text();
+  const published = await (await request.get(`/spots/${ORIGINAL_SLUG}`, { maxRedirects: 0 })).text();
   const attractions = jsonLdBlocks(published).flatMap((block) =>
     findTypedNodes(block, "TouristAttraction"),
   );
@@ -256,7 +258,7 @@ test("an admin can edit a spot and everyone else is refused", async ({
   expect(abroad.status()).toBe(400);
   expect(await abroad.text()).toContain("המיקום חייב להיות בתוך ישראל.");
 
-  const stillThere = await (await request.get(`/spots/${id}`, { maxRedirects: 0 })).text();
+  const stillThere = await (await request.get(`/spots/${ORIGINAL_SLUG}`, { maxRedirects: 0 })).text();
   expect(headingText(stillThere)).toContain(MOVED_NAME);
 
   const blockedEdit = await request.patch(`/api/admin/spots/${id}`, {
@@ -281,11 +283,11 @@ test("an admin can edit a spot and everyone else is refused", async ({
   spotId = null;
 
   await expect
-    .poll(async () => (await request.get(`/spots/${id}`, { maxRedirects: 0 })).status())
+    .poll(async () => (await request.get(`/spots/${ORIGINAL_SLUG}`, { maxRedirects: 0 })).status())
     .toBe(404);
   await expect
     .poll(async () => (await request.get("/sitemap.xml", { maxRedirects: 0 })).text())
-    .not.toContain(`/spots/${id}`);
+    .not.toContain(`/spots/${ORIGINAL_SLUG}`);
   await expect
     .poll(async () => (await request.get("/llms.txt", { maxRedirects: 0 })).text())
     .not.toContain(MOVED_NAME);

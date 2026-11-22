@@ -16,7 +16,7 @@ Public pages must be crawlable with unique metadata. Private pages must stay out
 If the work touches routing, rendered text, photos, or metadata, check:
 
 1. Public page? Unique `title` + `description` + `alternates.canonical` (path, not homepage).
-2. Private page (`/login`, `/spots/new`, `/spots/mine`, `/spots/[id]/edit`, `/auth/*`, `/api/*`)? `robots: noIndexRobots`.
+2. Private page (`/login`, `/spots/new`, `/spots/mine`, `/spots/[slug]/edit`, `/auth/*`, `/api/*`)? `robots: noIndexRobots`.
 3. New **public** URL? Add it to `src/app/sitemap.ts`. Keep it allowed in `src/app/robots.ts`.
 4. Map / virtualized lists still have a **server-rendered** link list (see `HomeSpotIndex`).
 5. Spot pages still emit JSON-LD via `spotJsonLd` and an `h1` with the spot name.
@@ -45,7 +45,7 @@ If the work touches routing, rendered text, photos, or metadata, check:
 | `/guides/north-golan-sunset` | yes | unique title + description, canonical `/guides/north-golan-sunset`, `h1`, `guideArticleJsonLd` (Article, FAQPage, Place ItemList, BreadcrumbList to `/regions/haifa-north`). ISR `revalidate` 600. File-based OG and Twitter image. There is no `/regions/golan` page |
 | `/guides/winter-coast-sunset` | yes | unique title + description, canonical `/guides/winter-coast-sunset`, `h1`, `guideArticleJsonLd` (Article, FAQPage, Place ItemList, BreadcrumbList to `/regions/tel-aviv`). ISR `revalidate` 600. File-based OG and Twitter image. Also linked from `/regions/sharon-coast`, `/regions/haifa-north`, and `/regions/south-shfela` |
 | `/llms.txt` | text file | `text/plain; charset=utf-8`. Allowed in `robots.ts` for `*` and AI crawlers. Lists public pages and published spots. No fixed spot count. Not an HTML page, so no title or canonical |
-| `/spots/[id]` | yes | `generateMetadata` via `spotPageTitle` / `spotPageDescription`, canonical `/spots/{id}`, `spotJsonLd` |
+| `/spots/[slug]` | yes | `generateMetadata` via `spotPageTitle` / `spotPageDescription`, canonical `/spots/{slug}`, `spotJsonLd`. `/spots/<cuid>` and any other non-canonical key 308 to that slug. Unknown keys 404 |
 | login, new, mine, edit, admin, auth, api | no | `noIndexRobots`; listed in `robots.ts` `disallow`. `/admin/suggestions` is the suggestion queue. Pages with their own title also set `pageSocialMetadata` so og:title, twitter:title, and og:url are that page (`%s | After the Sun`, absolute canonical) instead of the home title and URL. No separate image file: the helper keeps the default card |
 
 ## Verify

@@ -4,6 +4,7 @@ import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
 import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { REGIONS_INDEX, getRegionBySlug, publicRegionPages, spotMatchesRegion } from "@/lib/regions";
 import { getSiteUrl } from "@/lib/seo";
+import { spotPublicPath } from "@/lib/spot-slug";
 import { listSpots } from "@/services/spots";
 
 /** Read spots from the database on each fetch so lastmod is not frozen at deploy. */
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
  * UTC midnight on the change day. A clock time on that day was still in the future
  * for part of the day, and `lastModified` uses this value as the floor for region pages.
  */
-const PUBLIC_MARKUP_REVISION = new Date("2026-11-15T00:00:00.000Z");
+const PUBLIC_MARKUP_REVISION = new Date("2026-11-22T00:00:00.000Z");
 /**
  * Region page copy changed on this calendar day.
  * If the change ships on a later calendar day, bump this to that day's UTC midnight.
@@ -30,7 +31,7 @@ function lastModified(updatedAt: Date): Date {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
   let spots: {
-    id: string;
+    slug: string;
     region: string | null;
     createdAt: Date;
     updatedAt: Date;
@@ -48,7 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const cover = spot.photoUrl ?? spot.photos?.[0]?.url;
     const updatedAt = spot.updatedAt ?? spot.createdAt;
     return {
-      url: `${baseUrl}/spots/${spot.id}`,
+      url: `${baseUrl}${spotPublicPath(spot.slug)}`,
       lastModified: lastModified(updatedAt),
       changeFrequency: "weekly" as const,
       priority: 0.8,

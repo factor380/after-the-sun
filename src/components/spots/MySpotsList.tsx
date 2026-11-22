@@ -10,10 +10,12 @@ import {
   PhotoCountBadge,
   SpotThumbnail,
 } from "@/components/spots/SpotThumbnail";
+import { spotPublicPath } from "@/lib/spot-slug";
 import type { Accessibility, Parking } from "@/types/spot";
 
 export type MySpotItem = {
   id: string;
+  slug: string;
   name: string;
   region: string | null;
   photoUrl: string | null;
@@ -89,7 +91,7 @@ export default function MySpotsList({ spots }: MySpotsListProps) {
             <div className="flex min-w-0 items-center gap-3">
               {spot.photoUrl ? (
                 <Link
-                  href={`/spots/${spot.id}`}
+                  href={spotPublicPath(spot.slug)}
                   aria-hidden
                   tabIndex={-1}
                   className="relative h-14 w-16 shrink-0 overflow-hidden rounded-sm border border-[var(--line)]"
@@ -104,7 +106,7 @@ export default function MySpotsList({ spots }: MySpotsListProps) {
               ) : null}
               <div className="min-w-0">
                 <Link
-                  href={`/spots/${spot.id}`}
+                  href={spotPublicPath(spot.slug)}
                   className="inline-flex max-w-full items-center gap-1.5 font-[family-name:var(--font-display)] font-medium text-[var(--sand)] transition hover:text-[var(--ember)]"
                 >
                   <span className="truncate">{spot.name}</span>
@@ -122,13 +124,13 @@ export default function MySpotsList({ spots }: MySpotsListProps) {
             </div>
             <div className="flex flex-wrap gap-2 text-sm">
               <Link
-                href={`/spots/${spot.id}`}
+                href={spotPublicPath(spot.slug)}
                 className="border border-[var(--line)] px-3 py-1.5 text-[var(--sand-muted)] transition hover:border-[var(--ember)] hover:text-[var(--sand)]"
               >
                 {t("viewSpot")}
               </Link>
               <Link
-                href={`/spots/${spot.id}/edit`}
+                href={`${spotPublicPath(spot.slug)}/edit`}
                 className="border border-[var(--line)] px-3 py-1.5 text-[var(--sand-muted)] transition hover:border-[var(--ember)] hover:text-[var(--sand)]"
               >
                 {t("editSpot")}

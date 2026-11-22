@@ -67,6 +67,7 @@ export default async function MySpotsPage() {
           const summary = toPublicSpot(spot);
           return {
             id: summary.id,
+            slug: summary.slug,
             name: summary.name,
             region: summary.region,
             photoUrl: summary.photoUrl,

@@ -5,6 +5,7 @@ import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
 import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { REGIONS_INDEX, SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { spotPublicPath } from "@/lib/spot-slug";
 import type { SpotSummary } from "@/types/spot";
 
 /** Crawlable heading and links - the map list is virtualized in the client. */
@@ -39,7 +40,7 @@ export function HomeSpotIndex({ spots }: { spots: SpotSummary[] }) {
           <ul>
             {spots.map((spot) => (
               <li key={spot.id}>
-                <Link href={`/spots/${spot.id}`}>
+                <Link href={spotPublicPath(spot.slug)}>
                   {spot.region ? `${spot.name} - ${spot.region}` : spot.name}
                   <SpotAmenityIcons
                     parking={spot.parking}

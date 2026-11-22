@@ -14,6 +14,7 @@ type SpotPhotoRecord = {
 
 type SpotRecord = {
   id: string;
+  slug: string;
   name: string;
   description: string;
   lat: number;
@@ -41,6 +42,7 @@ export function toPublicSpot(spot: SpotRecord): SpotSummary {
 
   return {
     id: spot.id,
+    slug: spot.slug,
     name: spot.name,
     description: spot.description,
     lat: spot.lat,

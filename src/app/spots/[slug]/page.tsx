@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import SpotLocationMapClient from "@/components/map/SpotLocationMapClient";
 import ShareSpotButton from "@/components/spots/ShareSpotButton";
 import SpotContributorTools from "@/components/spots/SpotContributorTools";
@@ -19,6 +19,7 @@ import { allowStaticDataFallback } from "@/lib/static-data-fallback";
 import { matchingRegion, regionPath } from "@/lib/regions";
 import {
   SITE_NAME,
+  absoluteUrl,
   noIndexRobots,
   spotCoverImage,
   spotFaqJsonLd,
@@ -28,9 +29,17 @@ import {
 } from "@/lib/seo";
 import { faqAnswerSegments, spotFaq, type SpotFaqItem } from "@/lib/spot-faq";
 import { buildSpotShare, whatsAppShareHref } from "@/lib/spot-share";
-import { getSpotWithPhotos, listSpots } from "@/services/spots";
+import { spotPublicPath } from "@/lib/spot-slug";
+import { getPublishedSpotByPublicKey, listSpots } from "@/services/spots";
 
-type PageProps = { params: Promise<{ id: string }> };
+type PageProps = { params: Promise<{ slug: string }> };
+
+async function loadPublishedSpot(key: string) {
+  const spot = await getPublishedSpotByPublicKey(key);
+  if (!spot) return null;
+  if (key !== spot.slug) permanentRedirect(spotPublicPath(spot.slug));
+  return spot;
+}
 
 /**
  * Cached for 10 minutes. Spot and photo writes call `revalidatePublishedSpots`
@@ -42,7 +51,7 @@ export const revalidate = 600;
 export async function generateStaticParams() {
   try {
     const spots = await listSpots();
-    return spots.map((spot) => ({ id: spot.id }));
+    return spots.map((spot) => ({ slug: spot.slug }));
   } catch (error) {
     if (!allowStaticDataFallback()) throw error;
     return [];
@@ -50,8 +59,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  const spot = await getSpotWithPhotos(id);
+  const { slug: key } = await params;
+  const spot = await loadPublishedSpot(key);
   if (!spot) {
     return { title: "הנקודה לא נמצאה", robots: noIndexRobots };
   }
@@ -59,7 +68,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = spotPageTitle(spot.name, spot.region);
   const description = spotPageDescription(spot.description, spot.region);
   const brandedTitle = `${title} | ${SITE_NAME}`;
-  const path = `/spots/${spot.id}`;
+  const path = spotPublicPath(spot.slug);
   const shareImage = spotCoverImage(spot);
 
   return {
@@ -87,14 +96,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SpotDetailPage({ params }: PageProps) {
-  const { id } = await params;
+  const { slug: key } = await params;
 
-  const spot = await getSpotWithPhotos(id);
+  const spot = await loadPublishedSpot(key);
   if (!spot) notFound();
 
   const sunset = sunsetTime(spot.lat, spot.lng);
   const faqs = spotFaq(spot);
-  const share = buildSpotShare({ id: spot.id, name: spot.name });
+  const share = buildSpotShare({ slug: spot.slug, name: spot.name });
+  const canonicalUrl = absoluteUrl(spotPublicPath(spot.slug));
 
   const galleryPhotos: GalleryPhoto[] = [
     ...(spot.photoUrl
@@ -110,7 +120,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
   return (
     <article className="pb-16">
       <JsonLd data={spotJsonLd(spot)} />
-      {faqs.length > 0 ? <JsonLd data={spotFaqJsonLd(spot.name, faqs)} /> : null}
+      {faqs.length > 0 ? <JsonLd data={spotFaqJsonLd(spot.name, faqs, canonicalUrl)} /> : null}
       <SpotGallery
         spotId={spot.id}
         spotName={spot.name}
@@ -173,6 +183,7 @@ export default async function SpotDetailPage({ params }: PageProps) {
 
         <SpotContributorTools
           spotId={spot.id}
+          slug={spot.slug}
           createdById={spot.createdById}
           photoCount={spot.photos.length}
           lat={spot.lat}

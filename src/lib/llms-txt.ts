@@ -3,6 +3,7 @@ import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
 import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { publicRegionPages } from "@/lib/regions";
 import { SITE_DESCRIPTION, SITE_NAME, absoluteUrl, truncateMeta } from "@/lib/seo";
+import { isSpotSlug, spotPublicPath } from "@/lib/spot-slug";
 
 /**
  * English opening line of the blockquote. Hebrew site description follows it.
@@ -11,12 +12,11 @@ import { SITE_DESCRIPTION, SITE_NAME, absoluteUrl, truncateMeta } from "@/lib/se
 export const LLMS_TXT_SUMMARY =
   "A Hebrew community map of sunset-viewing spots in Israel.";
 
-/** Cuid-style ids only, so a spot name cannot break out of the markdown link. */
-const SPOT_ID = /^[A-Za-z0-9_-]+$/;
 const NOTE_MAX = 180;
 
 export type LlmsSpot = {
   id: string;
+  slug: string;
   name: string;
   description: string;
   region: string | null;
@@ -115,13 +115,11 @@ export function buildLlmsTxt(spots: readonly LlmsSpot[] = []): string {
     ...pageLinks().map((page) => markdownLink(page.label, page.path, page.note)),
   ];
 
-  const published = spots.filter((spot) => SPOT_ID.test(spot.id));
+  const published = spots.filter((spot) => isSpotSlug(spot.slug));
   if (published.length > 0) {
     lines.push("", "## Spots", "");
     for (const spot of published) {
-      lines.push(
-        markdownLink(spot.name, `/spots/${encodeURIComponent(spot.id)}`, spotNote(spot)),
-      );
+      lines.push(markdownLink(spot.name, spotPublicPath(spot.slug), spotNote(spot)));
     }
   }
 

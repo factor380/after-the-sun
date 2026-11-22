@@ -1,9 +1,7 @@
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { SITE_NAME } from "@/lib/seo";
+import { isSpotSlug, spotPublicPath } from "@/lib/spot-slug";
 import { absoluteUrl, getSiteUrl } from "@/lib/site-url";
-
-/** Public spot ids are a single path segment. Dots and slashes stay out of the URL. */
-const SPOT_ID = /^(?=.*[A-Za-z0-9])[A-Za-z0-9_-]{1,80}$/;
 
 export type SpotSharePayload = {
   /** Spot name. Passed to `navigator.share` as `title`. */
@@ -31,20 +29,21 @@ export function isCanonicalSpotUrl(value: string): boolean {
   }
   if (url.origin !== getSiteUrl()) return false;
   if (url.username || url.password || url.search || url.hash) return false;
-  return /^\/spots\/[A-Za-z0-9_-]{1,80}$/.test(url.pathname);
+  const slug = url.pathname.slice("/spots/".length);
+  return url.pathname.startsWith("/spots/") && isSpotSlug(slug);
 }
 
 /**
  * Title, Hebrew text, and canonical URL for one spot.
- * Returns null when the id is not a public path segment or the name is empty.
+ * Returns null when the slug is not a public path segment or the name is empty.
  */
-export function buildSpotShare(input: { id: string; name: string }): SpotSharePayload | null {
-  const id = input.id.trim();
-  if (!SPOT_ID.test(id)) return null;
+export function buildSpotShare(input: { slug: string; name: string }): SpotSharePayload | null {
+  const slug = input.slug.trim();
+  if (!isSpotSlug(slug)) return null;
   const title = cleanShareName(input.name);
   if (!title) return null;
 
-  const url = absoluteUrl(`/spots/${id}`);
+  const url = absoluteUrl(spotPublicPath(slug));
   if (!isCanonicalSpotUrl(url)) return null;
 
   // A template inserts the name as text, so `$&` in a name stays literal.

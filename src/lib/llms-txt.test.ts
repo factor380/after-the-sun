@@ -114,7 +114,7 @@ describe("buildLlmsTxt", () => {
     for (const page of publicRegionPages()) {
       const entry = entries.find((item) => item.url === `${origin}${page.path}`);
       expect((entry?.lastModified as Date).toISOString(), page.path).toBe(
-        "2026-11-15T00:00:00.000Z",
+        "2026-11-22T00:00:00.000Z",
       );
     }
     expect(entries.some((entry) => entry.url === `${origin}/regions/judea-samaria`)).toBe(
@@ -134,12 +134,14 @@ describe("buildLlmsTxt", () => {
     const spots: LlmsSpot[] = [
       {
         id: "spot-coast",
+        slug: "spot-coast",
         name: "חוף הילטון",
         description: "תצפית פתוחה לים.\nשורה שנייה",
         region: "תל אביב",
       },
       {
         id: "spot-hill",
+        slug: "spot-hill",
         name: "הר] הצופים",
         description: "",
         region: "ירושלים",
@@ -163,13 +165,15 @@ describe("buildLlmsTxt", () => {
     const long = "נוף ".repeat(80);
     const body = buildLlmsTxt([
       {
-        id: "../admin",
+        id: "spot-bad",
+        slug: "../admin",
         name: "לא בטוח",
         description: "לא אמור להופיע",
         region: null,
       },
       {
         id: "spot-long",
+        slug: "spot-long",
         name: "תצפית ארוכה",
         description: long,
         region: null,
@@ -195,6 +199,7 @@ describe("GET /llms.txt", () => {
     vi.mocked(listSpots).mockResolvedValue([
       {
         id: "spot-1",
+        slug: "spot-1",
         name: "חוף אמת המים",
         description: "קשתות רומיות פוגשות את הים.",
         region: "קיסריה",
@@ -285,6 +290,7 @@ describe("canonical domain", () => {
     const body = buildLlmsTxt([
       {
         id: "spot-1",
+        slug: "spot-1",
         name: "חוף אמת המים",
         description: "קשתות רומיות פוגשות את הים.",
         region: "קיסריה",

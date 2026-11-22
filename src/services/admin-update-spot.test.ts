@@ -87,6 +87,7 @@ describe("adminUpdateSpot", () => {
       photoUrl: null,
     });
     expect(data).not.toHaveProperty("createdById");
+    expect(data).not.toHaveProperty("slug");
     expect(result?.removedPhotoUrls).toEqual([]);
   });
 

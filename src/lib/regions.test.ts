@@ -370,6 +370,7 @@ describe("sunset regions", () => {
       spots: [
         {
           id: "spot-1",
+          slug: "spot-1",
           name: "חוף <script>",
           description: "",
           lat: 32,

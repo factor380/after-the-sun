@@ -3,6 +3,7 @@ import { toPublicSpot } from "@/lib/public-spot";
 
 const base = {
   id: "spot-1",
+  slug: "hof",
   name: "חוף",
   description: "שקיעה על המים בערב שקט.",
   lat: 31.67,

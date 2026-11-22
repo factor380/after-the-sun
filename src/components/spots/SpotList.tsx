@@ -10,6 +10,7 @@ import {
 } from "@/lib/geo/distance";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { SpotAmenityIcons } from "@/components/spots/SpotAmenities";
+import { spotPublicPath } from "@/lib/spot-slug";
 import type { SpotSummary } from "@/types/spot";
 
 type GeoStatus =
@@ -72,7 +73,7 @@ export function SpotCard({
 }) {
   return (
     <Link
-      href={`/spots/${spot.id}`}
+      href={spotPublicPath(spot.slug)}
       className="flex gap-3 border-b border-[var(--line)] py-3 transition hover:bg-[var(--dusk-mid)]/40"
     >
       <SpotCardBody spot={spot} distanceMeters={distanceMeters} />
@@ -112,7 +113,7 @@ function SelectableSpotCard({
         <SpotCardBody spot={spot} distanceMeters={distanceMeters} />
       </button>
       <Link
-        href={`/spots/${spot.id}`}
+        href={spotPublicPath(spot.slug)}
         className="mb-2 inline-block text-xs font-medium text-[var(--ember)] underline-offset-2 hover:underline"
       >
         {t("viewSpot")}

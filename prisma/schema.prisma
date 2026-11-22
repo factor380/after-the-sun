@@ -20,6 +20,8 @@ model Profile {
 model Spot {
   id          String   @id @default(cuid())
   name        String
+  /// Public URL segment. Chosen when the row is created. Renames do not change it.
+  slug        String   @unique
   description String
   lat         Float
   lng         Float
