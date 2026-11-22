@@ -243,9 +243,12 @@ describe("spotFaqJsonLd", () => {
       accessibilityNote: "שביל <script>",
       region: "תל אביב–יפו",
     });
-    const data = spotFaqJsonLd("נמל יפו", items) as {
+    const pageUrl = "https://after-the-sun.com/spots/namal-yafo";
+    const data = spotFaqJsonLd("נמל יפו", items, pageUrl) as {
       "@context": string;
       "@type": string;
+      "@id": string;
+      url: string;
       name: string;
       mainEntity: {
         "@type": string;
@@ -256,6 +259,8 @@ describe("spotFaqJsonLd", () => {
 
     expect(data["@context"]).toBe("https://schema.org");
     expect(data["@type"]).toBe("FAQPage");
+    expect(data["@id"]).toBe(`${pageUrl}#faq`);
+    expect(data.url).toBe(pageUrl);
     expect(data.name).toBe("נמל יפו");
     expect(data.mainEntity).toHaveLength(items.length);
     expect(data.mainEntity.map((item) => item["@type"])).toEqual([
@@ -295,6 +300,7 @@ describe("spotFaqJsonLd", () => {
 
     const attraction = spotJsonLd({
       id: "spot-1",
+      slug: "namal-yafo",
       name: "נמל יפו",
       description: "שקיעה",
       region: "תל אביב–יפו",

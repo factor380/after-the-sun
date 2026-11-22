@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       );
     }
 
-    revalidatePublishedSpots(result.spot.id);
+    revalidatePublishedSpots({ id: result.spot.id, slug: result.spot.slug });
     return NextResponse.json(toPublicSpot(result.spot), {
       status: result.created ? 201 : 200,
     });

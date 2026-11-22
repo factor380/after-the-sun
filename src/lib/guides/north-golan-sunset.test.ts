@@ -12,6 +12,7 @@ import {
 } from "@/lib/guides/north-golan-sunset";
 import { getRegionBySlug } from "@/lib/regions";
 import { absoluteUrl, guideArticleJsonLd, jsonLdString } from "@/lib/seo";
+import { spotPublicPath, spotSlugFromName } from "@/lib/spot-slug";
 
 const DRAFT_NOTES = [
   "טיוטה לאישור",
@@ -42,13 +43,13 @@ describe("north and golan sunset guide", () => {
 
   it("links the seven approved spots and leaves draft notes out of the copy", () => {
     expect(NORTH_GOLAN_SUNSET_PLACES.map((place) => place.path)).toEqual([
-      "/spots/cmtajdt7p0001ky04pox5p0c4",
-      "/spots/cmw26384x0001l3089z8n5ucd",
-      "/spots/cmulk5siq0001l804b5qkcbzz",
-      "/spots/cmukzlf8v0001l504bj3reujw",
-      "/spots/cmrw0xspi0004v3w0jrlv239l",
-      "/spots/cmrw0xspi0003v3w0r5x8qsfd",
-      "/spots/cmw409fqv0001l208wa4a5m28",
+      spotPublicPath(spotSlugFromName("תצפית סטלה מאריס")),
+      spotPublicPath(spotSlugFromName("תצפית כנרת מנדל")),
+      spotPublicPath(spotSlugFromName("חוף סוסיתא")),
+      spotPublicPath(spotSlugFromName("מצפור גיא")),
+      spotPublicPath(spotSlugFromName("חוף אכזיב")),
+      spotPublicPath(spotSlugFromName("טיילת בת גלים")),
+      spotPublicPath(spotSlugFromName("גמלא")),
     ]);
     expect(NORTH_GOLAN_SUNSET_PLACES.map((place) => place.name)).toEqual([
       "תצפית סטלה מאריס",

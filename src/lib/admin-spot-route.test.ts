@@ -140,7 +140,13 @@ describe("PATCH /api/admin/spots/[id]", () => {
     const cover = "https://cdn.example/old.jpg";
     const kept = "https://cdn.example/kept.jpg";
     adminUpdateSpot.mockResolvedValue({
-      spot: { id: SPOT_ID, name: "חוף חדש", status: "approved", photoUrl: kept },
+      spot: {
+        id: SPOT_ID,
+        slug: "hof-hadash",
+        name: "חוף חדש",
+        status: "approved",
+        photoUrl: kept,
+      },
       removedPhotoUrls: [
         "https://e2e.supabase.co/storage/v1/object/public/spot-photos/admin/old.jpg",
         cover,
@@ -162,7 +168,10 @@ describe("PATCH /api/admin/spots/[id]", () => {
       SPOT_ID,
       expect.objectContaining({ name: validBody.name, status: "approved" }),
     );
-    expect(revalidatePublishedSpots).toHaveBeenCalledWith(SPOT_ID);
+    expect(revalidatePublishedSpots).toHaveBeenCalledWith({
+      id: SPOT_ID,
+      slug: "hof-hadash",
+    });
     expect(remove).toHaveBeenCalledWith(["admin/old.jpg"]);
   });
 });

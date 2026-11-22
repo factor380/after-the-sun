@@ -18,7 +18,7 @@
 - **Community photos**: any signed-in user can add photos to any spot. The uploader or the spot owner can remove them (max 24 per spot, 5 per user per spot).
 - **Reporting**: users can flag a spot for moderation. Reports are reviewed in Prisma Studio for now.
 - **Campaign page** (`/about`): a public push toward 75 sunset spots by the end of 2026.
-- **SEO**: per-page metadata, JSON-LD structured data, dynamic sitemap, robots, and generated Open Graph images. Public routes are `/`, `/about`, and `/spots/[id]`.
+- **SEO**: per-page metadata, JSON-LD structured data, dynamic sitemap, robots, and generated Open Graph images. Public routes are `/`, `/about`, and `/spots/[slug]`. A legacy `/spots/<cuid>` redirects to the slug.
 - **Light and dark theme**.
 
 ## Engineering highlights

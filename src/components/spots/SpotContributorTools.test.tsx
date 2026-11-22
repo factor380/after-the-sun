@@ -27,6 +27,7 @@ vi.mock("@/components/spots/ReportSpot", () => ({ default: () => null }));
 import SpotContributorTools from "@/components/spots/SpotContributorTools";
 
 const SPOT_ID = "cmwbtra100001jp07yxl3gp4x";
+const SPOT_SLUG = "yaar-yatir";
 const USER_ID = "00000000-0000-4000-8000-000000000001";
 
 function renderTools(createdById: string | null) {
@@ -36,6 +37,7 @@ function renderTools(createdById: string | null) {
       null,
       createElement(SpotContributorTools, {
         spotId: SPOT_ID,
+        slug: SPOT_SLUG,
         createdById,
         photoCount: 0,
         lat: 31.34,
@@ -49,7 +51,7 @@ function renderTools(createdById: string | null) {
 function expectOwnerLinksHidden(html: string) {
   expect(html).not.toContain(dictionary.editSpot);
   expect(html).not.toContain(dictionary.mySpotsTitle);
-  expect(html).not.toContain(`/spots/${SPOT_ID}/edit`);
+  expect(html).not.toContain(`/spots/${SPOT_SLUG}/edit`);
   expect(html).not.toContain("/spots/mine");
 }
 
@@ -69,7 +71,7 @@ describe("SpotContributorTools owner links", () => {
     const html = renderTools(USER_ID);
     expect(html).toContain(dictionary.editSpot);
     expect(html).toContain(dictionary.mySpotsTitle);
-    expect(html).toContain(`/spots/${SPOT_ID}/edit`);
+    expect(html).toContain(`/spots/${SPOT_SLUG}/edit`);
     expect(html).toContain("/spots/mine");
   });
 

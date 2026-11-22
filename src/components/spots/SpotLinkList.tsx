@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SpotAmenityIcons } from "@/components/spots/SpotAmenities";
 import { SpotThumbnail } from "@/components/spots/SpotThumbnail";
+import { spotPublicPath } from "@/lib/spot-slug";
 import type { SpotSummary } from "@/types/spot";
 
 function httpsPhoto(url: string | null): string | null {
@@ -23,7 +24,7 @@ export function SpotLinkList({ spots }: { spots: SpotSummary[] }) {
         return (
           <li key={spot.id}>
             <Link
-              href={`/spots/${spot.id}`}
+              href={spotPublicPath(spot.slug)}
               className="flex items-center gap-3 px-4 py-3 transition hover:bg-[var(--dusk-mid)]/40"
             >
               {photoUrl ? (

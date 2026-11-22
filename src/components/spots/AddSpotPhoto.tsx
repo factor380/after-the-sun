@@ -12,9 +12,11 @@ import {
   MAX_SPOT_PHOTO_INPUT_BYTES,
   SPOT_PHOTO_INPUT_ACCEPT,
 } from "@/lib/spot-photo";
+import { spotPublicPath } from "@/lib/spot-slug";
 
 type AddSpotPhotoProps = {
   spotId: string;
+  slug: string;
   isAuthenticated: boolean;
   /** Hides the form once the spot reached its photo cap. */
   isFull: boolean;
@@ -22,6 +24,7 @@ type AddSpotPhotoProps = {
 
 export default function AddSpotPhoto({
   spotId,
+  slug,
   isAuthenticated,
   isFull,
 }: AddSpotPhotoProps) {
@@ -168,7 +171,7 @@ export default function AddSpotPhoto({
           {t("photoAddTitle")}
         </h2>
         <Link
-          href={`/login?next=/spots/${encodeURIComponent(spotId)}`}
+          href={`/login?next=${encodeURIComponent(spotPublicPath(slug))}`}
           className="mt-2 inline-block text-sm text-[var(--sand-muted)] underline-offset-2 transition hover:text-[var(--sand)] hover:underline"
         >
           {t("photoAddSignIn")}

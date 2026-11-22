@@ -76,7 +76,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
 
     await removeStoredPhotos(supabase, result.removedPhotoUrls);
-    revalidatePublishedSpots(result.spot.id);
+    revalidatePublishedSpots({ id: result.spot.id, slug: result.spot.slug });
 
     return NextResponse.json({
       id: result.spot.id,

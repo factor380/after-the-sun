@@ -17,6 +17,8 @@ export const AMENITY_NOTE_MAX = 200;
 
 export type SpotSummary = {
   id: string;
+  /** Public path segment. Stable for the life of the spot. */
+  slug: string;
   name: string;
   description: string;
   lat: number;

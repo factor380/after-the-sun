@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { assignSpotSlugs } from "../src/lib/spot-slug";
 
 const prisma = new PrismaClient();
 
@@ -99,7 +100,7 @@ async function main() {
 
   if (existing.length === 0) {
     await prisma.spot.createMany({
-      data: spots.map((spot) => ({
+      data: assignSpotSlugs(spots).map((spot) => ({
         ...spot,
         parking: null,
         parkingNote: null,

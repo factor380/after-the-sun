@@ -12,7 +12,10 @@ export async function loadGuideCoverMap(): Promise<Map<string, string>> {
     const covers = new Map<string, string>();
     for (const spot of spots) {
       const cover = spotCoverUrl(spot);
-      if (cover) covers.set(spot.id, cover);
+      if (cover) {
+        covers.set(spot.id, cover);
+        if (spot.slug) covers.set(spot.slug, cover);
+      }
     }
     return covers;
   } catch (error) {

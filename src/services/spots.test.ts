@@ -114,7 +114,10 @@ describe("createSpot idempotent replay", () => {
 
   it("returns the winner when two creates hit the unique constraint", async () => {
     const spot = storedSpot();
-    findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(spot);
+    findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(spot);
     create.mockRejectedValueOnce(uniqueViolation());
     const consumeRateLimit = vi.fn(() => true);
 
@@ -133,7 +136,7 @@ describe("createSpot idempotent replay", () => {
     await expect(
       createSpot(USER_ID, input, { consumeRateLimit: () => true }),
     ).rejects.toBe(error);
-    expect(findUnique).toHaveBeenCalledTimes(2);
+    expect(findUnique).toHaveBeenCalledTimes(3);
   });
 
   it("stores the key when the submit is new", async () => {
@@ -176,7 +179,10 @@ describe("createSpot idempotent replay", () => {
     });
 
     expect(result).toEqual({ ok: true, created: true, spot });
-    expect(findUnique).not.toHaveBeenCalled();
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { slug: "hof-hilton" },
+      select: { id: true },
+    });
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ clientRequestId: null }),

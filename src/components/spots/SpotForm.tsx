@@ -30,6 +30,7 @@ import {
   SPOT_PHOTO_INPUT_ACCEPT,
   spotPhotoPickRoom,
 } from "@/lib/spot-photo";
+import { isSpotSlug, spotPublicPath } from "@/lib/spot-slug";
 import { AMENITY_NOTE_MAX, type Accessibility, type Parking } from "@/types/spot";
 
 type DraftPhoto =
@@ -459,13 +460,13 @@ export default function SpotForm({ initial, signedIn = false }: SpotFormProps) {
         );
       }
 
-      const id = responseField(data, "id");
-      if (typeof id !== "string" || !id) {
+      const slug = responseField(data, "slug");
+      if (typeof slug !== "string" || !isSpotSlug(slug)) {
         throw new Error(t("saveFailed"));
       }
 
       if (!isEdit) await clearNewSpotDraft();
-      router.push(`/spots/${id}`);
+      router.push(spotPublicPath(slug));
       router.refresh();
     } catch (err) {
       setError(submitErrorText(err, t, "saveFailed"));

@@ -1,8 +1,14 @@
+import { randomBytes } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { resolveAdminSpotCover } from "@/lib/admin-cover";
 import { cleanContributorName } from "@/lib/contributor-name";
 import { prisma } from "@/lib/prisma";
 import { isRecordOwner } from "@/lib/spot-ownership";
+import {
+  RESERVED_SPOT_SLUGS,
+  spotSlugCandidate,
+  spotSlugFromName,
+} from "@/lib/spot-slug";
 import {
   assertIsraelCoordinates,
   type AdminUpdateSpotInput,
@@ -108,19 +114,47 @@ export async function listSpotsForAdmin() {
   });
 }
 
-/** Spot plus its full community gallery, for the detail page. */
-export async function getSpotWithPhotos(id: string) {
-  const spot = await prisma.spot.findUnique({
-    where: { id },
-    include: {
-      photos: {
-        orderBy: { createdAt: "asc" },
-        select: { id: true, url: true, uploadedById: true, createdAt: true },
-      },
-    },
+const GALLERY_INCLUDE = {
+  photos: {
+    orderBy: { createdAt: "asc" as const },
+    select: { id: true, url: true, uploadedById: true, createdAt: true },
+  },
+};
+
+/**
+ * Published spot for `/spots/[slug]`.
+ * The key may be the current slug or the legacy id. Callers redirect when
+ * the key is not the stored slug.
+ */
+export async function getPublishedSpotByPublicKey(key: string) {
+  if (!PUBLIC_SPOT_KEY.test(key)) return null;
+  const bySlug = await prisma.spot.findUnique({
+    where: { slug: key.toLowerCase() },
+    include: GALLERY_INCLUDE,
   });
-  if (!spot || spot.status !== PUBLISHED_STATUS) return null;
-  return spot;
+  if (bySlug) {
+    return bySlug.status === PUBLISHED_STATUS ? bySlug : null;
+  }
+  const byId = await prisma.spot.findUnique({
+    where: { id: key },
+    include: GALLERY_INCLUDE,
+  });
+  if (!byId || byId.status !== PUBLISHED_STATUS) return null;
+  return byId;
+}
+
+/** Any status, for the editor. Accepts the slug or the legacy id. */
+export async function getSpotByPublicKey(key: string) {
+  if (!PUBLIC_SPOT_KEY.test(key)) return null;
+  const bySlug = await prisma.spot.findUnique({
+    where: { slug: key.toLowerCase() },
+    include: COVER_PHOTO_SELECTION,
+  });
+  if (bySlug) return bySlug;
+  return prisma.spot.findUnique({
+    where: { id: key },
+    include: COVER_PHOTO_SELECTION,
+  });
 }
 
 const CREATED_SPOT_INCLUDE = {
@@ -130,10 +164,90 @@ const CREATED_SPOT_INCLUDE = {
   },
 };
 
-function isUniqueViolation(error: unknown): boolean {
+function isUniqueViolation(error: unknown): error is Prisma.PrismaClientKnownRequestError {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"
   );
+}
+
+const PUBLIC_SPOT_KEY = /^[A-Za-z0-9_-]{1,80}$/;
+const SPOT_ID_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+function createSpotId(): string {
+  const bytes = randomBytes(24);
+  let id = "c";
+  for (let index = 0; index < 24; index += 1) {
+    id += SPOT_ID_ALPHABET[bytes[index]! % SPOT_ID_ALPHABET.length];
+  }
+  return id;
+}
+
+function uniqueTargets(error: Prisma.PrismaClientKnownRequestError): string[] {
+  const target = error.meta?.target;
+  if (Array.isArray(target)) return target.map((item) => String(item));
+  if (typeof target === "string") return [target];
+  return [];
+}
+
+function isSlugConflict(error: unknown): boolean {
+  return (
+    isUniqueViolation(error) &&
+    uniqueTargets(error).some((target) => target.toLowerCase().includes("slug"))
+  );
+}
+
+async function allocateUniqueSlug(name: string, region: string | null, id: string) {
+  const base = spotSlugFromName(name, { region, id });
+  for (let occurrence = 1; occurrence < 500; occurrence += 1) {
+    const candidate = spotSlugCandidate(base, occurrence);
+    if (RESERVED_SPOT_SLUGS.has(candidate)) continue;
+    const existing = await prisma.spot.findUnique({
+      where: { slug: candidate },
+      select: { id: true },
+    });
+    if (!existing) return candidate;
+  }
+  throw new Error("Could not allocate a spot slug");
+}
+
+type SpotInsert = {
+  name: string;
+  description: string;
+  lat: number;
+  lng: number;
+  region: string | null;
+  photoUrl: string | null;
+  parking: string | null;
+  parkingNote: string | null;
+  accessibility: string | null;
+  accessibilityNote: string | null;
+  createdById: string | null;
+  status: string;
+  contributorName: string | null;
+  clientRequestId: string | null;
+  photos?: {
+    create: { url: string; uploadedById: string }[];
+  };
+};
+
+async function insertSpot(data: SpotInsert) {
+  const id = createSpotId();
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const slug = await allocateUniqueSlug(data.name, data.region, id);
+    try {
+      return await prisma.spot.create({
+        data: { ...data, id, slug },
+        include: CREATED_SPOT_INCLUDE,
+      });
+    } catch (error) {
+      if (!isSlugConflict(error)) throw error;
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Could not allocate a spot slug");
 }
 
 export async function findSpotByClientRequestId(
@@ -194,34 +308,31 @@ export async function createSpot(
   const extraPhotoUrls = input.extraPhotoUrls ?? [];
 
   try {
-    const spot = await prisma.spot.create({
-      data: {
-        name: input.name,
-        description: input.description?.trim() ?? "",
-        lat: input.lat,
-        lng: input.lng,
-        region: input.region ?? null,
-        photoUrl: input.photoUrl ?? null,
-        parking: input.parking ?? null,
-        parkingNote: input.parkingNote ?? null,
-        accessibility: input.accessibility ?? null,
-        accessibilityNote: input.accessibilityNote ?? null,
-        createdById: userId,
-        status: PUBLISHED_STATUS,
-        contributorName,
-        clientRequestId: input.clientRequestId ?? null,
-        ...(extraPhotoUrls.length > 0
-          ? {
-              photos: {
-                create: extraPhotoUrls.map((url) => ({
-                  url,
-                  uploadedById: userId,
-                })),
-              },
-            }
-          : {}),
-      },
-      include: CREATED_SPOT_INCLUDE,
+    const spot = await insertSpot({
+      name: input.name,
+      description: input.description?.trim() ?? "",
+      lat: input.lat,
+      lng: input.lng,
+      region: input.region ?? null,
+      photoUrl: input.photoUrl ?? null,
+      parking: input.parking ?? null,
+      parkingNote: input.parkingNote ?? null,
+      accessibility: input.accessibility ?? null,
+      accessibilityNote: input.accessibilityNote ?? null,
+      createdById: userId,
+      status: PUBLISHED_STATUS,
+      contributorName,
+      clientRequestId: input.clientRequestId ?? null,
+      ...(extraPhotoUrls.length > 0
+        ? {
+            photos: {
+              create: extraPhotoUrls.map((url) => ({
+                url,
+                uploadedById: userId,
+              })),
+            },
+          }
+        : {}),
     });
     return { ok: true, created: true, spot };
   } catch (error) {
@@ -267,24 +378,21 @@ export async function createSuggestion(
   }
 
   try {
-    const spot = await prisma.spot.create({
-      data: {
-        name: input.name,
-        description: input.description?.trim() ?? "",
-        lat: input.lat,
-        lng: input.lng,
-        region: input.region?.trim() ? input.region.trim() : null,
-        photoUrl: input.photoUrl ?? null,
-        parking: input.parking ?? null,
-        parkingNote: input.parkingNote ?? null,
-        accessibility: input.accessibility ?? null,
-        accessibilityNote: input.accessibilityNote ?? null,
-        createdById: null,
-        status: "pending",
-        contributorName: cleanContributorName(input.contributorName),
-        clientRequestId: input.clientRequestId ?? null,
-      },
-      include: CREATED_SPOT_INCLUDE,
+    const spot = await insertSpot({
+      name: input.name,
+      description: input.description?.trim() ?? "",
+      lat: input.lat,
+      lng: input.lng,
+      region: input.region?.trim() ? input.region.trim() : null,
+      photoUrl: input.photoUrl ?? null,
+      parking: input.parking ?? null,
+      parkingNote: input.parkingNote ?? null,
+      accessibility: input.accessibility ?? null,
+      accessibilityNote: input.accessibilityNote ?? null,
+      createdById: null,
+      status: "pending",
+      contributorName: cleanContributorName(input.contributorName),
+      clientRequestId: input.clientRequestId ?? null,
     });
     return { ok: true, created: true, spot };
   } catch (error) {
@@ -327,6 +435,7 @@ export async function updateSpot(
   return prisma.spot.update({
     where: { id },
     data: {
+      // The public slug is fixed at creation. A rename must not replace it.
       ...(input.name !== undefined ? { name: input.name } : {}),
       ...(input.description !== undefined
         ? { description: input.description }
@@ -389,6 +498,7 @@ export async function adminUpdateSpot(id: string, input: AdminUpdateSpotInput) {
     return tx.spot.update({
       where: { id },
       data: {
+        // The public slug is fixed at creation. A rename must not replace it.
         name: input.name,
         description: input.description.trim(),
         lat: input.lat,

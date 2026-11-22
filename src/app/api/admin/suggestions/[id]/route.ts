@@ -49,7 +49,9 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    if (spot.status === "approved") revalidatePublishedSpots(spot.id);
+    if (spot.status === "approved") {
+      revalidatePublishedSpots({ id: spot.id, slug: spot.slug });
+    }
 
     if (wantsHtml) {
       return NextResponse.redirect(new URL("/admin/suggestions", request.url), 303);

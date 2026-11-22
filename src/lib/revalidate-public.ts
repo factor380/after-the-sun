@@ -3,6 +3,7 @@ import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
 import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { REGIONS_INDEX, SUNSET_REGIONS, regionPath } from "@/lib/regions";
+import { isSpotSlug, spotPublicPath } from "@/lib/spot-slug";
 
 /**
  * Public HTML is cached for this many seconds (`export const revalidate = 600`
@@ -18,8 +19,13 @@ function revalidatePageAndSocialImages(path: string) {
   revalidatePath(`${base}/twitter-image`);
 }
 
+export type PublishedSpotCacheKey = {
+  id: string;
+  slug: string;
+};
+
 /** Drop cached public HTML, social images, the sitemap, and llms.txt after a spot or its photos change. */
-export function revalidatePublishedSpots(spotId?: string) {
+export function revalidatePublishedSpots(spot?: PublishedSpotCacheKey) {
   revalidatePageAndSocialImages("/");
   revalidatePageAndSocialImages("/about");
   revalidatePageAndSocialImages(REGIONS_INDEX.path);
@@ -31,6 +37,11 @@ export function revalidatePublishedSpots(spotId?: string) {
   for (const region of SUNSET_REGIONS) {
     revalidatePageAndSocialImages(regionPath(region.slug));
   }
-  // Spot share cards are metadata on the page, not a separate image route.
-  if (spotId) revalidatePath(`/spots/${spotId}`);
+  if (!spot) return;
+  // The canonical page, plus the opengraph-image and twitter-image paths under it.
+  if (isSpotSlug(spot.slug)) revalidatePageAndSocialImages(spotPublicPath(spot.slug));
+  // The legacy id URL is a 308. Drop a cached copy of that redirect too.
+  if (spot.id !== spot.slug && /^[A-Za-z0-9_-]{1,80}$/.test(spot.id)) {
+    revalidatePageAndSocialImages(`/spots/${spot.id}`);
+  }
 }

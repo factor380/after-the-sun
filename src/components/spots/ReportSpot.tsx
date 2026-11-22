@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n/dictionaries";
+import { spotPublicPath } from "@/lib/spot-slug";
 import {
   REPORT_REASONS,
   type ReportReason,
@@ -11,6 +12,7 @@ import {
 
 type ReportSpotProps = {
   spotId: string;
+  slug: string;
   isAuthenticated: boolean;
 };
 
@@ -23,6 +25,7 @@ const REASON_MESSAGE_KEYS = {
 
 export default function ReportSpot({
   spotId,
+  slug,
   isAuthenticated,
 }: ReportSpotProps) {
   const { t } = useLocale();
@@ -99,7 +102,7 @@ export default function ReportSpot({
     return (
       <div className="mt-8 border-t border-[var(--line)] pt-6">
         <Link
-          href={`/login?next=/spots/${encodeURIComponent(spotId)}`}
+          href={`/login?next=${encodeURIComponent(spotPublicPath(slug))}`}
           className="text-sm text-[var(--sand-muted)] underline-offset-2 transition hover:text-[var(--sand)] hover:underline"
         >
           {t("reportSignInLink")}

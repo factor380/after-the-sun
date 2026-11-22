@@ -3,7 +3,7 @@ import { generateMetadata as adminEditMetadata } from "@/app/admin/spots/[id]/pa
 import { metadata as adminSpotsMetadata } from "@/app/admin/spots/page";
 import { metadata as adminSuggestionsMetadata } from "@/app/admin/suggestions/page";
 import { metadata as loginMetadata } from "@/app/login/page";
-import { generateMetadata as editSpotMetadata } from "@/app/spots/[id]/edit/page";
+import { generateMetadata as editSpotMetadata } from "@/app/spots/[slug]/edit/page";
 import { metadata as mineMetadata } from "@/app/spots/mine/page";
 import { metadata as newSpotMetadata } from "@/app/spots/new/page";
 import { dictionary } from "@/lib/i18n/dictionaries";
@@ -42,6 +42,7 @@ function place(overrides?: {
 }) {
   return {
     id: "spot-1",
+    slug: "spot-1",
     name: overrides?.name ?? "חוף אמת המים",
     description: "קשתות רומיות פוגשות את הים.",
     region: "קיסריה",
@@ -172,7 +173,7 @@ describe("pageSocialMetadata", () => {
         path: "/spots/spot-1/edit",
         title: dictionary.editSpotTitle,
         description: dictionary.editSpotSubtitle,
-        metadata: await editSpotMetadata({ params: Promise.resolve({ id: "spot-1" }) }),
+        metadata: await editSpotMetadata({ params: Promise.resolve({ slug: "spot-1" }) }),
       },
       {
         path: "/admin/spots/spot-1",

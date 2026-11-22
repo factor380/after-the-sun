@@ -4,6 +4,7 @@ import { SPOT_PHOTOS_BUCKET, spotPhotoObjectPath } from "@/lib/spot-photo";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePublishedSpots } from "@/lib/revalidate-public";
 import { deleteSpotPhoto, SpotPhotoError } from "@/services/spot-photos";
+import { getSpotById } from "@/services/spots";
 
 type RouteContext = { params: Promise<{ id: string; photoId: string }> };
 
@@ -23,8 +24,9 @@ export async function DELETE(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const spot = await getSpotById(id);
     const photo = await deleteSpotPhoto(id, photoId, user.id);
-    revalidatePublishedSpots(id);
+    if (spot) revalidatePublishedSpots({ id: spot.id, slug: spot.slug });
 
     // Storage cleanup is best effort: the row is already gone, and bucket
     // policies may not let a spot owner remove another user's object.

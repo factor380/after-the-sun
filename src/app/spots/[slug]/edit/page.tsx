@@ -11,16 +11,17 @@ import {
 } from "@/lib/spot-amenities";
 import { noIndexRobots, pageSocialMetadata } from "@/lib/seo";
 import { isRecordOwner } from "@/lib/spot-ownership";
+import { spotPublicPath } from "@/lib/spot-slug";
 import { createClient } from "@/lib/supabase/server";
-import { getSpotById } from "@/services/spots";
+import { getSpotByPublicKey } from "@/services/spots";
 
-type PageProps = { params: Promise<{ id: string }> };
+type PageProps = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
+  const { slug: key } = await params;
   const title = dictionary.editSpotTitle;
   const description = dictionary.editSpotSubtitle;
-  const path = `/spots/${encodeURIComponent(id)}/edit`;
+  const path = `/spots/${encodeURIComponent(key)}/edit`;
   return {
     title,
     description,
@@ -52,22 +53,22 @@ export default async function EditSpotPage({ params }: PageProps) {
     );
   }
 
-  const { id } = await params;
+  const { slug: key } = await params;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?next=/spots/${encodeURIComponent(id)}/edit`);
+    redirect(`/login?next=/spots/${encodeURIComponent(key)}/edit`);
   }
 
-  const spot = await getSpotById(id);
+  const spot = await getSpotByPublicKey(key);
   if (!spot) notFound();
 
   if (!isRecordOwner(user.id, spot.createdById)) {
     if (spot.status !== "approved") notFound();
-    redirect(`/spots/${id}`);
+    redirect(spotPublicPath(spot.slug));
   }
 
   return (

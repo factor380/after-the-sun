@@ -35,7 +35,7 @@ test("welcome modal shows on the home page for a fresh session", async ({ page }
 });
 
 test("welcome modal stays closed on a spot page for a fresh session", async ({ page }) => {
-  await page.goto(`/spots/${SEEDED_SPOT.id}`, { waitUntil: "domcontentloaded" });
+  await page.goto(`/spots/${SEEDED_SPOT.slug}`, { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1, name: SEEDED_SPOT.name })).toBeVisible();
   await settledPage(page);
   await expect(welcomeDialog(page)).toHaveCount(0);
@@ -51,7 +51,7 @@ test("welcome modal stays closed on the new-spot form for a fresh session", asyn
 test("welcome modal shows when a fresh session reaches home from a spot page", async ({
   page,
 }) => {
-  await page.goto(`/spots/${SEEDED_SPOT.id}`, { waitUntil: "domcontentloaded" });
+  await page.goto(`/spots/${SEEDED_SPOT.slug}`, { waitUntil: "domcontentloaded" });
   await settledPage(page);
   await expect(welcomeDialog(page)).toHaveCount(0);
 

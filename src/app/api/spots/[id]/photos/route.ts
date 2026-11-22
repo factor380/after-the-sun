@@ -75,7 +75,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const photo = await addSpotPhoto(id, user.id, parsed.data.url);
-    revalidatePublishedSpots(id);
+    const spot = await getSpotById(id);
+    if (spot) revalidatePublishedSpots({ id: spot.id, slug: spot.slug });
     return NextResponse.json(toPublicSpotPhoto(photo), { status: 201 });
   } catch (error) {
     if (error instanceof SpotPhotoError) {

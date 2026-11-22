@@ -22,6 +22,7 @@ import {
   MAX_SPOT_PHOTO_INPUT_BYTES,
   SPOT_PHOTO_INPUT_ACCEPT,
 } from "@/lib/spot-photo";
+import { isSpotSlug, spotPublicPath } from "@/lib/spot-slug";
 import {
   AMENITY_NOTE_MAX,
   SPOT_STATUS_VALUES,
@@ -39,6 +40,7 @@ const STATUS_LABEL: Record<SpotStatus, MessageKey> = {
 
 export type AdminSpotFormInitial = {
   id: string;
+  slug: string;
   name: string;
   description: string;
   region: string | null;
@@ -257,7 +259,8 @@ export default function AdminSpotForm({ initial }: { initial: AdminSpotFormIniti
       const savedStatus = responseField(data, "status");
       if (typeof id !== "string" || !id) throw new Error(t("saveFailed"));
       if (savedStatus === "approved") {
-        router.push(`/spots/${id}`);
+        if (!isSpotSlug(initial.slug)) throw new Error(t("saveFailed"));
+        router.push(spotPublicPath(initial.slug));
         router.refresh();
         return;
       }

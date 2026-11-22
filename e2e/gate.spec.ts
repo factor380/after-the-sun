@@ -14,6 +14,7 @@ import { e2eUploadRoot, resolveE2EUploadPath } from "../src/lib/e2e/upload-path"
 import { SUNSET_REGIONS, matchingRegion, regionPath, unassignedSpotSummaries } from "../src/lib/regions";
 import { getSiteUrl } from "../src/lib/seo";
 import { spotFaq } from "../src/lib/spot-faq";
+import { spotSlugFromName } from "../src/lib/spot-slug";
 import {
   anchorHrefs,
   decodeHtml,
@@ -85,7 +86,7 @@ test("public pages, sitemap, robots, and llms.txt", async ({ request, baseURL })
     ...SUNSET_REGIONS.map((region) => regionPath(region.slug)),
     "/about",
     "/spots/new",
-    `/spots/${SEEDED_SPOT.id}`,
+    `/spots/${SEEDED_SPOT.slug}`,
   ];
 
   const htmlByPath = new Map<string, string>();
@@ -139,7 +140,7 @@ test("public pages, sitemap, robots, and llms.txt", async ({ request, baseURL })
   expect(mine.status()).toBe(200);
   expectPrivatePageShare(await mine.text(), "/spots/mine", "הנקודות שלי");
 
-  const spotHtml = htmlByPath.get(`/spots/${SEEDED_SPOT.id}`) ?? "";
+  const spotHtml = htmlByPath.get(`/spots/${SEEDED_SPOT.slug}`) ?? "";
   expect(home).toContain(SEEDED_SPOT.name);
   expect(headingText(spotHtml)).toContain(SEEDED_SPOT.name);
 
@@ -185,6 +186,33 @@ test("public pages, sitemap, robots, and llms.txt", async ({ request, baseURL })
   }
 });
 
+test("an old spot id redirects permanently to the slug and the slug page is canonical", async ({
+  request,
+}) => {
+  const legacy = await request.get(`/spots/${SEEDED_SPOT.id}`, { maxRedirects: 0 });
+  expect(legacy.status()).toBe(308);
+  const location = legacy.headers()["location"] ?? "";
+  expect(location.endsWith(`/spots/${SEEDED_SPOT.slug}`)).toBe(true);
+
+  const page = await request.get(`/spots/${SEEDED_SPOT.slug}`, { maxRedirects: 0 });
+  expect(page.status()).toBe(200);
+  const html = await page.text();
+  expect(linkHrefs(html, "canonical")).toContain(
+    `${getSiteUrl()}/spots/${SEEDED_SPOT.slug}`,
+  );
+  expect(metaContents(html, "property", "og:url")).toContain(
+    `${getSiteUrl()}/spots/${SEEDED_SPOT.slug}`,
+  );
+
+  const unknown = await request.get("/spots/not-a-real-spot", { maxRedirects: 0 });
+  expect(unknown.status()).toBe(404);
+  const mine = await request.get("/spots/mine", { maxRedirects: 0 });
+  expect(mine.status()).toBeGreaterThanOrEqual(300);
+  expect(mine.status()).toBeLessThan(400);
+  const created = await request.get("/spots/new", { maxRedirects: 0 });
+  expect(created.status()).toBe(200);
+});
+
 test("every published spot belongs to one region page", async ({ request }) => {
   const spots = (await (await request.get("/api/spots")).json()) as {
     id: string;
@@ -203,7 +231,7 @@ test("every published spot belongs to one region page", async ({ request }) => {
 
   for (const spot of E2E_SEED_SPOTS) {
     const hits = SUNSET_REGIONS.filter((region) =>
-      html.get(region.slug)?.includes(`/spots/${spot.id}`),
+      html.get(region.slug)?.includes(`/spots/${spot.slug}`),
     ).map((region) => region.slug);
     const label = spot.region?.trim() ?? "";
     if (!label) {
@@ -219,9 +247,9 @@ test("every published spot belongs to one region page", async ({ request }) => {
   const north = E2E_SEED_SPOTS.find((spot) => spot.region === "צפון");
   const gilboa = E2E_SEED_SPOTS.find((spot) => spot.region === "הרי הגלבוע");
   if (!north || !gilboa) throw new Error("missing seeded north labels");
-  expect(haifa).toContain(`/spots/${north.id}`);
+  expect(haifa).toContain(`/spots/${north.slug}`);
   expect(haifa).toContain(north.name);
-  expect(haifa).toContain(`/spots/${gilboa.id}`);
+  expect(haifa).toContain(`/spots/${gilboa.slug}`);
   expect(haifa).toContain(gilboa.name);
   expect(haifa).toContain("הרי הגלבוע");
 
@@ -242,7 +270,7 @@ test("every published spot belongs to one region page", async ({ request }) => {
 test("spot FAQ is visible with FAQPage JSON-LD, and absent when nothing applies", async ({
   page,
 }) => {
-  await page.goto(`/spots/${SEEDED_SPOT.id}`, { waitUntil: "domcontentloaded" });
+  await page.goto(`/spots/${SEEDED_SPOT.slug}`, { waitUntil: "domcontentloaded" });
   const section = page.locator("#spot-faq");
   await expect(section).toBeVisible();
   await expect(section).toHaveAttribute("dir", "rtl");
@@ -290,7 +318,7 @@ test("spot FAQ is visible with FAQPage JSON-LD, and absent when nothing applies"
   expect(attractionBlocks).toHaveLength(1);
   expect(findTypedNodes(attractionBlocks[0], "FAQPage")).toHaveLength(0);
 
-  await page.goto(`/spots/${NO_FAQ_SPOT.id}`, { waitUntil: "domcontentloaded" });
+  await page.goto(`/spots/${NO_FAQ_SPOT.slug}`, { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1, name: NO_FAQ_SPOT.name })).toBeVisible();
   await expect(page.locator("#spot-faq")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "שאלות נפוצות" })).toHaveCount(0);
@@ -693,14 +721,19 @@ test("test user can create, edit, report, and delete a spot with a photo", async
     maxRedirects: 0,
   });
   expect(created.status()).toBe(201);
-  const spot = (await created.json()) as { id?: string };
-  if (!spot.id) throw new Error("create did not return an id");
+  const spot = (await created.json()) as { id?: string; slug?: string };
+  if (!spot.id || !spot.slug) throw new Error("create did not return an id");
   const id = spot.id;
+  const slug = spot.slug;
   createdSpotId = id;
+
+  const legacy = await request.get(`/spots/${id}`, { maxRedirects: 0 });
+  expect(legacy.status()).toBe(308);
+  expect(legacy.headers()["location"] ?? "").toContain(`/spots/${slug}`);
 
   await expect
     .poll(async () => {
-      const page = await request.get(`/spots/${id}`, { maxRedirects: 0 });
+      const page = await request.get(`/spots/${slug}`, { maxRedirects: 0 });
       if (page.status() !== 200) return "";
       const html = await page.text();
       return html.includes(photoUrl) ? headingText(html) : "";
@@ -709,7 +742,7 @@ test("test user can create, edit, report, and delete a spot with a photo", async
 
   await expect
     .poll(async () => (await request.get("/sitemap.xml", { maxRedirects: 0 })).text())
-    .toContain(`/spots/${id}`);
+    .toContain(`/spots/${slug}`);
 
   const patched = await request.patch(`/api/spots/${id}`, {
     headers: authHeaders(origin),
@@ -720,7 +753,7 @@ test("test user can create, edit, report, and delete a spot with a photo", async
 
   await expect
     .poll(async () => {
-      const page = await request.get(`/spots/${id}`, { maxRedirects: 0 });
+      const page = await request.get(`/spots/${slug}`, { maxRedirects: 0 });
       if (page.status() !== 200) return "";
       return headingText(await page.text());
     })
@@ -741,12 +774,12 @@ test("test user can create, edit, report, and delete a spot with a photo", async
   createdSpotId = null;
 
   await expect
-    .poll(async () => (await request.get(`/spots/${id}`, { maxRedirects: 0 })).status())
+    .poll(async () => (await request.get(`/spots/${slug}`, { maxRedirects: 0 })).status())
     .toBe(404);
 
   await expect
     .poll(async () => (await request.get("/sitemap.xml", { maxRedirects: 0 })).text())
-    .not.toContain(`/spots/${id}`);
+    .not.toContain(`/spots/${slug}`);
 });
 
 test("anonymous suggestion stays hidden until an admin approves it", async ({
@@ -757,6 +790,7 @@ test("anonymous suggestion stays hidden until an admin approves it", async ({
   test.setTimeout(120_000);
   const origin = requireBase(baseURL);
   const name = "תצפית הצעה לבדיקה";
+  const approvedSlug = spotSlugFromName(name);
   const rejectedName = "תצפית שנדחית בבדיקה";
   const trappedName = "מלכודת דבש לבדיקה";
   const credit = "דנה כהן";
@@ -861,19 +895,23 @@ test("anonymous suggestion stays hidden until an admin approves it", async ({
 
   await expect
     .poll(async () => {
-      const spotPage = await request.get(`/spots/${id}`, { maxRedirects: 0 });
+      const spotPage = await request.get(`/spots/${approvedSlug}`, { maxRedirects: 0 });
       if (spotPage.status() !== 200) return "";
       return await spotPage.text();
     })
     .toContain(name);
 
-  const published = await (await request.get(`/spots/${id}`, { maxRedirects: 0 })).text();
+  const legacy = await request.get(`/spots/${id}`, { maxRedirects: 0 });
+  expect(legacy.status()).toBe(308);
+  expect(legacy.headers()["location"] ?? "").toContain(`/spots/${approvedSlug}`);
+
+  const published = await (await request.get(`/spots/${approvedSlug}`, { maxRedirects: 0 })).text();
   expect(published).toContain(`נוספה על ידי ${credit}`);
   expect(headingText(published)).toContain(name);
 
   await expect
     .poll(async () => (await request.get("/sitemap.xml", { maxRedirects: 0 })).text())
-    .toContain(`/spots/${id}`);
+    .toContain(`/spots/${approvedSlug}`);
   await expect
     .poll(async () => (await request.get("/llms.txt", { maxRedirects: 0 })).text())
     .toContain(name);

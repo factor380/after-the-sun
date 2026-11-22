@@ -7,6 +7,12 @@
  * all four coast regions, and each of those region pages lists this guide.
  */
 
+import { spotPublicPath, spotSlugFromName } from "@/lib/spot-slug";
+
+function guideSpotPath(storedName: string): string {
+  return spotPublicPath(spotSlugFromName(storedName));
+}
+
 export const WINTER_COAST_REGIONS = [
   { slug: "tel-aviv", path: "/regions/tel-aviv", label: "תל אביב יפו" },
   { slug: "sharon-coast", path: "/regions/sharon-coast", label: "השרון והחוף" },
@@ -71,7 +77,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "חוף אכזיב",
     heading: "חוף אכזיב: לגונות וסלעים בצפון",
-    path: "/spots/cmrw0xspi0004v3w0jrlv239l",
+    path: guideSpotPath("חוף אכזיב"),
     linkLabel: "לעמוד חוף אכזיב ולניווט",
     facts: [
       {
@@ -91,7 +97,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "טיילת בת גלים",
     heading: "טיילת בת גלים: השמש יורדת אל המפרץ",
-    path: "/spots/cmrw0xspi0003v3w0r5x8qsfd",
+    path: guideSpotPath("טיילת בת גלים"),
     linkLabel: "לעמוד טיילת בת גלים ולניווט",
     facts: [
       {
@@ -111,7 +117,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "חוף אמת המים בקיסריה",
     heading: "חוף אמת המים בקיסריה: קשתות מול הים",
-    path: "/spots/cmrw0xspi0002v3w0y9gcz6oz",
+    path: guideSpotPath("חוף אמת המים בקיסריה"),
     linkLabel: "לעמוד חוף אמת המים בקיסריה ולניווט",
     facts: [
       {
@@ -131,7 +137,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "טיילת המצוק נתניה",
     heading: "טיילת המצוק נתניה: מבט מגבוה אל הים",
-    path: "/spots/cmrw0xspi0005v3w0d03edxoi",
+    path: guideSpotPath("טיילת המצוק נתניה"),
     linkLabel: "לעמוד טיילת המצוק נתניה ולניווט",
     facts: [
       {
@@ -151,7 +157,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "טיילת ניצה",
     heading: "טיילת ניצה: טיילת מול הים בנתניה",
-    path: "/spots/cmuq28jeb0001la049t20g6l4",
+    path: guideSpotPath("טיילת ניצה"),
     linkLabel: "לעמוד טיילת ניצה ולניווט",
     facts: [
       {
@@ -171,7 +177,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "מרינה הרצליה",
     heading: "מרינה הרצליה: סירות, טיילת ואור אחרון",
-    path: "/spots/cmuvfmzwm0001kz04jzgawy6w",
+    path: guideSpotPath("מרינה הרצליה"),
     linkLabel: "לעמוד מרינה הרצליה ולניווט",
     facts: [
       {
@@ -191,7 +197,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "חוף הילטון",
     heading: "חוף הילטון: שתי זוויות לשקיעה",
-    path: "/spots/cmuvg4u0i0001lf04pjwyyizt",
+    path: guideSpotPath("חוף הילטון"),
     linkLabel: "לעמוד חוף הילטון ולניווט",
     facts: [
       {
@@ -211,7 +217,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "חוף גורדון",
     heading: "חוף גורדון: אופק פתוח בקו העיר",
-    path: "/spots/cmrw0xspi0001v3w0154giub8",
+    path: guideSpotPath("חוף גורדון"),
     linkLabel: "לעמוד חוף גורדון ולניווט",
     facts: [
       {
@@ -231,7 +237,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "נמל יפו",
     heading: "נמל יפו: סירות, רציפים ושמים למערב",
-    path: "/spots/cmrw0xspi0000v3w0xcs3qn42",
+    path: guideSpotPath("נמל יפו"),
     linkLabel: "לעמוד נמל יפו ולניווט",
     facts: [
       {
@@ -251,7 +257,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "טיילת אשקלון",
     heading: "טיילת אשקלון: הליכה לאורך החוף",
-    path: "/spots/cmuf9k8gd0003gq04zwfc3zem",
+    path: guideSpotPath("טיילת אשקלון"),
     linkLabel: "לעמוד טיילת אשקלון ולניווט",
     facts: [
       {
@@ -271,7 +277,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "מרינה אשקלון",
     heading: "מרינה אשקלון: מבט מערבי פתוח",
-    path: "/spots/cmrw0xspi0009v3w0rlsyhstp",
+    path: guideSpotPath("מרינה אשקלון"),
     linkLabel: "לעמוד מרינה אשקלון ולניווט",
     facts: [
       {
@@ -291,7 +297,7 @@ export const WINTER_COAST_SUNSET_PLACES: readonly WinterCoastPlace[] = [
   {
     name: "טיילת אילת",
     heading: "בונוס: שקיעת חורף בטיילת אילת",
-    path: "/spots/cmtj27v2o0001l10499h38efk",
+    path: guideSpotPath("טיילת אילת"),
     linkLabel: "לעמוד טיילת אילת ולניווט",
     lead: "מי שמגיע לאילת יכול לשלב עצירה בטיילת אילת. כאן מדובר בים סוף, לא בחוף הים התיכון. לפי עמוד הנקודה, נשקפת מכאן שקיעה על הרי אילת יחד עם הים. הנקודה נמצאת על הטיילת ועל האזורים שלידה. השתמשו בניווט שבעמוד.",
     facts: [

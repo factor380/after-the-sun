@@ -28,6 +28,7 @@ async function main() {
       parkingNote: spot.parkingNote ?? null,
       accessibility: spot.accessibility ?? null,
       accessibilityNote: spot.accessibilityNote ?? null,
+      slug: spot.slug,
       createdById: E2E_SEED_USER_ID,
     })),
   });

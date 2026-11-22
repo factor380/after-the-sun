@@ -13,6 +13,7 @@ import {
 } from "@/lib/guides/winter-coast-sunset";
 import { getRegionBySlug } from "@/lib/regions";
 import { absoluteUrl, guideArticleJsonLd, jsonLdString } from "@/lib/seo";
+import { spotPublicPath, spotSlugFromName } from "@/lib/spot-slug";
 
 const DRAFT_NOTES = [
   "טיוטה לאישור",
@@ -56,18 +57,18 @@ describe("winter coast sunset guide", () => {
 
   it("links the twelve approved spots and leaves draft notes out of the copy", () => {
     expect(WINTER_COAST_SUNSET_PLACES.map((place) => place.path)).toEqual([
-      "/spots/cmrw0xspi0004v3w0jrlv239l",
-      "/spots/cmrw0xspi0003v3w0r5x8qsfd",
-      "/spots/cmrw0xspi0002v3w0y9gcz6oz",
-      "/spots/cmrw0xspi0005v3w0d03edxoi",
-      "/spots/cmuq28jeb0001la049t20g6l4",
-      "/spots/cmuvfmzwm0001kz04jzgawy6w",
-      "/spots/cmuvg4u0i0001lf04pjwyyizt",
-      "/spots/cmrw0xspi0001v3w0154giub8",
-      "/spots/cmrw0xspi0000v3w0xcs3qn42",
-      "/spots/cmuf9k8gd0003gq04zwfc3zem",
-      "/spots/cmrw0xspi0009v3w0rlsyhstp",
-      "/spots/cmtj27v2o0001l10499h38efk",
+      spotPublicPath(spotSlugFromName("חוף אכזיב")),
+      spotPublicPath(spotSlugFromName("טיילת בת גלים")),
+      spotPublicPath(spotSlugFromName("חוף אמת המים בקיסריה")),
+      spotPublicPath(spotSlugFromName("טיילת המצוק נתניה")),
+      spotPublicPath(spotSlugFromName("טיילת ניצה")),
+      spotPublicPath(spotSlugFromName("מרינה הרצליה")),
+      spotPublicPath(spotSlugFromName("חוף הילטון")),
+      spotPublicPath(spotSlugFromName("חוף גורדון")),
+      spotPublicPath(spotSlugFromName("נמל יפו")),
+      spotPublicPath(spotSlugFromName("טיילת אשקלון")),
+      spotPublicPath(spotSlugFromName("מרינה אשקלון")),
+      spotPublicPath(spotSlugFromName("טיילת אילת")),
     ]);
     expect(WINTER_COAST_SUNSET_PLACES.map((place) => place.name)).toEqual([
       "חוף אכזיב",

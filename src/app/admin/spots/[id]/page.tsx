@@ -57,6 +57,7 @@ export default async function AdminEditSpotPage({ params }: PageProps) {
       <AdminSpotForm
         initial={{
           id: spot.id,
+          slug: spot.slug,
           name: spot.name,
           description: spot.description,
           region: spot.region,

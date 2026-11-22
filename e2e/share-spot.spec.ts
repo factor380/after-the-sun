@@ -4,7 +4,7 @@ import { E2E_SEED_SPOTS } from "../src/lib/e2e/seed-spots";
 const SEEDED_SPOT = E2E_SEED_SPOTS.find((spot) => spot.id === "e2e-tel-aviv");
 if (!SEEDED_SPOT) throw new Error("missing seeded tel aviv spot");
 
-const SPOT_URL = `https://after-the-sun.com/spots/${SEEDED_SPOT.id}`;
+const SPOT_URL = `https://after-the-sun.com/spots/${SEEDED_SPOT.slug}`;
 const SHARE_TEXT = `נקודת שקיעה: ${SEEDED_SPOT.name} | After the Sun`;
 
 test("share button copies the canonical spot URL when the share sheet is unavailable", async ({
@@ -22,7 +22,7 @@ test("share button copies the canonical spot URL when the share sheet is unavail
     }
   });
 
-  await page.goto(`/spots/${SEEDED_SPOT.id}`, { waitUntil: "domcontentloaded" });
+  await page.goto(`/spots/${SEEDED_SPOT.slug}`, { waitUntil: "domcontentloaded" });
 
   await expect
     .poll(() => page.evaluate(() => typeof navigator.share))

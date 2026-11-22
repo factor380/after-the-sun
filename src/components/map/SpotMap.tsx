@@ -13,6 +13,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import Link from "next/link";
+import { spotPublicPath } from "@/lib/spot-slug";
 import { SpotAmenityIcons } from "@/components/spots/SpotAmenities";
 import {
   PhotoCountBadge,
@@ -230,7 +231,7 @@ export default function SpotMap({ spots }: SpotMapProps) {
               <div dir="rtl" className="w-56">
                 {spot.photoUrl ? (
                   <Link
-                    href={`/spots/${spot.id}`}
+                    href={spotPublicPath(spot.slug)}
                     aria-label={spot.name}
                     className="relative block h-32 w-full overflow-hidden bg-[var(--dusk-mid)]"
                   >
@@ -256,7 +257,7 @@ export default function SpotMap({ spots }: SpotMapProps) {
                     </p>
                   ) : null}
                   <Link
-                    href={`/spots/${spot.id}`}
+                    href={spotPublicPath(spot.slug)}
                     className="inline-block text-xs font-medium text-[var(--ember)] underline"
                   >
                     {t("viewSpot")}

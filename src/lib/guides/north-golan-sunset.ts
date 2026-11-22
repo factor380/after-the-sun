@@ -3,6 +3,12 @@
  * Reader-facing wording comes from the approved draft. Draft notes stay out.
  */
 
+import { spotPublicPath, spotSlugFromName } from "@/lib/spot-slug";
+
+function guideSpotPath(storedName: string): string {
+  return spotPublicPath(spotSlugFromName(storedName));
+}
+
 export const NORTH_GOLAN_SUNSET_GUIDE = {
   path: "/guides/north-golan-sunset",
   regionSlug: "haifa-north",
@@ -57,7 +63,7 @@ export const NORTH_GOLAN_SUNSET_PLACES: readonly NorthGolanPlace[] = [
   {
     name: "תצפית סטלה מאריס",
     heading: "תצפית סטלה מאריס: הים והמפרץ מלמעלה",
-    path: "/spots/cmtajdt7p0001ky04pox5p0c4",
+    path: guideSpotPath("תצפית סטלה מאריס"),
     linkLabel: "לעמוד תצפית סטלה מאריס ולניווט",
     facts: [
       {
@@ -77,7 +83,7 @@ export const NORTH_GOLAN_SUNSET_PLACES: readonly NorthGolanPlace[] = [
   {
     name: "תצפית כנרת מנדל",
     heading: "תצפית כנרת מנדל: מבט מהגולן אל האגם",
-    path: "/spots/cmw26384x0001l3089z8n5ucd",
+    path: guideSpotPath("תצפית כנרת מנדל"),
     linkLabel: "לעמוד תצפית כנרת מנדל ולניווט",
     facts: [
       {
@@ -94,7 +100,7 @@ export const NORTH_GOLAN_SUNSET_PLACES: readonly NorthGolanPlace[] = [
   {
     name: "חוף סוסיתא",
     heading: "חוף סוסיתא: לשבת מול הכנרת",
-    path: "/spots/cmulk5siq0001l804b5qkcbzz",
+    path: guideSpotPath("חוף סוסיתא"),
     linkLabel: "לעמוד חוף סוסיתא ולניווט",
     facts: [
       {
@@ -114,7 +120,7 @@ export const NORTH_GOLAN_SUNSET_PLACES: readonly NorthGolanPlace[] = [
   {
     name: "מצפור גיא",
     heading: "מצפור גיא: רגע שקט בגליל המערבי",
-    path: "/spots/cmukzlf8v0001l504bj3reujw",
+    path: guideSpotPath("מצפור גיא"),
     linkLabel: "לעמוד מצפור גיא ולניווט",
     facts: [
       {
@@ -131,7 +137,7 @@ export const NORTH_GOLAN_SUNSET_PLACES: readonly NorthGolanPlace[] = [
   {
     name: "חוף אכזיב",
     heading: "חוף אכזיב: לגונות, סלעים ואור אחרון",
-    path: "/spots/cmrw0xspi0004v3w0jrlv239l",
+    path: guideSpotPath("חוף אכזיב"),
     linkLabel: "לעמוד חוף אכזיב ולניווט",
     facts: [
       {
@@ -151,7 +157,7 @@ export const NORTH_GOLAN_SUNSET_PLACES: readonly NorthGolanPlace[] = [
   {
     name: "טיילת בת גלים",
     heading: "טיילת בת גלים: עצירה בחיפה ליד המים",
-    path: "/spots/cmrw0xspi0003v3w0r5x8qsfd",
+    path: guideSpotPath("טיילת בת גלים"),
     linkLabel: "לעמוד טיילת בת גלים ולניווט",
     facts: [
       {
@@ -168,7 +174,7 @@ export const NORTH_GOLAN_SUNSET_PLACES: readonly NorthGolanPlace[] = [
   {
     name: "גמלא",
     heading: "מעלה גמלא: מבט אל הכנרת מהגולן",
-    path: "/spots/cmw409fqv0001l208wa4a5m28",
+    path: guideSpotPath("גמלא"),
     linkLabel: "לעמוד הנקודה ״גמלא״ ולניווט",
     facts: [
       {

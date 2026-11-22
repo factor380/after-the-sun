@@ -6,7 +6,7 @@ import { OG_CONTENT_TYPE, OG_SIZE, OgRtlText } from "@/lib/og-card";
 
 /**
  * Share card for the Jerusalem sunset guide.
- * Photo: public cover of גן הקיפוד (/spots/cmujygjcz0001l604bdtrkxhz), cropped to the sunset.
+ * Photo: public cover of גן הקיפוד (/spots/gan-ha-kipod), cropped to the sunset.
  */
 export const alt = `${JERUSALEM_SUNSET_GUIDE.title} — גן הקיפוד`;
 export const size = OG_SIZE;

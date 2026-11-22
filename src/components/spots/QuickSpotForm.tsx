@@ -33,6 +33,7 @@ import {
   MAX_SPOT_PHOTO_INPUT_BYTES,
   SPOT_PHOTO_INPUT_ACCEPT,
 } from "@/lib/spot-photo";
+import { isSpotSlug, spotPublicPath } from "@/lib/spot-slug";
 import { AMENITY_NOTE_MAX, type Accessibility, type Parking } from "@/types/spot";
 
 type ReadyPhoto = { file: File; previewUrl: string };
@@ -353,9 +354,9 @@ export default function QuickSpotForm({ signedIn, displayName }: QuickSpotFormPr
       await clearNewSpotDraft();
 
       if (signedIn) {
-        const id = responseField(data, "id");
-        if (typeof id !== "string" || !id) throw new Error(t("saveFailed"));
-        router.push(`/spots/${id}`);
+        const slug = responseField(data, "slug");
+        if (typeof slug !== "string" || !isSpotSlug(slug)) throw new Error(t("saveFailed"));
+        router.push(spotPublicPath(slug));
         router.refresh();
         return;
       }

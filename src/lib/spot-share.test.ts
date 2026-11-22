@@ -9,7 +9,7 @@ import {
 } from "@/lib/spot-share";
 import { shareOrCopySpot, safeWhatsAppHref } from "@/lib/spot-share-action";
 
-const SPOT = { id: "e2e-tel-aviv", name: "נמל יפו" };
+const SPOT = { slug: "e2e-tel-aviv", name: "נמל יפו" };
 
 describe("buildSpotShare", () => {
   afterEach(() => {
@@ -34,7 +34,7 @@ describe("buildSpotShare", () => {
   it("ignores a localhost site URL", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost:3004");
 
-    expect(buildSpotShare({ id: "ckspot1", name: "צוק" })?.url).toBe(
+    expect(buildSpotShare({ slug: "ckspot1", name: "צוק" })?.url).toBe(
       "https://after-the-sun.com/spots/ckspot1",
     );
   });
@@ -42,26 +42,26 @@ describe("buildSpotShare", () => {
   it("uses the configured public origin", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://staging.example.com/");
 
-    expect(buildSpotShare({ id: "ckspot1", name: "צוק" })?.url).toBe(
+    expect(buildSpotShare({ slug: "ckspot1", name: "צוק" })?.url).toBe(
       "https://staging.example.com/spots/ckspot1",
     );
   });
 
   it("collapses whitespace and keeps a dollar sign in the name literal", () => {
-    const share = buildSpotShare({ id: "ckspot1", name: "  צוק\n$&  " });
+    const share = buildSpotShare({ slug: "ckspot1", name: "  צוק\n$&  " });
 
     expect(share?.title).toBe("צוק $&");
     expect(share?.text).toBe("נקודת שקיעה: צוק $& | After the Sun");
   });
 
   it("returns null for an id or name that cannot be a public spot URL", () => {
-    expect(buildSpotShare({ id: "../admin", name: "צוק" })).toBeNull();
-    expect(buildSpotShare({ id: "a/b", name: "צוק" })).toBeNull();
-    expect(buildSpotShare({ id: "a b", name: "צוק" })).toBeNull();
-    expect(buildSpotShare({ id: "a?b", name: "צוק" })).toBeNull();
-    expect(buildSpotShare({ id: ".", name: "צוק" })).toBeNull();
-    expect(buildSpotShare({ id: "", name: "צוק" })).toBeNull();
-    expect(buildSpotShare({ id: "ckspot1", name: "  \n  " })).toBeNull();
+    expect(buildSpotShare({ slug: "../admin", name: "צוק" })).toBeNull();
+    expect(buildSpotShare({ slug: "a/b", name: "צוק" })).toBeNull();
+    expect(buildSpotShare({ slug: "a b", name: "צוק" })).toBeNull();
+    expect(buildSpotShare({ slug: "a?b", name: "צוק" })).toBeNull();
+    expect(buildSpotShare({ slug: ".", name: "צוק" })).toBeNull();
+    expect(buildSpotShare({ slug: "", name: "צוק" })).toBeNull();
+    expect(buildSpotShare({ slug: "ckspot1", name: "  \n  " })).toBeNull();
   });
 });
 

@@ -1,3 +1,5 @@
+import { assignSpotSlugs } from "@/lib/spot-slug";
+
 export const E2E_SEED_USER_ID = "00000000-0000-4000-8000-000000000001";
 
 export type E2ESeedSpot = {
@@ -20,7 +22,7 @@ export type E2ESeedSpot = {
  * Coordinates sit inside Israel.
  * None of these rows carry a photo, so spot pages use the shared PNG card.
  */
-export const E2E_SEED_SPOTS: readonly E2ESeedSpot[] = [
+const E2E_SEED_SPOT_ROWS: readonly E2ESeedSpot[] = [
   {
     id: "e2e-tel-aviv",
     name: "נמל יפו",
@@ -110,3 +112,5 @@ export const E2E_SEED_SPOTS: readonly E2ESeedSpot[] = [
     accessibilityNote: null,
   },
 ];
+
+export const E2E_SEED_SPOTS = assignSpotSlugs(E2E_SEED_SPOT_ROWS);
