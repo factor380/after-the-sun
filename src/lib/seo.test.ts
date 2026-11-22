@@ -1,4 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { generateMetadata as adminEditMetadata } from "@/app/admin/spots/[id]/page";
+import { metadata as adminSpotsMetadata } from "@/app/admin/spots/page";
+import { metadata as adminSuggestionsMetadata } from "@/app/admin/suggestions/page";
+import { metadata as loginMetadata } from "@/app/login/page";
+import { generateMetadata as editSpotMetadata } from "@/app/spots/[id]/edit/page";
+import { metadata as mineMetadata } from "@/app/spots/mine/page";
+import { metadata as newSpotMetadata } from "@/app/spots/new/page";
+import { dictionary } from "@/lib/i18n/dictionaries";
 import {
   ABOUT_PAGE_TITLE,
   DEFAULT_OG_ALT,
@@ -11,6 +19,7 @@ import {
   getSiteUrl,
   guideArticleJsonLd,
   jsonLdString,
+  pageSocialMetadata,
   regionPageJsonLd,
   regionsIndexJsonLd,
   spotCoverImage,
@@ -73,6 +82,127 @@ describe("search result titles", () => {
     expect(website.name).toBe(SITE_NAME);
     expect(website.alternateName).toBe(SITE_TAGLINE);
     expect(website.name).not.toBe(HOME_TITLE);
+  });
+});
+
+describe("pageSocialMetadata", () => {
+  it("gives the add-spot page its own title, description, and canonical url", () => {
+    const share = pageSocialMetadata({
+      title: dictionary.shareSpotTitle,
+      description: dictionary.shareSpotSubtitle,
+      path: "/spots/new",
+    });
+    const brandedTitle = `${dictionary.shareSpotTitle} | ${SITE_NAME}`;
+    const image = defaultOgImage();
+
+    expect(dictionary.shareSpotTitle).toBe("שיתוף נקודת שקיעה");
+    expect(brandedTitle).toBe("שיתוף נקודת שקיעה | After the Sun");
+    expect(brandedTitle).not.toBe(HOME_TITLE);
+    expect(share.openGraph).toMatchObject({
+      title: brandedTitle,
+      description: dictionary.shareSpotSubtitle,
+      url: "https://after-the-sun.com/spots/new",
+      siteName: SITE_NAME,
+      locale: "he_IL",
+      type: "website",
+      images: [image],
+    });
+    expect(share.twitter).toEqual({
+      card: "summary_large_image",
+      title: brandedTitle,
+      description: dictionary.shareSpotSubtitle,
+      images: [image],
+    });
+    expect(JSON.stringify(share)).not.toContain("localhost");
+    expect(share.openGraph?.url).toBe(absoluteUrl("/spots/new"));
+  });
+
+  it("keeps a dynamic edit path on that spot and still uses the default card", () => {
+    const share = pageSocialMetadata({
+      title: dictionary.editSpotTitle,
+      description: dictionary.editSpotSubtitle,
+      path: "/spots/spot-1/edit",
+    });
+
+    expect(share.openGraph?.title).toBe("עריכת נקודה | After the Sun");
+    expect(share.openGraph?.url).toBe("https://after-the-sun.com/spots/spot-1/edit");
+    expect(share.twitter?.title).toBe("עריכת נקודה | After the Sun");
+    expect(share.openGraph?.images).toEqual([defaultOgImage()]);
+  });
+
+  it("is what the private pages export, and those pages stay noindex", async () => {
+    const image = defaultOgImage();
+    const cases: {
+      path: string;
+      title: string;
+      description: string;
+      metadata: { robots?: unknown; openGraph?: unknown; twitter?: unknown };
+    }[] = [
+      {
+        path: "/spots/new",
+        title: dictionary.shareSpotTitle,
+        description: dictionary.shareSpotSubtitle,
+        metadata: newSpotMetadata,
+      },
+      {
+        path: "/spots/mine",
+        title: dictionary.mySpotsTitle,
+        description: dictionary.mySpotsSubtitle,
+        metadata: mineMetadata,
+      },
+      {
+        path: "/login",
+        title: dictionary.signInTitle,
+        description: dictionary.signInSubtitle,
+        metadata: loginMetadata,
+      },
+      {
+        path: "/admin/spots",
+        title: dictionary.adminSpotsTitle,
+        description: dictionary.adminSpotsDescription,
+        metadata: adminSpotsMetadata,
+      },
+      {
+        path: "/admin/suggestions",
+        title: dictionary.adminSuggestionsTitle,
+        description: dictionary.adminSuggestionsDescription,
+        metadata: adminSuggestionsMetadata,
+      },
+      {
+        path: "/spots/spot-1/edit",
+        title: dictionary.editSpotTitle,
+        description: dictionary.editSpotSubtitle,
+        metadata: await editSpotMetadata({ params: Promise.resolve({ id: "spot-1" }) }),
+      },
+      {
+        path: "/admin/spots/spot-1",
+        title: dictionary.adminEditSpotTitle,
+        description: dictionary.adminEditSpotSubtitle,
+        metadata: await adminEditMetadata({
+          params: Promise.resolve({ id: "spot-1" }),
+        }),
+      },
+    ];
+
+    for (const page of cases) {
+      const share = pageSocialMetadata({
+        title: page.title,
+        description: page.description,
+        path: page.path,
+      });
+      expect(page.metadata.robots, page.path).toMatchObject({
+        index: false,
+        follow: false,
+      });
+      expect(page.metadata.openGraph, page.path).toEqual(share.openGraph);
+      expect(page.metadata.twitter, page.path).toEqual(share.twitter);
+      expect(page.metadata.openGraph, page.path).toMatchObject({
+        title: `${page.title} | ${SITE_NAME}`,
+        url: absoluteUrl(page.path),
+        images: [image],
+      });
+      expect(JSON.stringify(page.metadata.openGraph), page.path).not.toContain(HOME_TITLE);
+    }
   });
 });
 

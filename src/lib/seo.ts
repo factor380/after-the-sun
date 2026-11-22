@@ -85,6 +85,42 @@ export function defaultOgImage(): ShareImage {
   };
 }
 
+/**
+ * Open Graph and Twitter tags for one route.
+ *
+ * A page-level `openGraph` or `twitter` object replaces the layout's tags.
+ * `title` is the unbranded segment used for `<title>`: og:title and
+ * twitter:title do not use the layout template, so the brand is added here.
+ * `path` is a site path. The URL is absolute and never localhost.
+ * The default card is set here because these pages have no image file, and a
+ * bare `openGraph` block would drop the root card.
+ */
+export function pageSocialMetadata(input: {
+  title: string;
+  description: string;
+  path: string;
+}): Pick<Metadata, "openGraph" | "twitter"> {
+  const brandedTitle = `${input.title} | ${SITE_NAME}`;
+  const image = defaultOgImage();
+  return {
+    openGraph: {
+      title: brandedTitle,
+      description: input.description,
+      url: absoluteUrl(input.path),
+      siteName: SITE_NAME,
+      locale: "he_IL",
+      type: "website",
+      images: [image],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: brandedTitle,
+      description: input.description,
+      images: [image],
+    },
+  };
+}
+
 function isLocalHostname(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
   return host === "localhost" || host === "127.0.0.1" || host === "::1";

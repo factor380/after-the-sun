@@ -124,6 +124,21 @@ test("public pages, sitemap, robots, and llms.txt", async ({ request, baseURL })
   }
 
   const home = htmlByPath.get("/") ?? "";
+  expectPrivatePageShare(
+    htmlByPath.get("/spots/new") ?? "",
+    "/spots/new",
+    "שיתוף נקודת שקיעה",
+  );
+  const login = await request.get("/login", { maxRedirects: 0 });
+  expect(login.status()).toBe(200);
+  expectPrivatePageShare(await login.text(), "/login", "התחברות");
+  const mine = await request.get("/spots/mine", {
+    headers: authHeaders(origin),
+    maxRedirects: 0,
+  });
+  expect(mine.status()).toBe(200);
+  expectPrivatePageShare(await mine.text(), "/spots/mine", "הנקודות שלי");
+
   const spotHtml = htmlByPath.get(`/spots/${SEEDED_SPOT.id}`) ?? "";
   expect(home).toContain(SEEDED_SPOT.name);
   expect(headingText(spotHtml)).toContain(SEEDED_SPOT.name);
@@ -909,6 +924,18 @@ function authHeaders(baseURL: string): Record<string, string> {
 
 function expectNoLegacyHost(body: string, where: string) {
   expect(body, where).not.toContain("after-the-sun.vercel.app");
+}
+
+function expectPrivatePageShare(html: string, pagePath: string, title: string) {
+  const branded = `${title} | After the Sun`;
+  const siteUrl = getSiteUrl();
+  expect(documentTitle(html), pagePath).toBe(branded);
+  expect(metaContents(html, "property", "og:title")[0], pagePath).toBe(branded);
+  expect(metaContents(html, "name", "twitter:title")[0], pagePath).toBe(branded);
+  expect(metaContents(html, "property", "og:description")[0], pagePath).not.toBe("");
+  expect(metaContents(html, "property", "og:url")[0], pagePath).toBe(`${siteUrl}${pagePath}`);
+  expect(metaContents(html, "property", "og:url")[0], pagePath).not.toBe(siteUrl);
+  expect(html, pagePath).toContain("noindex");
 }
 
 async function assertSeo(

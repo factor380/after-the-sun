@@ -4,14 +4,19 @@ import QuickSpotForm from "@/components/spots/QuickSpotForm";
 import { T } from "@/components/T";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { profileDisplayName } from "@/lib/profile-name";
-import { noIndexRobots } from "@/lib/seo";
+import { noIndexRobots, pageSocialMetadata } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 
+const title = dictionary.shareSpotTitle;
+const description = dictionary.shareSpotSubtitle;
+const path = "/spots/new";
+
 export const metadata: Metadata = {
-  title: dictionary.shareSpotTitle,
-  description: dictionary.shareSpotSubtitle,
-  alternates: { canonical: "/spots/new" },
+  title,
+  description,
+  alternates: { canonical: path },
   robots: noIndexRobots,
+  ...pageSocialMetadata({ title, description, path }),
 };
 
 /** The form depends on the session. Never cache. */
