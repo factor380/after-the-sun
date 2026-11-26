@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
+import { SHFELA_SOUTH_SUNSET_GUIDE } from "@/lib/guides/shfela-south-sunset";
 import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { REGIONS_INDEX, SUNSET_REGIONS, regionPath } from "@/lib/regions";
 import { isSpotSlug, spotPublicPath } from "@/lib/spot-slug";
@@ -34,6 +35,7 @@ export function revalidatePublishedSpots(spot?: PublishedSpotCacheKey) {
   revalidatePath(JERUSALEM_SUNSET_GUIDE.path);
   revalidatePath(NORTH_GOLAN_SUNSET_GUIDE.path);
   revalidatePath(WINTER_COAST_SUNSET_GUIDE.path);
+  revalidatePath(SHFELA_SOUTH_SUNSET_GUIDE.path);
   for (const region of SUNSET_REGIONS) {
     revalidatePageAndSocialImages(regionPath(region.slug));
   }
