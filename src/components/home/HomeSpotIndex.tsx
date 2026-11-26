@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SpotAmenityIcons } from "@/components/spots/SpotAmenities";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
+import { SHFELA_SOUTH_SUNSET_GUIDE } from "@/lib/guides/shfela-south-sunset";
 import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { dictionary } from "@/lib/i18n/dictionaries";
 import { REGIONS_INDEX, SUNSET_REGIONS, regionPath } from "@/lib/regions";
@@ -32,6 +33,9 @@ export function HomeSpotIndex({ spots }: { spots: SpotSummary[] }) {
           </li>
           <li>
             <Link href={WINTER_COAST_SUNSET_GUIDE.path}>מדריך שקיעות חורף על הים</Link>
+          </li>
+          <li>
+            <Link href={SHFELA_SOUTH_SUNSET_GUIDE.path}>מדריך שקיעה בדרום ובשפלה</Link>
           </li>
         </ul>
       </nav>

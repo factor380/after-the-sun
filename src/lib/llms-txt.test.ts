@@ -4,6 +4,7 @@ import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
+import { SHFELA_SOUTH_SUNSET_GUIDE } from "@/lib/guides/shfela-south-sunset";
 import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { SUNSET_REGIONS, publicRegionPages } from "@/lib/regions";
 import { SITE_DESCRIPTION, SITE_NAME, getSiteUrl } from "@/lib/seo";
@@ -66,7 +67,7 @@ describe("buildLlmsTxt", () => {
     const pages = pageSection(text);
     const lines = linkLines(pages);
 
-    expect(lines).toHaveLength(2 + publicRegionPages().length + 4);
+    expect(lines).toHaveLength(2 + publicRegionPages().length + 5);
     expect(SUNSET_REGIONS).toHaveLength(7);
     expect(publicRegionPages()).toHaveLength(SUNSET_REGIONS.length + 1);
     expect(pages).toContain(`](${origin}/regions):`);
@@ -86,6 +87,9 @@ describe("buildLlmsTxt", () => {
     expect(pages).toContain(`](${origin}${WINTER_COAST_SUNSET_GUIDE.path}):`);
     expect(pages).toContain(WINTER_COAST_SUNSET_GUIDE.title);
     expect(pages).toContain(WINTER_COAST_SUNSET_GUIDE.description);
+    expect(pages).toContain(`](${origin}${SHFELA_SOUTH_SUNSET_GUIDE.path}):`);
+    expect(pages).toContain(SHFELA_SOUTH_SUNSET_GUIDE.title);
+    expect(pages).toContain(SHFELA_SOUTH_SUNSET_GUIDE.description);
     expect(pages).toContain(`](${origin}/sitemap.xml):`);
     expect(pages).toContain("המפה הקהילתית של נקודות השקיעה בישראל.");
     expect(pages).toContain("אלה נקודות השקיעה שסומנו בתל אביב–יפו על המפה.");
@@ -284,6 +288,7 @@ describe("canonical domain", () => {
         `${origin}${JERUSALEM_SUNSET_GUIDE.path}`,
         `${origin}${NORTH_GOLAN_SUNSET_GUIDE.path}`,
         `${origin}${WINTER_COAST_SUNSET_GUIDE.path}`,
+        `${origin}${SHFELA_SOUTH_SUNSET_GUIDE.path}`,
       ]),
     );
 

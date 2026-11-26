@@ -1,5 +1,6 @@
 import { JERUSALEM_SUNSET_GUIDE } from "@/lib/guides/jerusalem-sunset";
 import { NORTH_GOLAN_SUNSET_GUIDE } from "@/lib/guides/north-golan-sunset";
+import { SHFELA_SOUTH_SUNSET_GUIDE } from "@/lib/guides/shfela-south-sunset";
 import { WINTER_COAST_SUNSET_GUIDE } from "@/lib/guides/winter-coast-sunset";
 import { publicRegionPages } from "@/lib/regions";
 import { SITE_DESCRIPTION, SITE_NAME, absoluteUrl, truncateMeta } from "@/lib/seo";
@@ -80,6 +81,11 @@ function pageLinks(): PageLink[] {
       label: WINTER_COAST_SUNSET_GUIDE.title,
       path: WINTER_COAST_SUNSET_GUIDE.path,
       note: WINTER_COAST_SUNSET_GUIDE.description,
+    },
+    {
+      label: SHFELA_SOUTH_SUNSET_GUIDE.title,
+      path: SHFELA_SOUTH_SUNSET_GUIDE.path,
+      note: SHFELA_SOUTH_SUNSET_GUIDE.description,
     },
     {
       label: "Sitemap",
